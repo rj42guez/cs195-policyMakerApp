@@ -97,6 +97,14 @@ def createNewProject():
     undeEffLabel1.grid(row=16, column=0, sticky = W, pady = 1)
     undeEffLabel2.grid(row=17, column=0, sticky = W, pady = 1)
     undeEff.grid(row=17, column=1, sticky = W, pady = 1)
+    
+    def save():
+        files = [('All Files', '*.*'),  
+                ('Python Files', '*.py'), 
+                ('Text Document', '*.txt')] 
+        file = asksaveasfile(filetypes = files, defaultextension = files) 
+        newProject.destroy()
+        newProject.update()
 
     btn = Button(newProject, text = "Save", command = lambda: save())
     btn.grid(row=20, column=1, pady = 4)
