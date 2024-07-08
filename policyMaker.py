@@ -48,6 +48,14 @@ aboutLabel3.place(x=240, y=153)
 aboutLabel4.place(x=240, y=183)
 aboutLabel5.place(x=240, y=213)
 
+projectTitle = Label(main, background="#9CDBA6", foreground="purple",  text = "")
+polAnaTitle = Label(main, background="#9CDBA6", foreground="purple",  text = "")
+probSit = Label(main, background="#9CDBA6", foreground="purple",  text = "")
+undeEff = Label(main, background="#9CDBA6", foreground="purple",  text = "")
+# currEffo
+# effoMeas
+# acco
+# asse
 
 def saveFile():
         files = [('All Files', '*.*'),  
@@ -65,23 +73,33 @@ def openFile():
 
     root.title("UPD Policy Maker - "+data[0])
 
+    projectTitle.config(text = "")
+    polAnaTitle.config(text = "")
+    probSit.config(text = "")
+    undeEff.config(text = "")
+    # currEffo
+    # effoMeas
+    # acco
+    # asse
+
+    projectTitle.config(text = data[0])
+    polAnaTitle.config(text = data[1])
+    probSit.config(text = data[2])
+    undeEff.config(text = data[3])
+    # currEffo
+    # effoMeas
+    # acco
+    # asse
+
     projectTitleLabel = Label(main, background="#9CDBA6", foreground="purple", text = "Project Title: ")
-    projectTitle = Label(main, background="#9CDBA6", foreground="purple",  text = data[0])
-
     polAnaTitleLabel = Label(main, background="#9CDBA6", foreground="purple",  text = "Policy Analysis Title: ")
-    polAnaTitle = Label(main, background="#9CDBA6", foreground="purple",  text = data[1])
-
     probSitLabel = Label(main, background="#9CDBA6", foreground="purple",  text = "Problematic Situation: ")
-    probSit = Label(main, background="#9CDBA6", foreground="purple",  text = data[2])
-
     undeEffLabel = Label(main, background="#9CDBA6", foreground="purple",  text = "Undesirable Effects: ")
-    undeEff = Label(main, background="#9CDBA6", foreground="purple",  text = data[3])
-
-    currEffoLabel = Label(main, background="#9CDBA6", foreground="purple",  text = "Current Efforts: ")
     
-    EffoMeasLabel = Label(main, background="#9CDBA6", foreground="purple",  text = "Effort/Measure")
-    AccoLabel = Label(main, text = "Accomplishments")
-    AsseLabel = Label(main, text = "Assessments")
+    currEffoLabel = Label(main, background="#9CDBA6", foreground="purple",  text = "Current Efforts: ")
+    effoMeasLabel = Label(main, background="#9CDBA6", foreground="purple",  text = "Effort/Measure")
+    accoLabel = Label(main, text = "Accomplishments")
+    asseLabel = Label(main, text = "Assessments")
 
                 
     projectTitleLabel.place(x=240, y=273)
@@ -174,13 +192,40 @@ def createNewProject():
     undeEff.grid(row=17, column=1, sticky = W, padx=7)
     
     def saveFile():
-        projecttitle = projectTitle.get()
-        policyanalysis = polAnaTitle.get()
-        problematicsituation = probSit.get("1.0", tk.END)
-        undesirableeffects = undeEff.get("1.0", tk.END)
-        fontstyle = fontsList.get()
-        fontsize = fontSize.get()
+        projectTitle.config(bg="white")
+        fontSize.config(bg="white")
+        polAnaTitle.config(bg="white")
+        probSit.config(bg="white")
+        undeEff.config(bg="white")
 
+
+        projecttitle = projectTitle.get()
+        if not projecttitle.strip():
+             projectTitle.config(bg="#ffd0d0")
+             return
+        
+        fontstyle = fontsList.get()
+        
+        fontsize = fontSize.get()
+        if fontsize.isnumeric() == False:
+             fontSize.config(bg="#ffd0d0")
+             return
+        
+        policyanalysis = polAnaTitle.get()
+        if not policyanalysis.strip():
+             polAnaTitle.config(bg="#ffd0d0")
+             return
+        
+        problematicsituation = probSit.get("1.0", tk.END)
+        if not problematicsituation.strip():
+             probSit.config(bg="#ffd0d0")
+             return
+        
+        undesirableeffects = undeEff.get("1.0", tk.END)
+        if not undesirableeffects.strip():
+             undeEff.config(bg="#ffd0d0")
+             return
+ 
         data = [projecttitle, policyanalysis, problematicsituation, undesirableeffects, fontstyle, fontsize]
 
         filename = projecttitle
