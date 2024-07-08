@@ -113,12 +113,10 @@ def openFile():
     currEffoLabel.grid(x=240, y=393)
 
 
-
-
 def createNewProject():
     newProject = Toplevel(root)
     newProject.title("UPD Policy Maker - Create New Project")
-    newProject.geometry("540x580")
+    newProject.geometry("1080x500")
 
     scrollbar = ttk.Scrollbar(newProject)
 
@@ -127,6 +125,7 @@ def createNewProject():
     blank3 = Label(newProject, text = "  ")
     blank4 = Label(newProject, text = "  ")
     blank5 = Label(newProject, text = "  ")
+    blank6 = Label(newProject, text = "  ")
 
     projectTitleLabel1 = Label(newProject, text = "Project Title")
     projectTitleLabel2 = Label(newProject, text = "Enter project title: ")
@@ -152,6 +151,19 @@ def createNewProject():
     fontSize = Entry(newProject, width=10)
     indentation = Entry(newProject, width=10)
 
+    analystLabel1 = Label(newProject, text = "Analyst")
+    analystLabel2 = Label(newProject, text = "Enter name of analyst: ")
+    analyst = Entry(newProject, width=50)
+
+    levelsLabel1 = Label(newProject, text = "Levels of Analysis ")
+    levelNLabel = Label(newProject, text = "National ")
+    levelLLabel = Label(newProject, text = "Local ")
+    levelOLabel = Label(newProject, text = "Organizational ")
+
+    nLevel = Entry(newProject, width=50)
+    lLevel = Entry(newProject, width=50)
+    oLevel = Entry(newProject, width=50)
+
     polAnaTitleLabel1 = Label(newProject, text = "Policy Analysis Title ")
     polAnaTitleLabel2 = Label(newProject, text = "Enter policy analysis title: ")
     polAnaTitle = Entry(newProject, width=50)
@@ -171,25 +183,36 @@ def createNewProject():
     projectTitleLabel2.grid(row=3, column=0, sticky = W, padx=7)
     projectTitle.grid(row=3, column=1, sticky = W, padx=7)
     blank1.grid(row=4, column=0, padx=7)
-    settingsLabel.grid(row=5, column=0, sticky = W, padx=7)
-    fontStyleLabel.grid(row=6, column=0, sticky = W, padx=7)
-    fontsList.grid(row=6, column=1, sticky = W, padx=7)
-    fontSizeLabel.grid(row=7, column=0, sticky = W, padx=7)
-    fontSize.grid(row=7, column=1, sticky = W, padx=7)
-    indentationLabel.grid(row=8, column=0, sticky = W, padx=7)
-    indentation.grid(row=8, column=1, sticky = W, padx=7)
-    blank2.grid(row=9, column=0)
-    polAnaTitleLabel1.grid(row=10, column=0, sticky = W, padx=7)
-    polAnaTitleLabel2.grid(row=11, column=0, sticky = W, padx=7)
-    polAnaTitle.grid(row=11, column=1, sticky = W, padx=7)
+    analystLabel1.grid(row=5, column=0, sticky = W, padx=7)
+    analystLabel2.grid(row=6, column=0, sticky = W, padx=7)
+    analyst.grid(row=6, column=1, sticky = W, padx=7)
+    blank2.grid(row=7, column=0)
+    settingsLabel.grid(row=8, column=0, sticky = W, padx=7)
+    fontStyleLabel.grid(row=9, column=0, sticky = W, padx=7)
+    fontsList.grid(row=9, column=1, sticky = W, padx=7)
+    fontSizeLabel.grid(row=10, column=0, sticky = W, padx=7)
+    fontSize.grid(row=10, column=1, sticky = W, padx=7)
+    indentationLabel.grid(row=11, column=0, sticky = W, padx=7)
+    indentation.grid(row=11, column=1, sticky = W, padx=7)
     blank3.grid(row=12, column=0)
+    polAnaTitleLabel1.grid(row=5, column=2, sticky = W, padx=7)
+    polAnaTitleLabel2.grid(row=6, column=2, sticky = W, padx=7)
+    polAnaTitle.grid(row=6, column=3, sticky = W, padx=7)
+    levelsLabel1.grid(row=8, column=2, sticky = W, padx=7)
+    levelNLabel.grid(row=9, column=2, sticky = W, padx=7)
+    levelLLabel.grid(row=10, column=2, sticky = W, padx=7)
+    levelOLabel.grid(row=11, column=2, sticky = W, padx=7)
+    nLevel.grid(row=9, column=3, sticky = W, padx=7)
+    lLevel.grid(row=10, column=3, sticky = W, padx=7)
+    oLevel.grid(row=11, column=3, sticky = W, padx=7)
+    blank5.grid(row=4, column=0)
     probSitLabel1.grid(row=13, column=0, sticky = W, padx=7)
     probSitLabel2.grid(row=14, column=0, sticky = W, padx=7)
     probSit.grid(row=14, column=1, sticky = W, padx=7)
-    blank4.grid(row=15, column=0)
-    undeEffLabel1.grid(row=16, column=0, sticky = W, padx=7)
-    undeEffLabel2.grid(row=17, column=0, sticky = W, padx=7)
-    undeEff.grid(row=17, column=1, sticky = W, padx=7)
+    blank6.grid(row=15, column=0)
+    undeEffLabel1.grid(row=13, column=2, sticky = W, padx=7)
+    undeEffLabel2.grid(row=14, column=2, sticky = W, padx=7)
+    undeEff.grid(row=14, column=3, sticky = W, padx=7)
     
     def saveFile():
         projectTitle.config(bg="white")
@@ -246,8 +269,8 @@ def createNewProject():
 
     btnCreate = Button(newProject, text = "Create a Project", command = lambda: saveFile())
     btnClear = Button(newProject, text = "Clear", command = lambda: clearCreate())
-    btnCreate.grid(row=19, column=1, pady=10)
-    btnClear.grid(row=19, column=0, pady=10)
+    btnCreate.grid(row=18, column=1, pady=10)
+    btnClear.grid(row=18, column=0, pady=10)
 
 menubar = Menu(root) 
 
@@ -266,6 +289,5 @@ file2.add_command(label ='Change Font Style')
 file2.add_command(label ='Change Indentation') 
 
 root.config(menu=menubar)
-
 
 root.mainloop()
