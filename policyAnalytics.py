@@ -17,12 +17,12 @@ root = Tk()
 root.title("UPD Policy Maker 1.0")
 root.geometry("1300x700")
 
-main = tk.PanedWindow(root, background="#468585")
+main = tk.PanedWindow(root, background="#ffffff")
 
 main.pack(side="top", fill="both", expand=True)
 
-left_pane = tk.Frame(main, background="#DEF9C4", width=200)
-right_pane = tk.PanedWindow(main, background="#9CDBA6", width=200)
+left_pane = tk.Frame(main, background="#76090c", width=200)
+right_pane = tk.PanedWindow(main, background="#ffffff", width=200)
 main.add(left_pane)
 main.add(right_pane)
 
@@ -46,12 +46,12 @@ def changeFontSize():
     button = Button(popup, text = "Change", command = change)
     button.place(x=10, y=30)
 
-introLabel = Label(main, background="#9CDBA6", foreground="purple", font=("Franklin Gothic Heavy", 14), text = "Welcome to the UPD Policy Analytics App")
-aboutLabel1 = Label(main, background="#9CDBA6", foreground="purple", font=("Franklin ", 10), wraplength=1000, justify="left", text = "The UPD Policy Maker App is exclusive to all students, faculty, and staff of the UP Diliman community. Here, users start by creating an analysis on a policy and defining the problematic situation and their undesirable effects. It also lets them do the following:")
-aboutLabel2 = Label(main, background="#9CDBA6", foreground="purple", wraplength=1000, font=("Franklin ", 10), justify="left", text = "1. Enumerate the efforts/measures that are currently being done to tackle the problem ")
-aboutLabel3 = Label(main, background="#9CDBA6", foreground="purple", wraplength=1000, font=("Franklin ", 10), justify="left", text = "2. List down the accomplishments and the assessments on each effort/measure")
-aboutLabel4 = Label(main, background="#9CDBA6", foreground="purple", wraplength=1000, font=("Franklin ", 10), justify="left", text = "3. Define the root cause of the problem")
-aboutLabel5 = Label(main, background="#9CDBA6", foreground="purple", wraplength=1000, font=("Franklin ", 10), justify="left", text = "4. Assess the existing policies ")
+introLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin Gothic Heavy", 14), text = "Welcome to Policy Analytics")
+aboutLabel1 = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="left", text = "Policy Analytics is exclusive to all students, faculty, and staff. Here, users start by creating an analysis on a policy and defining the problematic situation and their undesirable effects. It also lets them do the following:")
+aboutLabel2 = Label(main, background="#ffffff", foreground="#76090c", wraplength=1000, font=("Franklin ", 10), justify="left", text = "1. Enumerate the efforts/measures that are currently being done to tackle the problem ")
+aboutLabel3 = Label(main, background="#ffffff", foreground="#76090c", wraplength=1000, font=("Franklin ", 10), justify="left", text = "2. List down the accomplishments and the assessments on each effort/measure")
+aboutLabel4 = Label(main, background="#ffffff", foreground="#76090c", wraplength=1000, font=("Franklin ", 10), justify="left", text = "3. Define the root cause of the problem")
+aboutLabel5 = Label(main, background="#ffffff", foreground="#76090c", wraplength=1000, font=("Franklin ", 10), justify="left", text = "4. Assess the existing policies ")
 
 currentlyOpenLabel = Label(root, text = "Recently Opened Projects ")
 ProjectTitleLabel = Label(root, text = "Project Title:  ")
@@ -121,10 +121,10 @@ def openFile():
     global i
     i = 0
 
-    currEffoLabel = Label(root, background="#9CDBA6", foreground="purple",  text = "Current Efforts: ")
-    accoLabel = Label(root, background="#9CDBA6", foreground="purple",  text = "Enter accomplishment: ")
-    asseLabel = Label(root, background="#9CDBA6", foreground="purple",  text = "Enter assessment: ")
-    effoLabel = Label(root, background="#9CDBA6", foreground="purple",  text = "Enter effort/: ")
+    currEffoLabel = Label(root, foreground="purple",  text = "Current Efforts: ")
+    accoLabel = Label(root, foreground="purple",  text = "Enter accomplishment: ")
+    asseLabel = Label(root, foreground="purple",  text = "Enter assessment: ")
+    effoLabel = Label(root, foreground="purple",  text = "Enter effort/: ")
 
     effort = tk.Text(root,  height=1, width=70,bg='white') 
     accomplishment = tk.Text(root,  height=1, width=70,bg='white') 
@@ -174,27 +174,22 @@ def openFile():
       
 
 def createNewProject():
+
     newProject = Toplevel(root)
     newProject.title("UPD Policy Maker - Create New Project")
-    newProject.geometry("840x700")
+    newProject.geometry("660x210")
 
-    scrollbar = ttk.Scrollbar(newProject)
+    blank = Label(newProject, text = "  ")
+    
+    frame1 = tk.LabelFrame(newProject)
 
-    blank1 = Label(newProject, text = "  ")
-    blank2 = Label(newProject, text = "  ")
-    blank3 = Label(newProject, text = "  ")
-    blank4 = Label(newProject, text = "  ")
-    blank5 = Label(newProject, text = "  ")
-    blank6 = Label(newProject, text = "  ")
+    projectTitleLabel1 = Label(frame1, text = "Project Title")
+    projectTitle = Entry(frame1, width=30)
 
-    projectTitleLabel1 = Label(newProject, text = "Project Title")
-    projectTitleLabel2 = Label(newProject, text = "Enter project title: ")
-    projectTitle = Entry(newProject, width=30)
-
-    settingsLabel = Label(newProject, text = "Settings")
-    fontStyleLabel = Label(newProject, text = "Choose font style: ")
-    fontSizeLabel = Label(newProject, text = "Choose font size: ")
-    indentationLabel = Label(newProject, text = "Choose indentation: ")
+    settingsLabel = Label(frame1, text = "Settings")
+    fontStyleLabel = Label(frame1, text = "Choose font style: ")
+    fontSizeLabel = Label(frame1, text = "Choose font size: ")
+    indentationLabel = Label(frame1, text = "Choose indentation: ")
     
     font.families()
     fonts = list(font.families())
@@ -202,37 +197,26 @@ def createNewProject():
     
     selectedFont = tk.StringVar()
 
-    fontsList = ttk.Combobox(newProject, width=30, values=fonts)
-    
-    fontSize = Entry(newProject, width=10)
-    indentation = Entry(newProject, width=10)
+    fontsList = ttk.Combobox(frame1, width=30, values=fonts)
+    fontSize = Entry(frame1, width=10)
+    indentation = Entry(frame1, width=10)
 
-    analystLabel1 = Label(newProject, text = "Analyst")
-    analystLabel2 = Label(newProject, text = "Enter name of analyst: ")
-    analyst = Entry(newProject, width=30)
+    analystNameLabel1 = Label(frame1, text = "Analyst")
+    analystName = Entry(frame1, width=30)
 
-    levelsLabel1 = Label(newProject, text = "Levels of Analysis ")
-    levelsLabel2 = Label(newProject, text = "Check levels of analysis: ")
+    levelsLabel1 = Label(frame1, text = "Levels of Analysis ")
 
     varNat = tk.IntVar()
     varLoc = tk.IntVar()
     varOrg = tk.IntVar()
 
-    national = tk.Checkbutton(newProject, text='National',variable=varNat, onvalue=1, offvalue=0)
-    local = tk.Checkbutton(newProject, text='Local',variable=varLoc, onvalue=1, offvalue=0)
-    organizational = tk.Checkbutton(newProject, text='Organizational',variable=varOrg, onvalue=1, offvalue=0)
+    national = tk.Checkbutton(frame1, text='National',variable=varNat, onvalue=1, offvalue=0)
+    local = tk.Checkbutton(frame1, text='Local',variable=varLoc, onvalue=1, offvalue=0)
+    organizational = tk.Checkbutton(frame1, text='Organizational',variable=varOrg, onvalue=1, offvalue=0)
 
-    polAnaTitleLabel1 = Label(newProject, text = "Policy Analysis Title ")
-    polAnaTitleLabel2 = Label(newProject, text = "Enter policy analysis title: ")
-    polAnaTitle = Entry(newProject, width=30)
+    polAnaTitleLabel1 = Label(frame1, text = "Policy Analysis Title ")
+    polAnaTitle = Entry(frame1, width=30)
 
-    probSitLabel1 = Label(newProject, text = "Problematic Situation")
-    probSitLabel2 = Label(newProject, text = "Enter problematic situation: ")
-    probSit = scrolledtext.ScrolledText(newProject, height = 5, width=30)
-    
-    undeEffLabel1 = Label(newProject, text = "Undesirable Effects")
-    undeEffLabel2 = Label(newProject, text = "Enter undesirable effects: ")
-    undeEff = scrolledtext.ScrolledText(newProject, height = 5, width=30)
 
     rootCLabel1 = Label(newProject, text = "Root Cause of the Problem")
 
@@ -254,86 +238,171 @@ def createNewProject():
     undeEff = scrolledtext.ScrolledText(newProject, height = 5, width=30)
 
     polProbLabel1 = Label(newProject, text = "Policy Problem")
-    polProbLabel2 = Label(newProject, text = "Enter policy problem: ")
     polProb = scrolledtext.ScrolledText(newProject, height = 5, width=30)
 
-    projectTitleLabel1.grid(row=2, column=0, sticky = W, padx=7)
-    #projectTitleLabel2.grid(row=3, column=0, sticky = W, padx=7)
-    projectTitle.grid(row=3, column=0, sticky = W, padx=7)
-    blank1.grid(row=4, column=0, padx=7)
-    analystLabel1.grid(row=5, column=0, sticky = W, padx=7)
-    #analystLabel2.grid(row=6, column=0, sticky = W, padx=7)
-    analyst.grid(row=6, column=0, sticky = W, padx=7)
-    blank2.grid(row=7, column=0)
-    settingsLabel.grid(row=8, column=0, sticky = W, padx=7)
-    fontStyleLabel.grid(row=9, column=0, sticky = W, padx=7)
-    fontsList.grid(row=9, column=1, sticky = W, padx=7)
-    fontSizeLabel.grid(row=10, column=0, sticky = W, padx=7)
-    fontSize.grid(row=10, column=1, sticky = W, padx=7)
-    indentationLabel.grid(row=11, column=0, sticky = W, padx=7)
-    indentation.grid(row=11, column=1, sticky = W, padx=7)
-    blank3.grid(row=12, column=0)
-    polAnaTitleLabel1.grid(row=5, column=1, sticky = W, padx=7)
-    #polAnaTitleLabel2.grid(row=6, column=2, sticky = W, padx=7)
-    polAnaTitle.grid(row=6, column=1, sticky = W, padx=7)
-    levelsLabel1.grid(row=8, column=2, sticky = W, padx=7)
-    #levelsLabel2.grid(row=9, column=2, sticky = W, padx=7)
-    national.grid(row=9, column=2, sticky = W, padx=7)
-    local.grid(row=10, column=2, sticky = W, padx=7)
-    organizational.grid(row=11, column=2, sticky = W, padx=7)
-    blank5.grid(row=4, column=0)
-    probSitLabel1.grid(row=13, column=0, sticky = W, padx=7)
-    #probSitLabel2.grid(row=14, column=0, sticky = W, padx=7)
-    probSit.grid(row=14, column=0, sticky = W, padx=7)
-    undeEffLabel1.grid(row=13, column=1, sticky = W, padx=7)
-    #undeEffLabel2.grid(row=14, column=2, sticky = W, padx=7)
-    undeEff.grid(row=14, column=1, sticky = W, padx=7)
-    blank6.grid(row=15, column=0)
-    rootCLabel1.grid(row=16, column=0, sticky = W, padx=7)
-    quantitative.grid(row=17, column=0, sticky = W, padx=7)
-    regLin.grid(row=18, column=0, sticky = W, padx=14)
-    regLog.grid(row=19, column=0, sticky = W, padx=14)
-    regMul.grid(row=20, column=0, sticky = W, padx=14)
-    qualitative.grid(row=17, column=1, sticky = W, padx=7)
-    probTreeAnalysis.grid(row=18, column=1, sticky = W, padx=14)
-    delphiTechnique.grid(row=19, column=1, sticky = W, padx=14)
-    polProbLabel1.grid(row=13, column=2, sticky = W, padx=7)
-    #polProbLabel2.grid(row=17, column=2, sticky = W, padx=7)
-    polProb.grid(row=14, column=2, sticky = W, padx=7)
+    frame1.place(x=10, y=10)
+    projectTitleLabel1.grid(row=2, column=0, padx=7)
+    projectTitle.grid(row=3, column=0, padx=7)
+    analystNameLabel1.grid(row=2, column=1, padx=7)
+    analystName.grid(row=3, column=1, padx=7)
+    polAnaTitleLabel1.grid(row=2, column=2, padx=7)
+    polAnaTitle.grid(row=3, column=2, padx=7)
+    blank.grid(row=4, column=0)
+    settingsLabel.grid(row=5, column=0)
+    fontStyleLabel.grid(row=6, column=0, sticky = W, padx=7)
+    fontsList.grid(row=6, column=1, sticky = W, padx=7)
+    fontSizeLabel.grid(row=7, column=0, sticky = W, padx=7)
+    fontSize.grid(row=7, column=1, sticky = W, padx=7)
+    indentationLabel.grid(row=8, column=0, sticky = W, padx=7)
+    indentation.grid(row=8, column=1, sticky = W, padx=7)
+    levelsLabel1.grid(row=5, column=2, padx=7)
+    national.grid(row=6, column=2, sticky = W, padx=56)
+    local.grid(row=7, column=2, sticky = W, padx=56)
+    organizational.grid(row=8, column=2, sticky = W, padx=56)
+    # rootCLabel1.grid(row=16, column=0, sticky = W, padx=7)
+    # quantitative.grid(row=17, column=0, sticky = W, padx=7)
+    # regLin.grid(row=18, column=0, sticky = W, padx=14)
+    # regLog.grid(row=19, column=0, sticky = W, padx=14)
+    # regMul.grid(row=20, column=0, sticky = W, padx=14)
+    # qualitative.grid(row=17, column=1, sticky = W, padx=7)
+    # probTreeAnalysis.grid(row=18, column=1, sticky = W, padx=14)
+    # delphiTechnique.grid(row=19, column=1, sticky = W, padx=14)
+    # polProbLabel1.grid(row=13, column=2, sticky = W, padx=7)
+    # polProb.grid(row=14, column=2, sticky = W, padx=7)
     
-    def saveNewlyCreatedFile():
+    def saveNewProject():
+        projecttitle = projectTitle.get()
+        if not projecttitle.strip():
+             projectTitle.config(bg="#ffd0d0")
+             return
+        
+# save the project
+
+        filename = projecttitle
+        fileobject = open(filename + '.pol', 'w')
+        fileobject.close()
+
+        frame1.destroy() 
+        btnCreate.destroy() 
+
+# write problematic situation and undesirable effects
+
+        frame2 = tk.LabelFrame(newProject)
+
+        probSitLabel = Label(frame2, text = "Problematic Situation")
+        probSit = scrolledtext.ScrolledText(frame2, height = 8, width=30)
+        
+        undeEffLabel = Label(frame2, text = "Undesirable Effects")
+        undeEff = scrolledtext.ScrolledText(frame2, height = 8, width=30)
+        
+        frame2.place(x=40, y=10)
+        probSitLabel.grid(row=1, column=0, sticky = W, padx=7)
+        probSit.grid(row=2, column=0, sticky = W, padx=7)
+        undeEffLabel.grid(row=1, column=1, sticky = W, padx=7)
+        undeEff.grid(row=2, column=1, sticky = W, padx=7)
+
+        def next1():
+            frame2.destroy() 
+            btnNext1.destroy() 
+
+            newProject.geometry("660x900")
+            
+            btnClear.place(x=190, y=700)
+            btnNext2.place(x=380, y=700)
+            
+            frame3 = tk.LabelFrame(newProject)
+
+            currEffLabel = Label(frame3, text = "Current Efforts/Measures of the Government to Solve the Situational Problem")
+            effortsTable=ttk.Treeview(frame3,selectmode='browse')
+            effortsTable["columns"]=("1","2","3","4")
+            effortsTable['show']='headings'
+            effortsTable.column("1",width=30,anchor='c')
+            effortsTable.column("2",width=200,anchor='c')
+            effortsTable.column("3",width=200,anchor='c')
+            effortsTable.column("4",width=200,anchor='c')
+            effortsTable.heading("1",text="id")
+            effortsTable.heading("2",text="Efforts/Measures")
+            effortsTable.heading("3",text="Accomplishments")
+            effortsTable.heading("4",text="Assessments")
+
+            effoLabel = Label(newProject, text = "Effort")
+            accoLabel = Label(newProject, text = "Accomplishment")
+            asseLabel = Label(newProject, text = "Assessment")
+
+            effort = scrolledtext.ScrolledText(newProject, height=3, width=20)
+            accomplishment = scrolledtext.ScrolledText(newProject, height=3, width=20) 
+            assessment = scrolledtext.ScrolledText(newProject, height=3, width=20) 
+
+            addButton = tk.Button(newProject, text='Add Effort', width=10, command=lambda: add_data())  
+
+            global i
+            i = 0
+
+            def add_data():
+
+                effortText = effort.get("1.0",END)                          # read effort
+                accomplishmentText = accomplishment.get("1.0",END)          # read accomplishment
+                assessmentText = assessment.get("1.0",END)                  # read assessment
+
+                global i
+                i = i + 1
+
+                global efforttuple
+                efforttuple = [effortText, accomplishmentText, assessmentText]
+
+                effortList.append(efforttuple)
+
+                effortsTable.insert("",'end', values=(i, effortText, accomplishmentText, assessmentText))
+                effortText.delete('1.0',END)  # reset the text entry box
+                accomplishmentText.delete('1.0',END)  # reset the text entry box
+                assessmentText.delete('1.0',END)
+                effort.focus() 
+
+            frame3.place(x=10, y=10)
+            currEffLabel.grid(row=0, column=1)
+            effortsTable.grid(row=1, column=1)
+            effoLabel.place(x=90, y=270)
+            effort.place(x=20, y=300)
+            accoLabel.place(x=290, y=270)
+            accomplishment.place(x=250, y=300)
+            asseLabel.place(x=520, y=270)
+            assessment.place(x=480, y=300)
+            
+        btnNext1 = Button(newProject, text = "Next", command = lambda: next1())
+        btnNext1.place(x=380, y=170)
+
         projectTitle.config(bg="white")
         fontSize.config(bg="white")
         polAnaTitle.config(bg="white")
         probSit.config(bg="white")
         undeEff.config(bg="white")
 
-        projecttitle = projectTitle.get()
-        if not projecttitle.strip():
-             projectTitle.config(bg="#ffd0d0")
-             return
-        
         fontstyle = fontsList.get()
-        
+            
         fontsize = fontSize.get()
         if fontsize.isnumeric() == False:
-             fontSize.config(bg="#ffd0d0")
-             return
-        
+            fontSize.config(bg="#ffd0d0")
+            return
+
+        analyst = analystName.get()
+        if not analyst.strip():
+            analystName.config(bg="#ffd0d0")
+            return
+            
         policyanalysis = polAnaTitle.get()
         if not policyanalysis.strip():
-             polAnaTitle.config(bg="#ffd0d0")
-             return
-        
+            polAnaTitle.config(bg="#ffd0d0")
+            return
+            
         problematicsituation = probSit.get("1.0", tk.END)
         if not problematicsituation.strip():
-             probSit.config(bg="#ffd0d0")
-             return
-        
+            probSit.config(bg="#ffd0d0")
+            return
+            
         undesirableeffects = undeEff.get("1.0", tk.END)
         if not undesirableeffects.strip():
-             undeEff.config(bg="#ffd0d0")
-             return
+            undeEff.config(bg="#ffd0d0")
+            return
 
         n = varNat.get()
         l = varLoc.get()
@@ -347,7 +416,7 @@ def createNewProject():
         prob = varRoot6.get()
         delp = varRoot7.get()
 
-        data = [projecttitle, policyanalysis, problematicsituation, undesirableeffects, fontstyle, fontsize, n, l, o, quan, regLi, regMu, regLo, qual, prob, delp]
+        data = [projecttitle, policyanalysis, fontstyle, fontsize, n, l, o]
 
         filename = projecttitle
         fileobject = open(filename + '.pol', 'w')
@@ -371,10 +440,11 @@ def createNewProject():
         probSit.delete("1.0", tk.END)
         undeEff.delete("1.0", tk.END)
 
-    btnCreate = Button(newProject, text = "Create a Project", command = lambda: saveNewlyCreatedFile())
+    btnCreate = Button(newProject, text = "Create", command = lambda: saveNewProject())
+    btnNext2 = Button(newProject, text = "Next")
     btnClear = Button(newProject, text = "Clear", command = lambda: clearCreate())
-    btnCreate.grid(row=21, column=1, pady=10)
-    btnClear.grid(row=21, column=0, pady=10)
+    btnCreate.place(x=380, y=170)
+    btnClear.place(x=190, y=170)
 
 menubar = Menu(root) 
 
