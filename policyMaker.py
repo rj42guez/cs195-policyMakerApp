@@ -358,6 +358,12 @@ def createNewProject():
         newProject.update()
     
     def clearCreate():
+        projectTitle.config(bg="white")
+        fontSize.config(bg="white")
+        polAnaTitle.config(bg="white")
+        probSit.config(bg="white")
+        undeEff.config(bg="white")
+        
         projectTitle.delete(0, END)
         polAnaTitle.delete(0, END)
         fontSize.delete(0, END)
