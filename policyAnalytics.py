@@ -14,7 +14,7 @@ global size
 size = 10
 
 root = Tk()
-root.title("UPD Policy Maker 1.0")
+root.title("Policy Analytics")
 root.geometry("1300x700")
 
 main = tk.PanedWindow(root, background="#ffffff")
@@ -171,8 +171,7 @@ def openFile():
     assessment.place(x=700, y=333)
 
     b1.place(x=500, y=363)
-      
-
+    
 def createNewProject():
 
     newProject = Toplevel(root)
@@ -194,8 +193,6 @@ def createNewProject():
     font.families()
     fonts = list(font.families())
     fonts.sort()
-    
-    selectedFont = tk.StringVar()
 
     fontsList = ttk.Combobox(frame1, width=30, values=fonts)
     fontSize = Entry(frame1, width=10)
@@ -217,9 +214,6 @@ def createNewProject():
     polAnaTitleLabel1 = Label(frame1, text = "Policy Analysis Title ")
     polAnaTitle = Entry(frame1, width=30)
 
-
-    rootCLabel1 = Label(newProject, text = "Root Cause of the Problem")
-
     varRoot1 = tk.IntVar()
     varRoot2 = tk.IntVar()
     varRoot3 = tk.IntVar()
@@ -227,18 +221,8 @@ def createNewProject():
     varRoot5 = tk.IntVar()
     varRoot6 = tk.IntVar()
     varRoot7 = tk.IntVar()
-
-    quantitative = tk.Checkbutton(newProject, text='Quantitative',variable=varRoot1, onvalue=1, offvalue=0)
-    regLin = tk.Checkbutton(newProject, text='Linear Regression',variable=varRoot2, onvalue=1, offvalue=0)
-    regMul = tk.Checkbutton(newProject, text='Multiple Regression',variable=varRoot3, onvalue=1, offvalue=0)
-    regLog = tk.Checkbutton(newProject, text='Logistic Regression',variable=varRoot4, onvalue=1, offvalue=0)
-    qualitative = tk.Checkbutton(newProject, text='Qualitative',variable=varRoot5, onvalue=1, offvalue=0)
-    probTreeAnalysis = tk.Checkbutton(newProject, text='Problem Tree Analysis',variable=varRoot6, onvalue=1, offvalue=0)
-    delphiTechnique = tk.Checkbutton(newProject, text='Delphi Technique',variable=varRoot7, onvalue=1, offvalue=0)
+    
     undeEff = scrolledtext.ScrolledText(newProject, height = 5, width=30)
-
-    polProbLabel1 = Label(newProject, text = "Policy Problem")
-    polProb = scrolledtext.ScrolledText(newProject, height = 5, width=30)
 
     frame1.place(x=10, y=10)
     projectTitleLabel1.grid(row=2, column=0, padx=7)
@@ -259,33 +243,63 @@ def createNewProject():
     national.grid(row=6, column=2, sticky = W, padx=56)
     local.grid(row=7, column=2, sticky = W, padx=56)
     organizational.grid(row=8, column=2, sticky = W, padx=56)
-    # rootCLabel1.grid(row=16, column=0, sticky = W, padx=7)
-    # quantitative.grid(row=17, column=0, sticky = W, padx=7)
-    # regLin.grid(row=18, column=0, sticky = W, padx=14)
-    # regLog.grid(row=19, column=0, sticky = W, padx=14)
-    # regMul.grid(row=20, column=0, sticky = W, padx=14)
-    # qualitative.grid(row=17, column=1, sticky = W, padx=7)
-    # probTreeAnalysis.grid(row=18, column=1, sticky = W, padx=14)
-    # delphiTechnique.grid(row=19, column=1, sticky = W, padx=14)
-    # polProbLabel1.grid(row=13, column=2, sticky = W, padx=7)
-    # polProb.grid(row=14, column=2, sticky = W, padx=7)
     
+    def clearCreate():
+        projectTitle.config(bg="white")
+        fontSize.config(bg="white")
+        polAnaTitle.config(bg="white")
+        # probSit.config(bg="white")
+        # undeEff.config(bg="white")
+        
+        projectTitle.delete(0, END)
+        polAnaTitle.delete(0, END)
+        fontSize.delete(0, END)
+        indentation.delete(0, END)
+        # probSit.delete("1.0", tk.END)
+        # undeEff.delete("1.0", tk.END)
+
     def saveNewProject():
         projecttitle = projectTitle.get()
         if not projecttitle.strip():
-             projectTitle.config(bg="#ffd0d0")
-             return
+                projectTitle.config(bg="#ffd0d0")
+                return
         
-# save the project
+        fontstyle = fontsList.get()
+            
+        fontsize = fontSize.get()
+        if fontsize.isnumeric() == False:
+            fontSize.config(bg="#ffd0d0")
+            return
 
+        analyst = analystName.get()
+        if not analyst.strip():
+            analystName.config(bg="#ffd0d0")
+            return
+            
+        policyanalysis = polAnaTitle.get()
+        if not policyanalysis.strip():
+            polAnaTitle.config(bg="#ffd0d0")
+            return
+            
+        # problematicsituation = probSit.get("1.0", tk.END)
+        # if not problematicsituation.strip():
+        #     probSit.config(bg="#ffd0d0")
+        #     return
+                
+        # undesirableeffects = undeEff.get("1.0", tk.END)
+        # if not undesirableeffects.strip():
+        #     undeEff.config(bg="#ffd0d0")
+        #     return
+        # save the project
         filename = projecttitle
         fileobject = open(filename + '.pol', 'w')
         fileobject.close()
 
         frame1.destroy() 
         btnCreate.destroy() 
+        btnClear.destroy() 
 
-# write problematic situation and undesirable effects
+        # write problematic situation and undesirable effects
 
         frame2 = tk.LabelFrame(newProject)
 
@@ -305,54 +319,66 @@ def createNewProject():
             frame2.destroy() 
             btnNext1.destroy() 
 
-            newProject.geometry("660x900")
-            
-            btnClear.place(x=190, y=700)
-            btnNext2.place(x=380, y=700)
+            newProject.geometry("640x500")
             
             frame3 = tk.LabelFrame(newProject)
 
+            
+            # enumerate current efforts
+
             currEffLabel = Label(frame3, text = "Current Efforts/Measures of the Government to Solve the Situational Problem")
-            effortsTable=ttk.Treeview(frame3,selectmode='browse')
-            effortsTable["columns"]=("1","2","3","4")
+            effortsTable=ttk.Treeview(frame3)
+            effortsTable["columns"]=("1","2","3")
             effortsTable['show']='headings'
-            effortsTable.column("1",width=30,anchor='c')
+            effortsTable.column("1",width=200,anchor='c')
             effortsTable.column("2",width=200,anchor='c')
             effortsTable.column("3",width=200,anchor='c')
-            effortsTable.column("4",width=200,anchor='c')
-            effortsTable.heading("1",text="id")
-            effortsTable.heading("2",text="Efforts/Measures")
-            effortsTable.heading("3",text="Accomplishments")
-            effortsTable.heading("4",text="Assessments")
+            effortsTable.heading("1",text="Effort/Measure")
+            effortsTable.heading("2",text="Accomplishments")
+            effortsTable.heading("3",text="Assessment")
 
             effoLabel = Label(newProject, text = "Effort")
             accoLabel = Label(newProject, text = "Accomplishment")
             asseLabel = Label(newProject, text = "Assessment")
 
-            effort = scrolledtext.ScrolledText(newProject, height=3, width=20)
-            accomplishment = scrolledtext.ScrolledText(newProject, height=3, width=20) 
-            assessment = scrolledtext.ScrolledText(newProject, height=3, width=20) 
+            effort = tk.Entry(newProject, width=20)
+            accomplishment = tk.Entry(newProject, width=20) 
+            assessment = tk.Entry(newProject, width=20) 
 
-            addButton = tk.Button(newProject, text='Add Effort', width=10, command=lambda: add_data())  
+            addButton = tk.Button(newProject, text='Add', width=10, command=lambda: add_data())  
+            editButton = tk.Button(newProject, text="Edit", width=10, command=lambda: edit_data())
 
-            global i
-            i = 0
+            def show_data(a):
+                effort.delete(0,END)
+                accomplishment.delete(0,END)
+                assessment.delete(0,END)
+
+                selectedItem = effortsTable.selection()[0]
+                effort.insert(0, effortsTable.item(selectedItem)['values'][0])
+                accomplishment.insert(0, effortsTable.item(selectedItem)['values'][1])
+                assessment.insert(0, effortsTable.item(selectedItem)['values'][2])
+
+            effortsTable.bind("<<TreeviewSelect>>", show_data)
+
+            def edit_data():
+                effortText = effort.get()                          # read effort
+                accomplishmentText = accomplishment.get()          # read accomplishment
+                assessmentText = assessment.get()                  # read assessment
+
+                selected_item = effortsTable.selection()[0]
+                effortsTable.item(selected_item, text="blub", values=(effortText, accomplishmentText, assessmentText))
 
             def add_data():
-
-                effortText = effort.get("1.0",END)                          # read effort
-                accomplishmentText = accomplishment.get("1.0",END)          # read accomplishment
-                assessmentText = assessment.get("1.0",END)                  # read assessment
-
-                global i
-                i = i + 1
+                effortText = effort.get()                          # read effort
+                accomplishmentText = accomplishment.get()          # read accomplishment
+                assessmentText = assessment.get()                  # read assessment
 
                 global efforttuple
                 efforttuple = [effortText, accomplishmentText, assessmentText]
 
                 effortList.append(efforttuple)
 
-                effortsTable.insert("",'end', values=(i, effortText, accomplishmentText, assessmentText))
+                effortsTable.insert("",'end', values=(effortText, accomplishmentText, assessmentText))
                 effortText.delete('1.0',END)  # reset the text entry box
                 accomplishmentText.delete('1.0',END)  # reset the text entry box
                 assessmentText.delete('1.0',END)
@@ -362,47 +388,194 @@ def createNewProject():
             currEffLabel.grid(row=0, column=1)
             effortsTable.grid(row=1, column=1)
             effoLabel.place(x=90, y=270)
-            effort.place(x=20, y=300)
-            accoLabel.place(x=290, y=270)
-            accomplishment.place(x=250, y=300)
-            asseLabel.place(x=520, y=270)
+            effort.place(x=45, y=300)
+            accoLabel.place(x=275, y=270)
+            accomplishment.place(x=261, y=300)
+            asseLabel.place(x=510, y=270)
             assessment.place(x=480, y=300)
+            addButton.place(x=190, y=330)
+            editButton.place(x=380, y=330)
+
+            def next2():
+                frame3.destroy() 
+                btnNext2.destroy() 
+
+                newProject.geometry("660x210")
+
+                frame4 = tk.LabelFrame(newProject)
+
+                var = IntVar()
+                
+                StatisticalMethod = Label(frame4, text = "Statistical Method")
+                Qualita = Label(frame4, text = "Qualitative")
+                Quantita = Label(frame4, text = "Quantitative")
+                R1 = Radiobutton(frame4, text="Linear Regression", variable=var, value=1)
+                R2 = Radiobutton(frame4, text="Multiple Regression", variable=var, value=2)
+                R3 = Radiobutton(frame4, text="Logistic Regression", variable=var, value=3)
+                R4 = Radiobutton(frame4, text="Problem Tree Analysis", variable=var, value=4)
+                R5 = Radiobutton(frame4, text="Delphi Technique", variable=var, value=5)
+
+                StatisticalMethod.place(x = 275, y=10)
+                frame4.place(x=190, y=50)
+                Quantita.grid(row=1, column=0)
+                Qualita.grid(row=1, column=1)
+                R1.grid(row=2, column=0)
+                R2.grid(row=3, column=0)
+                R3.grid(row=4, column=0)
+                R4.grid(row=2, column=1)
+                R5.grid(row=3, column=1)
+
+                def next3():
+                    frame4.destroy() 
+                    btnNext3.destroy() 
+
+                    newProject.geometry("830x480")
+
+                    frame5 = tk.LabelFrame(newProject)
+
+                    assessExistLabel = Label(frame5, text = "Assessment of Existing Policies that Address the Root Cause")
+                    assessmentTable=ttk.Treeview(frame5)
+                    assessmentTable["columns"]=("1","2","3","4")
+                    assessmentTable['show']='headings'
+                    assessmentTable.column("1",width=200,anchor='c')
+                    assessmentTable.column("2",width=200,anchor='c')
+                    assessmentTable.column("3",width=200,anchor='c')
+                    assessmentTable.column("4",width=200,anchor='c')
+                    assessmentTable.heading("1",text="Existing Policy")
+                    assessmentTable.heading("2",text="Relevant Provision(s)")
+                    assessmentTable.heading("3",text="Accomplishments")
+                    assessmentTable.heading("4",text="Assessment")
+
+                    existLabel = Label(newProject, text = "Existing Policy")
+                    releLabel = Label(newProject, text = "Relevant Provision")
+                    accompLabel2 = Label(newProject, text = "Accomplishment")
+                    assessLabel2 = Label(newProject, text = "Assessment")
+
+                    existingPolicy = tk.Entry(newProject, width=30)
+                    relevantProvision = tk.Entry(newProject, width=30) 
+                    accomplishment2 = tk.Entry(newProject, width=30) 
+                    assessment2 = tk.Entry(newProject, width=30) 
+
+                    addButton2 = tk.Button(newProject, text='Add', width=10, command=lambda: add_data2())  
+                    editButton2 = tk.Button(newProject, text="Edit", width=10, command=lambda: edit_data2())
+
+                    def show_data2(a):
+                        existingPolicy.delete(0,END)
+                        relevantProvision.delete(0,END)
+                        accomplishment2.delete(0,END)
+                        assessment2.delete(0,END)
+
+                        selectedItem = assessmentTable.selection()[0]
+                        existingPolicy.insert(0, assessmentTable.item(selectedItem)['values'][0])
+                        relevantProvision.insert(0, assessmentTable.item(selectedItem)['values'][1])
+                        accomplishment2.insert(0, assessmentTable.item(selectedItem)['values'][2])
+                        assessment2.insert(0, assessmentTable.item(selectedItem)['values'][3])
+
+                    assessmentTable.bind("<<TreeviewSelect>>", show_data2)
+
+                    def edit_data2():
+                        existingPolicyText = existingPolicy.get()               # read existing policy
+                        relevantProvisionText = relevantProvision.get()         # read relevant provision
+                        accomplishment2Text = accomplishment2.get()             # read accomplishment 
+                        assessment2Text = assessment2.get()                     # read assessment                 
+                                                
+                        selected_item = assessmentTable.selection()[0]
+                        assessmentTable.item(selected_item, text="blub", values=(existingPolicyText, relevantProvisionText, accomplishment2Text, assessment2Text))
+
+                    def add_data2():
+                        existingPolicyText = existingPolicy.get()               # read existing policy
+                        relevantProvisionText = relevantProvision.get()         # read relevant provision
+                        accomplishment2Text = accomplishment2.get()             # read accomplishment 
+                        assessment2Text = assessment2.get()                     # read assessment      
+
+                        global assessmentTuple
+                        assessmentTuple = [existingPolicyText, relevantProvisionText, accomplishment2Text, assessment2Text]
+
+                        # effortList.append(efforttuple)
+
+                        assessmentTable.insert("",'end', values=(existingPolicyText, relevantProvisionText, accomplishment2Text, assessment2Text))
+                        existingPolicyText.delete('1.0',END)                    # reset the text entry box
+                        relevantProvisionText.delete('1.0',END)                 # reset the text entry box
+                        accomplishment2Text.delete('1.0',END)                   # reset the text entry box
+                        assessment2Text.delete('1.0',END)                       # reset the text entry box
+                        existingPolicyText.focus() 
+
+                    frame5.place(x=10, y=10)
+                    effoLabel.destroy()
+                    effort.destroy()
+                    accoLabel.destroy()
+                    accomplishment.destroy()
+                    asseLabel.destroy()
+                    assessment.destroy()
+                    addButton.destroy()
+                    editButton.destroy()
+                    assessExistLabel.grid(row=0, column=1)
+                    assessmentTable.grid(row=1, column=1)
+                    existLabel.place(x=40, y=270)
+                    existingPolicy.place(x=200, y=270)
+                    releLabel.place(x=40, y=330)
+                    relevantProvision.place(x=200, y=330)
+                    accompLabel2.place(x=40, y=390)
+                    accomplishment2.place(x=200, y=390)
+                    assessLabel2.place(x=40, y=450)
+                    assessment2.place(x=200, y=450)
+                    addButton2.place(x=450, y=330)
+                    editButton2.place(x=450, y=390)
+
+                    def next4():
+                        frame5.destroy() 
+                        btnNext4.destroy() 
+
+                        existLabel.destroy()
+                        existingPolicy.destroy()
+                        releLabel.destroy()
+                        relevantProvision.destroy()
+                        accoLabel.destroy()
+                        accompLabel2.destroy()
+                        assessLabel2.destroy()
+                        assessment2.destroy()
+    
+                        newProject.geometry("660x210")
+
+                        # write problematic situation and undesirable effects
+
+                        frame6 = tk.LabelFrame(newProject)
+
+                        rootCauseLabel = Label(frame6, text = "Root Cause of the Problem")
+                        rootCause = scrolledtext.ScrolledText(frame6, height = 8, width=30)
+                        
+                        policyProbLabel = Label(frame6, text = "Policy Problem")
+                        policyProb = scrolledtext.ScrolledText(frame6, height = 8, width=30)
+                        
+                        frame6.place(x=40, y=10)
+                        rootCauseLabel.grid(row=1, column=0, sticky = W, padx=7)
+                        rootCause.grid(row=2, column=0, sticky = W, padx=7)
+                        policyProbLabel.grid(row=1, column=1, sticky = W, padx=7)
+                        policyProb.grid(row=2, column=1, sticky = W, padx=7)
+
+                        def finish():
+                            return
+
+                        btnFinish = Button(newProject, text = "Finish", width=10, command = lambda: finish())
+                        btnFinish.place(x=270, y=170)
+
+                    btnNext4 = Button(newProject, text = "Next", width=10, command = lambda: next4())
+                    btnNext4.place(x=600, y=390)
+                    
+                btnNext3 = Button(newProject, text = "Next", width=10, command = lambda: next3())
+                btnNext3.place(x=280, y=170)
             
-        btnNext1 = Button(newProject, text = "Next", command = lambda: next1())
-        btnNext1.place(x=380, y=170)
+            btnNext2 = Button(newProject, text = "Next", width=10, command = lambda: next2())
+            btnNext2.place(x=285, y=400)
+            
+        btnNext1 = Button(newProject, text = "Next", width=10, command = lambda: next1())
+        btnNext1.place(x=270, y=170)
 
         projectTitle.config(bg="white")
         fontSize.config(bg="white")
         polAnaTitle.config(bg="white")
         probSit.config(bg="white")
         undeEff.config(bg="white")
-
-        fontstyle = fontsList.get()
-            
-        fontsize = fontSize.get()
-        if fontsize.isnumeric() == False:
-            fontSize.config(bg="#ffd0d0")
-            return
-
-        analyst = analystName.get()
-        if not analyst.strip():
-            analystName.config(bg="#ffd0d0")
-            return
-            
-        policyanalysis = polAnaTitle.get()
-        if not policyanalysis.strip():
-            polAnaTitle.config(bg="#ffd0d0")
-            return
-            
-        problematicsituation = probSit.get("1.0", tk.END)
-        if not problematicsituation.strip():
-            probSit.config(bg="#ffd0d0")
-            return
-            
-        undesirableeffects = undeEff.get("1.0", tk.END)
-        if not undesirableeffects.strip():
-            undeEff.config(bg="#ffd0d0")
-            return
 
         n = varNat.get()
         l = varLoc.get()
@@ -425,24 +598,9 @@ def createNewProject():
 
         newProject.destroy()
         newProject.update()
-    
-    def clearCreate():
-        projectTitle.config(bg="white")
-        fontSize.config(bg="white")
-        polAnaTitle.config(bg="white")
-        probSit.config(bg="white")
-        undeEff.config(bg="white")
-        
-        projectTitle.delete(0, END)
-        polAnaTitle.delete(0, END)
-        fontSize.delete(0, END)
-        indentation.delete(0, END)
-        probSit.delete("1.0", tk.END)
-        undeEff.delete("1.0", tk.END)
 
-    btnCreate = Button(newProject, text = "Create", command = lambda: saveNewProject())
-    btnNext2 = Button(newProject, text = "Next")
-    btnClear = Button(newProject, text = "Clear", command = lambda: clearCreate())
+    btnCreate = Button(newProject, text = "Create", width=10, command = lambda: saveNewProject())
+    btnClear = Button(newProject, text = "Clear", width=10, command = lambda: clearCreate())
     btnCreate.place(x=380, y=170)
     btnClear.place(x=190, y=170)
 
