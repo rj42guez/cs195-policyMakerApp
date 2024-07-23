@@ -1,5 +1,4 @@
 import tkinter as tk
-# from settings import *
 import json
 from tkinter import *
 from tkinter import font
@@ -7,7 +6,7 @@ from tkinter import ttk
 from tkinter import scrolledtext 
 from tkinter.filedialog import asksaveasfile 
 from tkinter.filedialog import askopenfilename
-
+from PIL import Image, ImageTk
 from pathlib import Path
 
 global size
@@ -47,14 +46,28 @@ def changeFontSize():
     button.place(x=10, y=30)
 
 introLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin Gothic Heavy", 14), text = "Welcome to Policy Analytics")
-aboutLabel1 = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="left", text = "Policy Analytics is exclusive to all students, faculty, and staff. Here, users start by creating an analysis on a policy and defining the problematic situation and their undesirable effects. It also lets them do the following:")
-aboutLabel2 = Label(main, background="#ffffff", foreground="#76090c", wraplength=1000, font=("Franklin ", 10), justify="left", text = "1. Enumerate the efforts/measures that are currently being done to tackle the problem ")
-aboutLabel3 = Label(main, background="#ffffff", foreground="#76090c", wraplength=1000, font=("Franklin ", 10), justify="left", text = "2. List down the accomplishments and the assessments on each effort/measure")
-aboutLabel4 = Label(main, background="#ffffff", foreground="#76090c", wraplength=1000, font=("Franklin ", 10), justify="left", text = "3. Define the root cause of the problem")
-aboutLabel5 = Label(main, background="#ffffff", foreground="#76090c", wraplength=1000, font=("Franklin ", 10), justify="left", text = "4. Assess the existing policies ")
+aboutLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Policy Analytics is a tool for learning policy analysis. This software can be used in training programs and classroom learning. It provides a step-by-step procedure that allows users to input and process basic essential data for problem structuring, forecasting and assessment of policy alternatives, recommending or prescribing the best/optimal policy alternative, designing an implementation plan, and building a monitoring and evaluation plan. Its outputs can be used in writing a complete policy issue paper. It is based on the “Elements of the Policy Issue Paper” in Annex 1 of Public Policy Analysis: An Integrated Approach by William N. Dunn (2018) with modifications based on the teaching and training experiences of its creator, Dr. Ebinezer R. Florano, Professor of Public Policy at the University of the Philippines, National College of Public Administration and Governance and Convenor of the UPCIDS Data Science for Public Policy Program (DSPPP).")
+arrLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "All rights reserved@2024 – UPCIDS-DSPPP")
+creatorLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Creator: Dr. Ebinezer R. Florano")
+programmerLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Programmers: Raphael Justin Portuguez and Emmerson Isip")
+reveiwerLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Reviewers: --------------")
+adminLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Administrative Assistance: Lilian J. Marfil and Zhelly Ann Langsangan")
 
-currentlyOpenLabel = Label(root, text = "Recently Opened Projects ")
-ProjectTitleLabel = Label(root, text = "Project Title:  ")
+
+
+dspppLogo = (Image.open("logo_DSPPP.png"))
+cidsLogo = (Image.open("logo_UP_CIDS.png"))
+upLogo = (Image.open("logo_UP.png"))
+
+up = upLogo.resize((100, 100))
+dsppp = dspppLogo.resize((100, 100))
+
+up = ImageTk.PhotoImage(up)
+dsppp = ImageTk.PhotoImage(dsppp)
+cids = ImageTk.PhotoImage(cidsLogo)
+
+currentlyOpenLabel = Label(main, text = "Recently Opened Projects ")
+ProjectTitleLabel = Label(main, text = "Project Title:  ")
 
 main.columnconfigure(0, weight=1)
 main.columnconfigure(1, weight=1)
@@ -64,21 +77,24 @@ main.columnconfigure(4, weight=1)
 main.columnconfigure(5, weight=1)
 
 introLabel.place(x=600, y=23)
+aboutLabel.place(x=240, y=63)
+arrLabel.place(x=595, y=200)
 
-aboutLabel1.place(x=240, y=63)
-aboutLabel2.place(x=240, y=123)
-aboutLabel3.place(x=240, y=153)
-aboutLabel4.place(x=240, y=183)
-aboutLabel5.place(x=240, y=213)
+upLabel=Label(main, image=up)
+upLabel.place(x=380, y=250)
+dspppLabel=Label(main, image=dsppp)
+dspppLabel.place(x=630, y=250)
+cidsLabel=Label(main, image=cids)
+cidsLabel.place(x=880, y=250)
 
-projectTitle = Label(main, background="#9CDBA6", foreground="purple",  text = "")
-polAnaTitle = Label(main, background="#9CDBA6", foreground="purple",  text = "")
-probSit = Label(main, background="#9CDBA6", foreground="purple",  text = "")
-undeEff = Label(main, background="#9CDBA6", foreground="purple",  text = "")
-# currEffo
-# effoMeas
-# acco
-# asse
+
+creatorLabel.place(x=380, y=400)
+programmerLabel.place(x=380, y=430)
+reveiwerLabel.place(x=380, y=460)
+adminLabel.place(x=380, y=490)
+
+
+
 
 effortList = []
 
