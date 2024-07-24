@@ -8,6 +8,18 @@ from tkinter.filedialog import asksaveasfile
 from tkinter.filedialog import askopenfilename
 from PIL import Image, ImageTk
 from pathlib import Path
+import csv
+import seaborn as sns
+import pandas as pd
+import numpy as np
+import os
+import matplotlib.pyplot as plt 
+from sklearn import linear_model
+from scipy import stats
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
+from mpl_toolkits.mplot3d import axes3d
 
 global size
 size = 10
@@ -19,6 +31,15 @@ root.geometry("1300x700")
 main = tk.PanedWindow(root, background="#ffffff")
 
 main.pack(side="top", fill="both", expand=True)
+
+# activeKey = "password12345"
+
+# enterActiveKey = input("Please enter the activation key down below:\n")
+# if activeKey == enterActiveKey:
+#     print("Activation key is successful.")
+# while activeKey != enterActiveKey:
+#     print("Activation key is incorrect. Please re-run the program")
+#     break
 
 left_pane = tk.Frame(main, background="#76090c", width=200)
 right_pane = tk.PanedWindow(main, background="#ffffff", width=200)
@@ -52,8 +73,6 @@ creatorLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Fr
 programmerLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Programmers: Raphael Justin Portuguez and Emmerson Isip")
 reveiwerLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Reviewers: --------------")
 adminLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Administrative Assistance: Lilian J. Marfil and Zhelly Ann Langsangan")
-
-
 
 dspppLogo = (Image.open("logo_DSPPP.png"))
 cidsLogo = (Image.open("logo_UP_CIDS.png"))
@@ -94,99 +113,6 @@ reveiwerLabel.place(x=380, y=460)
 adminLabel.place(x=380, y=490)
 
 
-
-
-effortList = []
-
-def openFile():
-    filename = askopenfilename(parent=root, title="Select a POL File")
-    f = open(filename)
-    
-    content = f
-    data = json.load(content)
-
-    root.title("UPD Policy Maker - "+data[0])
-
-    projectTitle.config(text = "")
-    polAnaTitle.config(text = "")
-    probSit.config(text = "")
-    undeEff.config(text = "")
-
-    projectTitle.config(text = data[0])
-    polAnaTitle.config(text = data[1])
-    probSit.config(text = data[2])
-    undeEff.config(text = data[3])
-
-    projectTitleLabel = Label(root, background="#9CDBA6", foreground="purple", text = "Project Title: ")
-    polAnaTitleLabel = Label(root, background="#9CDBA6", foreground="purple",  text = "Policy Analysis Title: ")
-    probSitLabel = Label(root, background="#9CDBA6", foreground="purple",  text = "Problematic Situation: ")
-    undeEffLabel = Label(root, background="#9CDBA6", foreground="purple",  text = "Undesirable Effects: ")
-    
-    effortsTable=ttk.Treeview(root,selectmode='browse')
-    effortsTable["columns"]=("1","2","3","4")
-    effortsTable['show']='headings'
-    effortsTable.column("1",width=30,anchor='c')
-    effortsTable.column("2",width=200,anchor='c')
-    effortsTable.column("3",width=200,anchor='c')
-    effortsTable.column("4",width=200,anchor='c')
-    effortsTable.heading("1",text="id")
-    effortsTable.heading("2",text="Efforts/Measures")
-    effortsTable.heading("3",text="Accomplishments")
-    effortsTable.heading("4",text="Assessments")
-
-    global i
-    i = 0
-
-    currEffoLabel = Label(root, foreground="purple",  text = "Current Efforts: ")
-    accoLabel = Label(root, foreground="purple",  text = "Enter accomplishment: ")
-    asseLabel = Label(root, foreground="purple",  text = "Enter assessment: ")
-    effoLabel = Label(root, foreground="purple",  text = "Enter effort/: ")
-
-    effort = tk.Text(root,  height=1, width=70,bg='white') 
-    accomplishment = tk.Text(root,  height=1, width=70,bg='white') 
-    assessment = tk.Text(root,  height=1, width=70,bg='white') 
-
-    b1 = tk.Button(root,  text='Add Effort', width=10, command=lambda: add_data())  
-
-    def add_data():
-
-        effortText = effort.get("1.0",END)                    # read effort
-        accomplishmentText = accomplishment.get("1.0",END)    # read accomplishment
-        assessmentText = assessment.get("1.0",END)                # read assessment
-
-        global i
-        i = i + 1
-
-        global efforttuple
-        efforttuple = [effortText, accomplishmentText, assessmentText]
-
-        effortList.append(efforttuple)
-
-        effortsTable.insert("",'end', values=(i, effortText, accomplishmentText, assessmentText))
-        effortText.delete('1.0',END)  # reset the text entry box
-        accomplishmentText.delete('1.0',END)  # reset the text entry box
-        assessmentText.delete('1.0',END)
-        effort.focus()  
-                
-    projectTitleLabel.place(x=240, y=273)
-    projectTitle.place(x=400, y=273)
-    polAnaTitleLabel.place(x=240, y=303)
-    polAnaTitle.place(x=400, y=303)
-    probSitLabel.place(x=240, y=333)
-    probSit.place(x=400, y=333) 
-    undeEffLabel.place(x=240, y=363)
-    undeEff.place(x=400, y=363)
-    currEffoLabel.place(x=240, y=393)
-    effortsTable.place(x=240, y=423)
-
-    effoLabel.place(x=500, y=273)
-    accoLabel.place(x=500, y=303)
-    asseLabel.place(x=500, y=333)
-    effort.place(x=700, y=273)
-    accomplishment.place(x=700, y=303)
-    assessment.place(x=700, y=333)
-
-    b1.place(x=500, y=363)
     
 def createNewProject():
 
@@ -237,8 +163,6 @@ def createNewProject():
     varRoot5 = tk.IntVar()
     varRoot6 = tk.IntVar()
     varRoot7 = tk.IntVar()
-    
-    undeEff = scrolledtext.ScrolledText(newProject, height = 5, width=30)
 
     frame1.place(x=10, y=10)
     projectTitleLabel1.grid(row=2, column=0, padx=7)
@@ -339,7 +263,6 @@ def createNewProject():
             
             frame3 = tk.LabelFrame(newProject)
 
-            
             # enumerate current efforts
 
             currEffLabel = Label(frame3, text = "Current Efforts/Measures of the Government to Solve the Situational Problem")
@@ -389,11 +312,6 @@ def createNewProject():
                 accomplishmentText = accomplishment.get()          # read accomplishment
                 assessmentText = assessment.get()                  # read assessment
 
-                global efforttuple
-                efforttuple = [effortText, accomplishmentText, assessmentText]
-
-                effortList.append(efforttuple)
-
                 effortsTable.insert("",'end', values=(effortText, accomplishmentText, assessmentText))
                 effortText.delete('1.0',END)  # reset the text entry box
                 accomplishmentText.delete('1.0',END)  # reset the text entry box
@@ -442,6 +360,135 @@ def createNewProject():
                 R5.grid(row=3, column=1)
 
                 def next3():
+                    
+                    analysis = Toplevel(main)
+                    analysis.title("UPD Policy Maker - Analysis")
+                    analysis.geometry("830x480")
+                    
+                    if (int(var.get()) == 1):
+                        filename = askopenfilename(filetypes=[("CSV Files", "*.csv")])
+                        df = pd.read_csv(filename, usecols=[0,1])
+                        data_x = df.iloc[:, [0]]
+                        data_y = df.iloc[:, [1]]
+
+                        column_names = list(df.columns)
+
+                        df.plot(kind='scatter', x=column_names[0], y=column_names[1], alpha=0.2)
+                        ax = sns.lmplot(x=column_names[0], y=column_names[1], data=df, aspect=1.5, scatter_kws={'alpha':0.2})
+                        plt.show() 
+                        
+                    elif(int(var.get()) == 2):
+                        filename = askopenfilename(filetypes=[("CSV Files", "*.csv")])
+                        df = pd.read_csv(filename)
+
+                        # data_x = df.iloc[:, [0]]
+                        # data_y = df.iloc[:, [1]]
+                        # Define the independent variables
+                        df.head()
+
+                        x = df['RM']
+                        y = df['CRIM']
+                        z = df['MEDV']
+
+                        
+                        fig = plt.figure()
+                        ax = fig.add_subplot(111, projection='3d')
+
+                        # Define the independent variables
+                        # Add the data points
+                        ax.scatter(x, y, z)
+
+                        # # Fit a plane using np.linalg.lstsq
+                        # A = np.vstack([x, y, np.ones_like(x)]).T
+                        # plane_coef, _, _, _ = np.linalg.lstsq(A, z, rcond=None)
+
+                        # # Create a meshgrid for the plane
+                        # x_plane, y_plane = np.meshgrid(x, y)
+                        # z_plane = plane_coef[0] * x_plane + plane_coef[1] * y_plane + plane_coef[2]
+
+                        # # Add the regression plane
+                        # ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.5)
+
+                        # Add labels and title
+                        ax.set_xlabel('Number of Rooms')
+                        ax.set_ylabel('Crime Rate')
+                        ax.set_zlabel('Median Value of Homes ($1000s)')
+                        plt.title('Multiple Linear Regression')
+
+                        # Show the plot
+                        plt.show()
+
+                    elif(int(var.get()) == 3):
+                        filename = askopenfilename(filetypes=[("CSV Files", "*.csv")])
+                        df = pd.read_csv(filename)
+                        data_x = df.iloc[:, [0]]
+                        data_y = df.iloc[:, [1]]
+
+                        column_names = list(df.columns)
+
+                        ax = sns.regplot(x=column_names[0], y=column_names[1], data=df, logistic=True, scatter_kws={'color': 'black'}, line_kws={'color': 'red'})
+                        plt.show() 
+                    
+                    elif(int(var.get()) == 4):
+                        class ShapeEditorApp:
+                            def __init__(self, root):
+                                self.root = root
+                                self.root.title("UPD Policy Maker - Analysis")
+
+                                # Create Canvas widget
+                                self.canvas = tk.Canvas(root, bg="white")
+                                self.canvas.pack(fill=tk.BOTH, expand=True)
+
+                                # Initialize shape variables
+                                self.current_shape = None
+                                self.start_x = None
+                                self.start_y = None
+                                self.current_shape_item = None
+
+                                # Create buttons
+                                self.rect_button = tk.Button(root, text="Rectangle", command=self.create_rectangle)
+                                self.circle_button = tk.Button(root, text="Circle", command=self.create_circle)
+                                self.clear_button = tk.Button(root, text="Clear", command=self.clear_canvas)
+                                self.rect_button.pack(side=tk.LEFT)
+                                self.circle_button.pack(side=tk.LEFT)
+                                self.clear_button.pack(side=tk.LEFT)
+
+                                # Bind mouse events
+                                self.canvas.bind("<Button-1>", self.start_draw)
+                                self.canvas.bind("<B1-Motion>", self.draw_shape)
+                                self.canvas.bind("<ButtonRelease-1>", self.stop_draw)
+
+                            def create_rectangle(self):
+                                self.current_shape = "rectangle"
+
+                            def create_circle(self):
+                                self.current_shape = "circle"
+
+                            def start_draw(self, event):
+                                self.start_x = event.x
+                                self.start_y = event.y
+                                if self.current_shape == "rectangle":
+                                    self.current_shape_item = self.canvas.create_rectangle(
+                                        self.start_x, self.start_y, self.start_x, self.start_y, outline="black"
+                                    )
+                                elif self.current_shape == "circle":
+                                    self.current_shape_item = self.canvas.create_oval(
+                                        self.start_x, self.start_y, self.start_x, self.start_y, outline="black"
+                                    )
+
+                            def draw_shape(self, event):
+                                if self.current_shape_item:
+                                    x, y = event.x, event.y
+                                    self.canvas.coords(self.current_shape_item, self.start_x, self.start_y, x, y)
+
+                            def stop_draw(self, event):
+                                self.current_shape_item = None
+
+                            def clear_canvas(self):
+                                self.canvas.delete("all")
+
+                        app = ShapeEditorApp(analysis)
+                        
                     frame4.destroy() 
                     btnNext3.destroy() 
 
@@ -624,8 +671,7 @@ menubar = Menu(root)
 
 file1 = Menu(menubar, tearoff = 0) 
 menubar.add_cascade(label ='File', menu = file1) 
-file1.add_command(label ='Create New', command = createNewProject) 
-file1.add_command(label ='Open', command = openFile) 
+file1.add_command(label ='Create New', command = createNewProject)
 file1.add_command(label ='Save') 
 file1.add_separator() 
 file1.add_command(label ='Exit', command = root.destroy)
