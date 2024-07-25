@@ -4,6 +4,7 @@ from tkinter import *
 from tkinter import font
 from tkinter import ttk
 from tkinter import scrolledtext 
+from tkinter import colorchooser
 from tkinter.filedialog import asksaveasfile 
 from tkinter.filedialog import askopenfilename
 from PIL import Image, ImageTk
@@ -373,7 +374,6 @@ def createNewProject():
 
                         column_names = list(df.columns)
 
-                        df.plot(kind='scatter', x=column_names[0], y=column_names[1], alpha=0.2)
                         ax = sns.lmplot(x=column_names[0], y=column_names[1], data=df, aspect=1.5, scatter_kws={'alpha':0.2})
                         plt.show() 
                         
@@ -446,34 +446,52 @@ def createNewProject():
                                 self.current_shape_item = None
 
                                 # Create buttons
+                                self.color_button = tk.Button(root, text="Color", command=self.choose_color)
+                                self.pen_button = Button(root, text='Pen', command=self.use_pen)
                                 self.rect_button = tk.Button(root, text="Rectangle", command=self.create_rectangle)
-                                self.circle_button = tk.Button(root, text="Circle", command=self.create_circle)
+                                self.circle_button = tk.Button(root, text="Arrow", command=self.create_arrow)
                                 self.clear_button = tk.Button(root, text="Clear", command=self.clear_canvas)
+                                self.pen_button.pack(side=tk.LEFT)
+                                self.clear_button.pack(side=tk.LEFT)
+                                self.color_button.pack(side=tk.LEFT)
                                 self.rect_button.pack(side=tk.LEFT)
                                 self.circle_button.pack(side=tk.LEFT)
-                                self.clear_button.pack(side=tk.LEFT)
 
                                 # Bind mouse events
                                 self.canvas.bind("<Button-1>", self.start_draw)
                                 self.canvas.bind("<B1-Motion>", self.draw_shape)
                                 self.canvas.bind("<ButtonRelease-1>", self.stop_draw)
+                                self.canvas.bind('<Return>', self.add_text)
+
+                            def use_pen(self):
+                                self.activate_button(self.pen_button)
+
+                            def choose_color(self):
+                                global color 
+                                color = colorchooser.askcolor(title="Choose color")
 
                             def create_rectangle(self):
                                 self.current_shape = "rectangle"
 
-                            def create_circle(self):
-                                self.current_shape = "circle"
+                            def create_arrow(self):
+                                self.current_shape = "arrow"
+                            
+                            def add_text(self, event):
+                                entry = Entry(root, bd=0,font=("Purisa",15)) #No Border and added font:)
+                                entry.place(x=self.start_x, y= self.start_y)
+                                entry.focus_force()
+                        
 
                             def start_draw(self, event):
                                 self.start_x = event.x
                                 self.start_y = event.y
                                 if self.current_shape == "rectangle":
                                     self.current_shape_item = self.canvas.create_rectangle(
-                                        self.start_x, self.start_y, self.start_x, self.start_y, outline="black"
+                                        self.start_x, self.start_y, self.start_x, self.start_y, outline=color[1]
                                     )
-                                elif self.current_shape == "circle":
-                                    self.current_shape_item = self.canvas.create_oval(
-                                        self.start_x, self.start_y, self.start_x, self.start_y, outline="black"
+                                elif self.current_shape == "arrow":
+                                    self.current_shape_item = self.canvas.create_line(
+                                        self.start_x, self.start_y, self.start_x, self.start_y, fill=color[1], arrow="last", width=5
                                     )
 
                             def draw_shape(self, event):
