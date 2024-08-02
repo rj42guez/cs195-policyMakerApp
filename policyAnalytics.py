@@ -19,8 +19,12 @@ from sklearn import linear_model
 from scipy import stats
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
+import statsmodels.api as sm
 from sklearn.model_selection import train_test_split
 from mpl_toolkits.mplot3d import axes3d
+from licensing.models import *
+from licensing.methods import Key, Helpers
+
 
 global size
 size = 10
@@ -360,13 +364,12 @@ def createNewProject():
                 R4.grid(row=2, column=1)
                 R5.grid(row=3, column=1)
 
-                def next3():
-                    
-                    analysis = Toplevel(main)
-                    analysis.title("UPD Policy Maker - Analysis")
-                    analysis.geometry("830x480")
-                    
+                def next3():                    
                     if (int(var.get()) == 1):
+                        analysis = Toplevel(main)
+                        analysis.title("UPD Policy Maker - Analysis")
+                        analysis.geometry("830x480")
+
                         filename = askopenfilename(filetypes=[("CSV Files", "*.csv")])
                         df = pd.read_csv(filename, usecols=[0,1])
                         data_x = df.iloc[:, [0]]
@@ -374,10 +377,20 @@ def createNewProject():
 
                         column_names = list(df.columns)
 
+                        model = sm.OLS(data_y, data_x).fit()
+
+
+                        lb1 = Label(analysis,text=model.summary(), font="Consolas", justify="left")
+                        lb1.pack()
+
                         ax = sns.lmplot(x=column_names[0], y=column_names[1], data=df, aspect=1.5, scatter_kws={'alpha':0.2})
                         plt.show() 
                         
                     elif(int(var.get()) == 2):
+                        analysis = Toplevel(main)
+                        analysis.title("UPD Policy Maker - Analysis")
+                        analysis.geometry("830x480")
+                        
                         filename = askopenfilename(filetypes=[("CSV Files", "*.csv")])
                         df = pd.read_csv(filename)
 
@@ -419,6 +432,10 @@ def createNewProject():
                         plt.show()
 
                     elif(int(var.get()) == 3):
+                        analysis = Toplevel(main)
+                        analysis.title("UPD Policy Maker - Analysis")
+                        analysis.geometry("830x480")
+
                         filename = askopenfilename(filetypes=[("CSV Files", "*.csv")])
                         df = pd.read_csv(filename)
                         data_x = df.iloc[:, [0]]
@@ -426,17 +443,30 @@ def createNewProject():
 
                         column_names = list(df.columns)
 
+                        logit_model = sm.Logit(data_y, data_x).fit()
+
+                        lb1 = Label(analysis,text=logit_model.summary(), font="Consolas", justify="left")
+                        lb1.pack()
+
                         ax = sns.regplot(x=column_names[0], y=column_names[1], data=df, logistic=True, scatter_kws={'color': 'black'}, line_kws={'color': 'red'})
                         plt.show() 
                     
                     elif(int(var.get()) == 4):
+                        analysis = Toplevel(main)
+                        analysis.title("UPD Policy Maker - Analysis")
+                        analysis.geometry("830x480")
+
                         class ShapeEditorApp:
+
                             def __init__(self, root):
+                                global textValue
+                                textValue = StringVar()
+
                                 self.root = root
                                 self.root.title("UPD Policy Maker - Analysis")
 
                                 # Create Canvas widget
-                                self.canvas = tk.Canvas(root, bg="white")
+                                self.canvas = tk.Canvas(analysis, bg="white")
                                 self.canvas.pack(fill=tk.BOTH, expand=True)
 
                                 # Initialize shape variables
@@ -451,18 +481,26 @@ def createNewProject():
                                 self.rect_button = tk.Button(root, text="Rectangle", command=self.create_rectangle)
                                 self.circle_button = tk.Button(root, text="Arrow", command=self.create_arrow)
                                 self.clear_button = tk.Button(root, text="Clear", command=self.clear_canvas)
+                                self.text_frame = Frame(root, height=100, width=200, relief=SUNKEN, borderwidth=3)
+                                self.text_entry = Entry(self.text_frame, textvariable=textValue, bg="white" , width=20)
                                 self.pen_button.pack(side=tk.LEFT)
                                 self.clear_button.pack(side=tk.LEFT)
                                 self.color_button.pack(side=tk.LEFT)
                                 self.rect_button.pack(side=tk.LEFT)
                                 self.circle_button.pack(side=tk.LEFT)
+                                self.text_frame.pack(side=tk.LEFT)                         
+                                self.text_entry.pack(side=tk.LEFT)
 
                                 # Bind mouse events
                                 self.canvas.bind("<Button-1>", self.start_draw)
                                 self.canvas.bind("<B1-Motion>", self.draw_shape)
                                 self.canvas.bind("<ButtonRelease-1>", self.stop_draw)
-                                self.canvas.bind('<Return>', self.add_text)
+                                self.canvas.bind("<Button-2>", self.add_text)
+                                self.canvas.bind("<Button-3>", self.add_text)
 
+                            def add_text(self, event):
+                                self.canvas.create_text(event.x, event.y, text=textValue.get())
+                            
                             def use_pen(self):
                                 self.activate_button(self.pen_button)
 
@@ -475,12 +513,6 @@ def createNewProject():
 
                             def create_arrow(self):
                                 self.current_shape = "arrow"
-                            
-                            def add_text(self, event):
-                                entry = Entry(root, bd=0,font=("Purisa",15)) #No Border and added font:)
-                                entry.place(x=self.start_x, y= self.start_y)
-                                entry.focus_force()
-                        
 
                             def start_draw(self, event):
                                 self.start_x = event.x
