@@ -542,9 +542,12 @@ def createNewProject():
                     frame4.destroy() 
                     btnNext3.destroy() 
 
-                    newProject.geometry("830x480")
+                    newProject.geometry("830x600")
 
                     frame5 = tk.LabelFrame(newProject)
+                    
+                    rootCauseLabel = Label(frame5, text = "Root Cause of the Problem")
+                    rootCause = Entry(frame5)
 
                     assessExistLabel = Label(frame5, text = "Assessment of Existing Policies that Address the Root Cause")
                     assessmentTable=ttk.Treeview(frame5)
@@ -622,18 +625,30 @@ def createNewProject():
                     assessment.destroy()
                     addButton.destroy()
                     editButton.destroy()
-                    assessExistLabel.grid(row=0, column=1)
-                    assessmentTable.grid(row=1, column=1)
-                    existLabel.place(x=40, y=270)
-                    existingPolicy.place(x=200, y=270)
-                    releLabel.place(x=40, y=330)
-                    relevantProvision.place(x=200, y=330)
-                    accompLabel2.place(x=40, y=390)
-                    accomplishment2.place(x=200, y=390)
-                    assessLabel2.place(x=40, y=450)
-                    assessment2.place(x=200, y=450)
-                    addButton2.place(x=450, y=330)
-                    editButton2.place(x=450, y=390)
+                    rootCauseLabel.grid(row=0, column=1)
+                    rootCause.grid(row=1, column=1)
+                    assessExistLabel.grid(row=2, column=1)
+                    assessmentTable.grid(row=3, column=1)
+                    existLabel.place(x=40, y=330)
+                    existingPolicy.place(x=200, y=330)
+                    releLabel.place(x=40, y=390)
+                    relevantProvision.place(x=200, y=390)
+                    accompLabel2.place(x=40, y=450)
+                    accomplishment2.place(x=200, y=450)
+                    assessLabel2.place(x=40, y=510)
+                    assessment2.place(x=200, y=510)
+                    addButton2.place(x=450, y=390)
+                    editButton2.place(x=450, y=450)
+                    # existLabel.place(x=40, y=270)
+                    # existingPolicy.place(x=200, y=270)
+                    # releLabel.place(x=40, y=330)
+                    # relevantProvision.place(x=200, y=330)
+                    # accompLabel2.place(x=40, y=390)
+                    # accomplishment2.place(x=200, y=390)
+                    # assessLabel2.place(x=40, y=450)
+                    # assessment2.place(x=200, y=450)
+                    # addButton2.place(x=450, y=330)
+                    # editButton2.place(x=450, y=390)
 
                     def next4():
                         frame5.destroy() 
@@ -654,17 +669,17 @@ def createNewProject():
 
                         frame6 = tk.LabelFrame(newProject)
 
-                        rootCauseLabel = Label(frame6, text = "Root Cause of the Problem")
-                        rootCause = scrolledtext.ScrolledText(frame6, height = 8, width=30)
-                        
                         policyProbLabel = Label(frame6, text = "Policy Problem")
                         policyProb = scrolledtext.ScrolledText(frame6, height = 8, width=30)
                         
+                        policyIssueLabel = Label(frame6, text = "Policy Issue Statement")
+                        policyIssue = scrolledtext.ScrolledText(frame6, height = 8, width=30)
+                        
                         frame6.place(x=40, y=10)
-                        rootCauseLabel.grid(row=1, column=0, sticky = W, padx=7)
-                        rootCause.grid(row=2, column=0, sticky = W, padx=7)
-                        policyProbLabel.grid(row=1, column=1, sticky = W, padx=7)
-                        policyProb.grid(row=2, column=1, sticky = W, padx=7)
+                        policyProbLabel.grid(row=1, column=0, sticky = W, padx=7)
+                        policyProb.grid(row=2, column=0, sticky = W, padx=7)
+                        policyIssueLabel.grid(row=1, column=1, sticky = W, padx=7)
+                        policyIssue.grid(row=2, column=1, sticky = W, padx=7)
 
                         def finish():
                             return
@@ -673,7 +688,7 @@ def createNewProject():
                         btnFinish.place(x=270, y=170)
 
                     btnNext4 = Button(newProject, text = "Next", width=10, command = lambda: next4())
-                    btnNext4.place(x=600, y=390)
+                    btnNext4.place(x=600, y=450)
                     
                 btnNext3 = Button(newProject, text = "Next", width=10, command = lambda: next3())
                 btnNext3.place(x=280, y=170)
