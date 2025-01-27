@@ -1,0 +1,5 @@
+To install:
+
+1. Extract all contents of the zip file
+2. Set any folder as the destination
+3. Open the PolicyAnalytics.exe file located in the folder

@@ -1,46 +1,43 @@
 import tkinter as tk
-import json
 from tkinter import *
 from tkinter import font
 from tkinter import ttk
 from tkinter import scrolledtext 
 from tkinter import colorchooser
-from tkinter.filedialog import asksaveasfile 
 from tkinter.filedialog import askopenfilename
+
+import textwrap
+
+import PIL
 from PIL import Image, ImageTk
-from pathlib import Path
-import seaborn as sns
+
+import fpdf
+from fpdf import FPDF
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt 
-from sklearn import linear_model
-from scipy import stats
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
+import scipy as sp
+
+import sys
+import os
+
 import statsmodels.api as sm
-from sklearn.model_selection import train_test_split
-from mpl_toolkits.mplot3d import axes3d
-from licensing.models import *
-from licensing.methods import Key, Helpers
+import sklearn as skl
 
+from sklearn.linear_model import LinearRegression, LogisticRegression
 
-global size
+global size, var, pageNumber
 size = 10
 
 root = Tk()
-root.title("Policy Analytics 3.0")
+root.title("Policy Analytics 1.0")
 root.geometry("1300x700")
 
-combostyle = ttk.Style()
-
-combostyle.theme_create('combostyle', parent='alt',
-                         settings = {'TCombobox':
-                                     {'configure':
-                                      {'selectbackground': 'blue',
-                                       'fieldbackground': 'red',
-                                       'background': 'green'
-                                       }}}
-                         )
+# getting screen's width in pixels
+height = root.winfo_screenheight()
+width = root.winfo_screenwidth() 
+print("\n width x height = %d x %d (in pixels)\n" %(width, height))
 
 main = tk.PanedWindow(root, background="#ffffff")
 
@@ -60,28 +57,28 @@ right_pane = tk.PanedWindow(main, background="#ffffff", width=200)
 main.add(left_pane)
 main.add(right_pane)
 
-def changeFontSize():
-    popup = Toplevel(root)
-    popup.geometry("200x200")
-    popup.title("UPD Policy Maker 1.0 - Change Font Size")
+# def changeFontSize():
+#     popup = Toplevel(root)
+#     popup.geometry("200x200")
+#     popup.title("UPD Policy Maker 1.0 - Change Font Size")
 
-    label = Label(popup, text = "Change font size: ")
-    fontSize = Entry(popup, width=10)
+#     label = Label(popup, text = "Change font size: ")
+#     fontSize = Entry(popup, width=10)
 
-    def change():
-        size = int(fontSize.get())
-        print(size)
-        popup.update()
-        popup.destroy()
+#     def change():
+#         size = int(fontSize.get())
+#         print(size)
+#         popup.update()
+#         popup.destroy()
 
-    label.place(x=10, y=10)
-    fontSize.place(x=70, y=10)
+#     label.place(x=10, y=10)
+#     fontSize.place(x=70, y=10)
 
-    button = Button(popup, text = "Change", command = change)
-    button.place(x=10, y=30)
+#     button = Button(popup, text = "Change", command = change)
+#     button.place(x=10, y=30)
 
-introLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin Gothic Heavy", 14), text = "Welcome to Policy Analytics 3.0")
-aboutLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Policy Analytics 3.0 is a tool for learning policy analysis. This software can be used in training programs and classroom learning. It provides a step-by-step procedure that allows users to input and process basic essential data for problem structuring, forecasting and assessment of policy alternatives, recommending or prescribing the best/optimal policy alternative, designing an implementation plan, and building a monitoring and evaluation plan. Its outputs can be used in writing a complete policy issue paper. It is based on the “Elements of the Policy Issue Paper” in Annex 1 of Public Policy Analysis: An Integrated Approach by William N. Dunn (2018) with modifications based on the teaching and training experiences of its creator, Dr. Ebinezer R. Florano, Professor of Public Policy at the University of the Philippines, National College of Public Administration and Governance and Convenor of the UPCIDS Data Science for Public Policy Program (DSPPP).")
+introLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin Gothic Heavy", 14), text = "Welcome to Policy Analytics 1.0")
+aboutLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Policy Analytics 1.0 is a tool for learning policy analysis. This software can be used in training programs and classroom learning. It provides a step-by-step procedure that allows users to input and process basic essential data for problem structuring, forecasting and assessment of policy alternatives, recommending or prescribing the best/optimal policy alternative, designing an implementation plan, and building a monitoring and evaluation plan. Its outputs can be used in writing a complete policy issue paper. It is based on the “Elements of the Policy Issue Paper” in Annex 1 of Public Policy Analysis: An Integrated Approach by William N. Dunn (2018) with modifications based on the teaching and training experiences of its creator, Dr. Ebinezer R. Florano, Professor of Public Policy at the University of the Philippines, National College of Public Administration and Governance and Convenor of the UPCIDS Data Science for Public Policy Program (DSPPP).")
 arrLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "All rights reserved@2024 – UPCIDS-DSPPP")
 creatorLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Creator: Dr. Ebinezer R. Florano")
 programmerLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Programmers: Raphael Justin Portuguez and Emmerson Isip")
@@ -98,9 +95,6 @@ dsppp = dspppLogo.resize((100, 100))
 up = ImageTk.PhotoImage(up)
 dsppp = ImageTk.PhotoImage(dsppp)
 cids = ImageTk.PhotoImage(cidsLogo)
-
-currentlyOpenLabel = Label(main, text = "Recently Opened Projects ")
-ProjectTitleLabel = Label(main, text = "Project Title:  ")
 
 main.columnconfigure(0, weight=1)
 main.columnconfigure(1, weight=1)
@@ -124,8 +118,21 @@ creatorLabel.place(x=380, y=400)
 programmerLabel.place(x=380, y=430)
 reveiwerLabel.place(x=380, y=460)
 adminLabel.place(x=380, y=490)
-    
+
+style = ttk.Style()
+
+def wrap(string, length=40):
+    return '\n'.join(textwrap.wrap(string, length))
+
 def createNewProject():
+    global pageNumber
+    pageNumber = 0
+
+    global p3efforts, p3accomplishments, p3assessments
+    p3efforts = []
+    p3accomplishments = []
+    p3assessments = []
+
     global filename, fileobject
 
     mainProject = Toplevel(root)
@@ -139,14 +146,40 @@ def createNewProject():
     varRoot7 = tk.IntVar()
 
     status = ttk.Label(mainProject, text="")
+    
+    global p1projecttitle, p1analysts, p1fontstyle, p1policyanalysis, p1fontstyle, p1fontsize
+    p1projecttitle = " "
+    p1analysts = " "
+    p1fontstyle = " "
+    p1policyanalysis = " "
+    p1fontstyle = " "
+    p1fontsize = 12
+
+    global p4summaryPDF
+    p4summaryPDF = " "
 
     def page_1():
-        mainProject.title("Policy Analytics 3.0 - Create New Project")
+        mainProject.title("Create New Project")
         mainProject.geometry("660x210")
 
-        blank = Label(mainProject, text = "  ")
-        
+        # mainFrame1_1 = tk.Frame(mainProject)
+        # mainFrame1_1.pack(fill=BOTH,expand=1)
+        # mainFrame2_1 = tk.LabelFrame(mainFrame1_1)
+        # mainFrame2_1.pack(fill=X,side=BOTTOM)
+        # canvas1 = Canvas(mainFrame1_1)
+        # canvas1.pack(side=LEFT,fill=BOTH,expand=1)
+
+        # sbx1 = ttk.Scrollbar(mainFrame2_1,orient=HORIZONTAL,command=canvas1.xview)
+        # sbx1.pack(side=BOTTOM,fill=X)
+        # sby1 = ttk.Scrollbar(mainFrame1_1,orient=VERTICAL,command=canvas1.yview)
+        # sby1.pack(side=RIGHT,fill=Y)
+        # canvas1.configure(xscrollcommand=sbx1.set)
+        # canvas1.configure(yscrollcommand=sby1.set)
+        # canvas1.bind("<Configure>",lambda e: canvas1.config(scrollregion= canvas1.bbox(ALL))) 
+
         frame1 = tk.LabelFrame(mainProject)
+
+        blank = Label(mainProject, text = "  ")
 
         projectTitleLabel1 = Label(frame1, text = "Project Title")
         projectTitle = Entry(frame1, width=30)
@@ -187,7 +220,6 @@ def createNewProject():
         analystName.grid(row=3, column=1, padx=7)
         polAnaTitleLabel1.grid(row=2, column=2, padx=7)
         polAnaTitle.grid(row=3, column=2, padx=7)
-        blank.grid(row=4, column=0)
         settingsLabel.grid(row=5, column=0)
         fontStyleLabel.grid(row=6, column=0, sticky = W, padx=7)
         fontsList.grid(row=6, column=1, sticky = W, padx=7)
@@ -217,60 +249,65 @@ def createNewProject():
             # probSit.delete("1.0", tk.END)
             # undeEff.delete("1.0", tk.END)
 
-        def create_project():
-            global projecttitle
-            projecttitle = projectTitle.get()
-            if not projecttitle.strip():
+        def create_project():    
+            global p1projecttitle, p1analysts, p1fontstyle, p1policyanalysis, p1fontstyle, p1fontsize
+            p1projecttitle = projectTitle.get()
+            if not p1projecttitle.strip():
                 status.config(
                     text="Enter project title",
                     foreground="red",
                 )
                 return
             
-            fontstyle = fontsList.get()
+            p1fontstyle = fontsList.get()
 
-            fontsize = fontSize.get()
-            if fontsize.isnumeric() == False:
+            p1fontsize = fontSize.get()
+            if p1fontsize.isnumeric() == False:
                 status.config(
                     text="Enter font size",
                     foreground="red",
                 )
                 return
-                    
-            analyst = analystName.get()
-            if not analyst.strip():
+
+            p1fontsize = int(p1fontsize)
+
+            p1analysts = analystName.get()
+            if not p1analysts.strip():
                 status.config(
                     text="Enter analyst name",
                     foreground="red",
                 )
                 return
                     
-            policyanalysis = polAnaTitle.get()
-            if not policyanalysis.strip():
+            p1policyanalysis = polAnaTitle.get()
+            if not p1policyanalysis.strip():
                 status.config(
                     text="Enter policy analysis title",
                     foreground="red",
                 )
                 return
             
-            # save the project
-            global filename, fileobject
-            filename = projecttitle
-            fileobject = open(filename + '.pol', 'w')
-            fileobject.write(projecttitle+"\n"+analyst+"\n"+policyanalysis+"\n"+fontstyle+"\n"+fontsize+"\n")
-
+            save()
+            
+            global pageNumber
+            pageNumber += 1
             frame1.destroy()
             btnCreate.destroy() 
             btnClear1.destroy()  
             page_2()
-
+            
         btnCreate = Button(mainProject, text = "Create", width=10, command = lambda: create_project())
         btnClear1 = Button(mainProject, text = "Clear", width=10, command = lambda: clear_page_1())
+
         btnCreate.place(x=380, y=170)
         btnClear1.place(x=190, y=170)
         status.place(x=10, y=170)
 
     page_1()
+
+    global p2problematicsituation, p2undesirableeffects
+    p2problematicsituation = "problematic situation"
+    p2undesirableeffects = "undesirable effects"
 
     def page_2():                                                               # write problematic situation and undesirable effects
         mainProject.geometry("660x210")
@@ -291,29 +328,38 @@ def createNewProject():
         undeEff.grid(row=2, column=1, sticky = W, padx=7)
         
         def back_1():
+            global pageNumber
+            pageNumber -= 1
+            print(pageNumber)
             frame2.destroy() 
             btnBack1.destroy()
             btnNext1.destroy() 
             page_1()
         
         def next_1():
-            problematicsituation = probSit.get("1.0", tk.END)
-            if not problematicsituation.strip():
+            global pageNumber
+            pageNumber += 1
+            print(pageNumber)
+
+            global p2problematicsituation, p2undesirableeffects
+            p2problematicsituation = probSit.get("1.0", tk.END)
+            if not p2problematicsituation.strip():
                 status.config(
                 text="Enter problematic\nsituation",
                 foreground="red",
             )
                 return
                     
-            undesirableeffects = undeEff.get("1.0", tk.END)
-            if not undesirableeffects.strip():
+            p2undesirableeffects = undeEff.get("1.0", tk.END)
+            if not p2undesirableeffects.strip():
                 status.config(
                 text="Enter undesirable\neffects",
                 foreground="red",
             )
                 return
         
-            fileobject.writelines(problematicsituation+"\n"+undesirableeffects+"\n")
+            # fileobject.writelines(problematicsituation+"\n"+undesirableeffects+"\n")
+            save()
 
             frame2.destroy() 
             btnBack1.destroy()
@@ -326,87 +372,130 @@ def createNewProject():
         btnNext1.place(x=400, y=170)
     
     def page_3():
-        mainProject.geometry("640x500")
+        mainProject.geometry("1250x700")
+        style.configure('Treeview', rowheight=160)
 
         status.config(text="")
-            
+
+        # mainFrame3 = tk.Frame(mainProject)
+        # mainFrame3.place(x=10, y=10)
+        # mainFrame1_3 = tk.Frame(mainFrame3, height=600, width = 1200)
+        # mainFrame1_3.pack(fill=BOTH,expand=1)
+        # mainFrame2_3 = tk.LabelFrame(mainFrame1_3, height=600, width = 1200)
+        # mainFrame2_3.pack(fill=X,side=BOTTOM)
+        # canvas3 = Canvas(mainFrame1_3, height=600, width = 1200)
+        # canvas3.pack(side=LEFT,fill=BOTH,expand=1)
+
+        # sbx3 = ttk.Scrollbar(mainFrame2_3,orient=HORIZONTAL,command=canvas3.xview)
+        # sbx3.pack(side=BOTTOM,fill=X)
+        # sby3 = ttk.Scrollbar(mainFrame1_3,orient=VERTICAL,command=canvas3.yview)
+        # sby3.pack(side=RIGHT,fill=Y)
+        # canvas3.configure(xscrollcommand=sbx3.set)
+        # canvas3.configure(yscrollcommand=sby3.set)
+        # canvas3.bind("<Configure>",lambda e: canvas3.config(scrollregion= canvas3.bbox(ALL))) 
+
         frame3 = tk.LabelFrame(mainProject)
-
-            # enumerate current efforts
-
+        # canvas3.create_window((0,0),window= frame3, anchor="nw")
+            # enumerate current effort
         currEffLabel = Label(frame3, text = "Current Efforts/Measures of the Government to Solve the Situational Problem")
-        effortsTable=ttk.Treeview(frame3)
+        effortsTable=ttk.Treeview(frame3, selectmode="browse", height=2)
         effortsTable["columns"]=("1","2","3")
         effortsTable['show']='headings'
-        effortsTable.column("1",width=200,anchor='c')
-        effortsTable.column("2",width=200,anchor='c')
-        effortsTable.column("3",width=200,anchor='c')
+        effortsTable.column("1",width=200,anchor='c', stretch=TRUE)
+        effortsTable.column("2",width=700,anchor='c', stretch=TRUE)
+        effortsTable.column("3",width=300,anchor='c', stretch=TRUE)
         effortsTable.heading("1",text="Effort/Measure")
         effortsTable.heading("2",text="Accomplishments")
         effortsTable.heading("3",text="Assessment")
 
+        sb = Scrollbar(frame3, orient=VERTICAL)
+
+        effortsTable.configure(yscrollcommand=sb.set)  # connect to Treeview
+        sb.config(command=effortsTable.yview)
+        
         effoLabel = Label(mainProject, text = "Effort")
         accoLabel = Label(mainProject, text = "Accomplishment")
         asseLabel = Label(mainProject, text = "Assessment")
 
-        effort = tk.Entry(mainProject, width=20)
-        accomplishment = tk.Entry(mainProject, width=20) 
-        assessment = tk.Entry(mainProject, width=20) 
+        effort = scrolledtext.ScrolledText(mainProject, height = 9, width=40)
+        accomplishment = scrolledtext.ScrolledText(mainProject, height = 9, width=40)
+        assessment = scrolledtext.ScrolledText(mainProject, height = 9, width=40)
 
         addButton = tk.Button(mainProject, text='Add', width=10, command=lambda: add_data())  
         editButton = tk.Button(mainProject, text="Edit", width=10, command=lambda: edit_data())
 
         def show_data(a):
-            effort.delete(0,END)
-            accomplishment.delete(0,END)
-            assessment.delete(0,END)
+            effort.delete("1.0", tk.END)   
+            accomplishment.delete("1.0", tk.END) 
+            assessment.delete("1.0", tk.END) 
 
             selectedItem = effortsTable.selection()[0]
-            effort.insert(0, effortsTable.item(selectedItem)['values'][0])
-            accomplishment.insert(0, effortsTable.item(selectedItem)['values'][1])
-            assessment.insert(0, effortsTable.item(selectedItem)['values'][2])
+            effort.insert(tk.INSERT, effortsTable.item(selectedItem)['values'][0])
+            accomplishment.insert(tk.INSERT, effortsTable.item(selectedItem)['values'][1])
+            assessment.insert(tk.INSERT, effortsTable.item(selectedItem)['values'][2])
 
         effortsTable.bind("<<TreeviewSelect>>", show_data)
 
         def edit_data():
-            effortText = effort.get()                          # read effort
-            accomplishmentText = accomplishment.get()          # read accomplishment
-            assessmentText = assessment.get()                  # read assessment
+            effortText = effort.get("1.0", tk.END)                          # read effort
+            accomplishmentText = accomplishment.get("1.0", tk.END)          # read accomplishment
+            assessmentText = assessment.get("1.0", tk.END)                  # read assessment
 
             selected_item = effortsTable.selection()[0]
+
             effortsTable.item(selected_item, text="blub", values=(effortText, accomplishmentText, assessmentText))
 
-        def add_data():
-            effortText = effort.get()                          # read effort
-            accomplishmentText = accomplishment.get()          # read accomplishment
-            assessmentText = assessment.get()                  # read assessment
+            print(effortsTable.index(selected_item))
 
-            effortsTable.insert("",'end', values=(effortText, accomplishmentText, assessmentText))
-            effortText.delete('1.0',END)  # reset the text entry box
-            accomplishmentText.delete('1.0',END)  # reset the text entry box
-            assessmentText.delete('1.0',END)
+            p3efforts[effortsTable.index(selected_item)] = effortText
+            p3accomplishments[effortsTable.index(selected_item)] = accomplishmentText
+            p3assessments[effortsTable.index(selected_item)] = assessmentText
+
+        def add_data():
+            global p3efforts, p3accomplishments, p3assessments
+            effortText = effort.get("1.0", tk.END)                          # read effort
+            accomplishmentText = accomplishment.get("1.0", tk.END)          # read accomplishment
+            assessmentText = assessment.get("1.0", tk.END)                  # read assessment
+
+            effortsTable.insert("",'end', values=(wrap(effortText), wrap(accomplishmentText), wrap(assessmentText)))
+            effort.delete("1.0", tk.END)            # reset the text entry box
+            accomplishment.delete("1.0", tk.END)    # reset the text entry box
+            assessment.delete("1.0", tk.END)
             effort.focus() 
 
+            p3efforts.append(effortText)
+            p3accomplishments.append(accomplishmentText)
+            p3assessments.append(assessmentText)
+
         frame3.place(x=10, y=10)
-        currEffLabel.grid(row=0, column=1)
-        effortsTable.grid(row=1, column=1)
-        effoLabel.place(x=90, y=270)
-        effort.place(x=45, y=300)
-        accoLabel.place(x=275, y=270)
-        accomplishment.place(x=261, y=300)
-        asseLabel.place(x=510, y=270)
-        assessment.place(x=480, y=300)
-        addButton.place(x=190, y=330)
-        editButton.place(x=380, y=330)
+        currEffLabel.grid(row=0, column=0, columnspan=2)
+        effortsTable.grid(row=1, column=0)
+        # sb.grid(row=0, column=1, rowspan=2)
+        effoLabel.place(x=195, y=390)
+        effort.place(x=50, y=420)
+        accoLabel.place(x=563, y=390)
+        accomplishment.place(x=450, y=420)
+        asseLabel.place(x=975, y=390)
+        assessment.place(x=850, y=420)
+        addButton.place(x=490, y=590)
+        editButton.place(x=680, y=590)
 
         def back_2():
+            global pageNumber
+            pageNumber -= 1
+            print(pageNumber)
+
+            sb.destroy()
             frame3.destroy() 
             effoLabel.destroy()
             effort.destroy()
+            effort.place_forget()
             accoLabel.destroy()
             accomplishment.destroy()
+            accomplishment.place_forget()
             asseLabel.destroy()
             assessment.destroy()
+            assessment.place_forget()
             addButton.destroy()
             editButton.destroy()
             btnBack2.destroy()
@@ -414,13 +503,22 @@ def createNewProject():
             page_2()
         
         def next_2():
+            global pageNumber
+            pageNumber += 1
+            print(pageNumber)
+
+            save()
+            sb.destroy()
             frame3.destroy() 
             effoLabel.destroy()
             effort.destroy()
+            effort.place_forget()
             accoLabel.destroy()
             accomplishment.destroy()
+            accomplishment.place_forget()
             asseLabel.destroy()
             assessment.destroy()
+            assessment.place_forget()
             addButton.destroy()
             editButton.destroy()
             btnBack2.destroy()
@@ -429,8 +527,8 @@ def createNewProject():
 
         btnBack2 = Button(mainProject, text = "Back", width=10, command = lambda: back_2())
         btnNext2 = Button(mainProject, text = "Next", width=10, command = lambda: next_2())
-        btnBack2.place(x=190, y=400)
-        btnNext2.place(x=380, y=400)
+        btnBack2.place(x=490, y=650)
+        btnNext2.place(x=680, y=650)
 
     def page_4():
         mainProject.geometry("660x210")
@@ -447,7 +545,6 @@ def createNewProject():
         R2 = Radiobutton(frame4, text="Multiple Regression", variable=var, value=2)
         R3 = Radiobutton(frame4, text="Logistic Regression", variable=var, value=3)
         R4 = Radiobutton(frame4, text="Problem Tree Analysis", variable=var, value=4)
-        R5 = Radiobutton(frame4, text="Delphi Technique", variable=var, value=5)
 
         StatisticalMethod.place(x = 275, y=10)
         frame4.place(x=190, y=50)
@@ -457,98 +554,213 @@ def createNewProject():
         R2.grid(row=3, column=0)
         R3.grid(row=4, column=0)
         R4.grid(row=2, column=1)
-        R5.grid(row=3, column=1)
 
         def analyses():                    
             if (int(var.get()) == 1):
                 analysis = Toplevel(main)
-                analysis.title("UPD Policy Maker - Analysis")
-                analysis.geometry("830x480")
+                analysis.title("Analysis - Linear Regression")
+                analysis.geometry("1000x680")
 
                 filename = askopenfilename(filetypes=[("CSV Files", "*.csv")])
+
+                if filename == "":
+                    page_4()
                 df = pd.read_csv(filename, usecols=[0,1])
-                data_x = df.iloc[:, [0]]
-                data_y = df.iloc[:, [1]]
+                X_train = df.iloc[:, [0]]
+                y_train = df.iloc[:, [1]]
+
+                print(df)
 
                 column_names = list(df.columns)
 
-                model = sm.OLS(data_y, data_x).fit()
-
+                model = sm.OLS(y_train, sm.add_constant(X_train)).fit()
 
                 lb1 = Label(analysis,text=model.summary(), font="Consolas", justify="left")
                 lb1.pack()
 
-                ax = sns.lmplot(x=column_names[0], y=column_names[1], data=df, aspect=1.5, scatter_kws={'alpha':0.2})
-                plt.show() 
+                reg = skl.linear_model.LinearRegression().fit(X_train[:], y_train[:])
+
+                divider  = "\n******************************************************************************\n"
+                regTitle = "                       skLearn Linear Regression Results                        \n"
+                lb2 = Label(analysis,text=divider+regTitle, font="Consolas", justify="left")
+                lb2.pack()
+
+                score = "Score:        " + str(round(float(reg.score(X_train, y_train)), 5))
+                global interceptLR, coefficientLR, interceptLRDisplay, coefficientLRDisplay
+                interceptLRDisplay = "\nIntercept:    " + str(round(float(reg.intercept_), 5))
+                interceptLR = float(reg.intercept_)
+                coefficientLRDisplay = "\nCoefficient:  " + str(round(float(reg.coef_), 5))
+                coefficientLR = float(reg.coef_)
+
+                summary = score + interceptLRDisplay + coefficientLRDisplay
+                lb3 = Label(analysis,text=summary, font="Consolas", justify="left")
+                lb3.pack()
+
+                global p4summaryPDF
+                p4summaryPDF = divider + regTitle + summary
                 
+                plt.scatter(X_train, y_train, color = "m", marker = "o", s = 30)
+
+                # plotting the regression line
+                plt.plot(X_train, reg.predict(X_train), color = "g")
+
+                # putting labels
+                plt.xlabel(column_names[0])
+                plt.ylabel(column_names[1])
+                plt.show()
+
             elif(int(var.get()) == 2):
                 analysis = Toplevel(main)
-                analysis.title("UPD Policy Maker - Analysis")
-                analysis.geometry("830x480")
-                
+                analysis.title("Analysis - Multiple Regression Summary 1")
+                analysis.geometry("1200x680")
+
+                analysis2 = Toplevel(main)
+                analysis2.title("Analysis - Multiple Regression Summary 2")
+                analysis2.geometry("1200x680")
+
                 filename = askopenfilename(filetypes=[("CSV Files", "*.csv")])
                 df = pd.read_csv(filename)
 
-                # data_x = df.iloc[:, [0]]
-                # data_y = df.iloc[:, [1]]
-                # Define the independent variables
-                df.head()
+                data_x = df.iloc[:, 0:2]
+                data_x1 = df.iloc[:, [0]]
+                data_x2 = df.iloc[:, [1]]
+                data_y = df.iloc[:, [2]]
 
-                x = df['RM']
-                y = df['CRIM']
-                z = df['MEDV']
+                data_x = sm.add_constant(data_x)
 
+                ks = sm.OLS(data_y, data_x)
+                ks_res =ks.fit()
+                ks_res.summary()
                 
+                print(ks_res.summary())
+
+                lb1 = Label(analysis, text=ks_res.summary(), font="Consolas", justify="left")
+                lb1.pack()
+
+                column_headers = list(df.columns.values)
+
+                dividerA  = "******************************************************************************\n"
+                regTitleA = "          skLearn Multiple Regression Results - "+column_headers[0]+"           \n"
+                lb2 = Label(analysis2, text=dividerA+regTitleA, font="Consolas", justify="left")
+                lb2.pack()
+
+                reg1 = skl.linear_model.LinearRegression().fit(data_x1, data_y)
+
+                score = "Score:        " + str(reg1.score(data_x1, data_y))
+                global interceptMR1, coefficientMR1
+                interceptMR1Display = "\nIntercept:    " + str(reg1.intercept_)
+                coefficientMR1Display = "\nCoefficient:  " + str(reg1.coef_)
+                interceptMR1 = float(reg1.intercept_)
+                coefficientMR1 = float(reg1.coef_)
+
+                summary3 = score + interceptMR1Display + coefficientMR1Display 
+                lb3 = Label(analysis2, text=summary3, font="Consolas", justify="left")
+                lb3.pack()
+
+                dividerB  = "******************************************************************************\n"
+                regTitleB = "          skLearn Multiple Regression Results - "+column_headers[1]+"            \n"
+                lb4 = Label(analysis2, text=dividerB+regTitleB, font="Consolas", justify="left")
+                lb4.pack()
+
+                reg2 = skl.linear_model.LinearRegression().fit(data_x2, data_y)
+
+                score = "Score:        " + str(reg2.score(data_x2, data_y))
+                global interceptMR2, coefficientMR2
+                interceptMR2Display = "\nIntercept:    " + str(reg2.intercept_)
+                coefficientMR2Display = "\nCoefficient:  " + str(reg2.coef_)
+                interceptMR2 = float(reg2.intercept_)
+                coefficientMR2 = float(reg2.coef_)
+
+                summary4 = score + interceptMR2Display + coefficientMR2Display
+                lb5 = Label(analysis2, text=summary4, font="Consolas", justify="left")
+                lb5.pack()
+
+
                 fig = plt.figure()
                 ax = fig.add_subplot(111, projection='3d')
+                ax.scatter(data_x1, data_x2, data_y, c='blue', marker='o')
 
-                # Define the independent variables
-                # Add the data points
-                ax.scatter(x, y, z)
+                # set your labels
+                ax.set_xlabel(column_headers[0])
+                ax.set_ylabel(column_headers[1])
+                ax.set_zlabel(column_headers[2])
 
-                # # Fit a plane using np.linalg.lstsq
-                # A = np.vstack([x, y, np.ones_like(x)]).T
-                # plane_coef, _, _, _ = np.linalg.lstsq(A, z, rcond=None)
-
-                # # Create a meshgrid for the plane
-                # x_plane, y_plane = np.meshgrid(x, y)
-                # z_plane = plane_coef[0] * x_plane + plane_coef[1] * y_plane + plane_coef[2]
-
-                # # Add the regression plane
-                # ax.plot_surface(x_plane, y_plane, z_plane, alpha=0.5)
-
-                # Add labels and title
-                ax.set_xlabel('Number of Rooms')
-                ax.set_ylabel('Crime Rate')
-                ax.set_zlabel('Median Value of Homes ($1000s)')
-                plt.title('Multiple Linear Regression')
-
-                # Show the plot
+                plt.savefig('regplot.png')
                 plt.show()
+
+                # l = tk.Label(frame, text="Hello", font="-size 50")
+                # l.pack()
+
+                # l = tk.Label(frame, text="World", font="-size 50")
+                # l.pack()
+
+                # l = tk.Label(frame, text="Test text 1\nTest text 2\nTest text 3\nTest text 4\nTest text 5\nTest text 6\nTest text 7\nTest text 8\nTest text 9", font="-size 20")
+                # l.pack()
 
             elif(int(var.get()) == 3):
                 analysis = Toplevel(main)
-                analysis.title("UPD Policy Maker - Analysis")
+                analysis.title("Analysis - Logistic Regression Summary 1")
                 analysis.geometry("830x480")
+
+                analysis2 = Toplevel(main)
+                analysis2.title("Analysis - Logistic Regression Summary 2")
+                analysis2.geometry("830x480")
 
                 filename = askopenfilename(filetypes=[("CSV Files", "*.csv")])
                 df = pd.read_csv(filename)
-                data_x = df.iloc[:, [0]]
-                data_y = df.iloc[:, [1]]
+                X_train = df.iloc[:, [0]]
+                y_train = df.iloc[:, [1]]
+
+                X_train = sm.add_constant(X_train)
+                print("111")
+                print(X_train.max()[1])
+                print("111")
 
                 column_names = list(df.columns)
 
-                logit_model = sm.Logit(data_y, data_x).fit()
+                logit_model = sm.Logit(y_train, X_train).fit()
 
                 lb1 = Label(analysis,text=logit_model.summary(), font="Consolas", justify="left")
                 lb1.pack()
 
-                ax = sns.regplot(x=column_names[0], y=column_names[1], data=df, logistic=True, scatter_kws={'color': 'black'}, line_kws={'color': 'red'})
+                reg = skl.linear_model.LogisticRegression().fit(X_train[:], y_train[:])
+
+                divider  = "\n******************************************************************************\n"
+                regTitle = "                       skLearn Logistic Regression Results                        "
+                lb2 = Label(analysis,text=divider+regTitle, font="Consolas", justify="left")
+                lb2.pack()
+
+                score = "Score:        " + str(round(float(reg.score(X_train, y_train)), 5))
+                global interceptLogR, coefficientConstLogR, coefficientXLogR, interceptLogRDisplay, coefficientLogRDisplay
+                interceptLogRDisplay = "\nIntercept:    " + str(reg.intercept_)
+                print(interceptLogRDisplay)
+                coefficientLogRDisplay = "\nCoefficient:  " + str(reg.coef_)
+                print(coefficientLogRDisplay)
+                interceptLogR = float(reg.intercept_)
+                coefficientConstLogR = float(reg.coef_[0][0])
+                coefficientXLogR = float(reg.coef_[0][1])
+
+                summary2 = score + interceptLogRDisplay + coefficientLogRDisplay
+                lb3 = Label(analysis,text=summary2, font="Consolas", justify="left")
+                lb3.pack()
+
+                lb4 = Label(analysis2,text=logit_model.summary2(), font="Consolas", justify="left")
+                lb4.pack()
+                
+                X_train = df.iloc[:, [0]]
+                plt.scatter(X_train, y_train, color = "m", marker = "o", s = 30)
+
+                X_train = sm.add_constant(X_train)
+                X_test = np.arange(0, int(X_train.max()[1]), 0.1)
+                y_test = sp.special.expit(X_test * reg.coef_[0][1] + reg.intercept_[0])
+                plt.plot(X_test, y_test, label="Logistic Regression Model", color="red", linewidth=3)
+                plt.savefig('regplot.png')
                 plt.show() 
+
             
             elif(int(var.get()) == 4):
                 analysis = Toplevel(main)
-                analysis.title("UPD Policy Maker - Analysis")
+                analysis.title("Analysis - Problem Tree Analysis")
                 analysis.geometry("830x480")
 
                 class ShapeEditorApp:
@@ -558,7 +770,7 @@ def createNewProject():
                         textValue = StringVar()
 
                         self.root = root
-                        self.root.title("UPD Policy Maker - Analysis")
+                        self.root.title("Problem Tree Analysis")
 
                         # Create Canvas widget
                         self.canvas = tk.Canvas(analysis, bg="white")
@@ -635,13 +847,21 @@ def createNewProject():
                 app = ShapeEditorApp(analysis)
         
         def back_3():
+            global pageNumber
+            pageNumber -= 1
+            print(pageNumber)
             frame4.destroy() 
+            frame4.forget() 
             btnBack3.destroy()
             btnNext3.destroy() 
             page_3()
         
         def next_3():
+            global pageNumber
+            pageNumber += 1
+            print(pageNumber)
             frame4.destroy()
+            frame4.forget()
             btnBack3.destroy()
             btnNext3.destroy() 
             analyses()
@@ -652,22 +872,28 @@ def createNewProject():
         btnBack3.place(x=190, y=170)
         btnNext3.place(x=380, y=170)
 
+    global p5rootcause
+    p5rootcause = " "
+    
     def page_5(): 
-        mainProject.geometry("830x600")
+        mainProject.state('zoomed')
+        style.configure('Treeview', rowheight=320)
 
         frame5 = tk.LabelFrame(mainProject)
+
+        status.config(text="")
         
         rootCauseLabel = Label(frame5, text = "Root Cause of the Problem")
-        rootCause = Entry(frame5, width=100)
+        rootCause = Entry(frame5, width=200)
 
-        assessExistLabel = Label(frame5, text = "Assessment of Existing Policies that Address the Root Cause")
-        assessmentTable=ttk.Treeview(frame5)
+        assessmentLabel = Label(frame5, text = "Assessment of Existing Policies that Address the Root Cause")
+        assessmentTable=ttk.Treeview(frame5, selectmode="browse", height=1)
         assessmentTable["columns"]=("1","2","3","4")
         assessmentTable['show']='headings'
-        assessmentTable.column("1",width=200,anchor='c')
-        assessmentTable.column("2",width=200,anchor='c')
-        assessmentTable.column("3",width=200,anchor='c')
-        assessmentTable.column("4",width=200,anchor='c')
+        assessmentTable.column("1",width=150,anchor='c')
+        assessmentTable.column("2",width=650,anchor='c')
+        assessmentTable.column("3",width=400,anchor='c')
+        assessmentTable.column("4",width=300,anchor='c')
         assessmentTable.heading("1",text="Existing Policy")
         assessmentTable.heading("2",text="Relevant Provision(s)")
         assessmentTable.heading("3",text="Accomplishments")
@@ -678,10 +904,10 @@ def createNewProject():
         accompLabel2 = Label(mainProject, text = "Accomplishment")
         assessLabel2 = Label(mainProject, text = "Assessment")
 
-        existingPolicy = tk.Entry(mainProject, width=30)
-        relevantProvision = tk.Entry(mainProject, width=30) 
-        accomplishment2 = tk.Entry(mainProject, width=30) 
-        assessment2 = tk.Entry(mainProject, width=30) 
+        existingPolicy = scrolledtext.ScrolledText(mainProject, height = 9, width=40)
+        relevantProvision = scrolledtext.ScrolledText(mainProject, height = 9, width=40)
+        accomplishment2 = scrolledtext.ScrolledText(mainProject, height = 9, width=40)
+        assessment2 = scrolledtext.ScrolledText(mainProject, height = 9, width=40)
 
         addButton2 = tk.Button(mainProject, text='Add', width=10, command=lambda: add_data2())  
         editButton2 = tk.Button(mainProject, text="Edit", width=10, command=lambda: edit_data2())
@@ -701,19 +927,19 @@ def createNewProject():
         assessmentTable.bind("<<TreeviewSelect>>", show_data2)
 
         def edit_data2():
-            existingPolicyText = existingPolicy.get()               # read existing policy
-            relevantProvisionText = relevantProvision.get()         # read relevant provision
-            accomplishment2Text = accomplishment2.get()             # read accomplishment 
-            assessment2Text = assessment2.get()                     # read assessment                 
+            existingPolicyText = existingPolicy.get("1.0", tk.END)               # read existing policy
+            relevantProvisionText = relevantProvision.get("1.0", tk.END)         # read relevant provision
+            accomplishment2Text = accomplishment2.get("1.0", tk.END)             # read accomplishment 
+            assessment2Text = assessment2.get("1.0", tk.END)                     # read assessment                 
                                     
             selected_item = assessmentTable.selection()[0]
             assessmentTable.item(selected_item, text="blub", values=(existingPolicyText, relevantProvisionText, accomplishment2Text, assessment2Text))
 
         def add_data2():
-            existingPolicyText = existingPolicy.get()               # read existing policy
-            relevantProvisionText = relevantProvision.get()         # read relevant provision
-            accomplishment2Text = accomplishment2.get()             # read accomplishment 
-            assessment2Text = assessment2.get()                     # read assessment      
+            existingPolicyText = existingPolicy.get("1.0", tk.END)               # read existing policy
+            relevantProvisionText = relevantProvision.get("1.0", tk.END)         # read relevant provision
+            accomplishment2Text = accomplishment2.get("1.0", tk.END)             # read accomplishment 
+            assessment2Text = assessment2.get("1.0", tk.END)                     # read assessment      
 
             global assessmentTuple
             assessmentTuple = [existingPolicyText, relevantProvisionText, accomplishment2Text, assessment2Text]
@@ -730,45 +956,71 @@ def createNewProject():
         frame5.place(x=10, y=10)
         rootCauseLabel.grid(row=0, column=1)
         rootCause.grid(row=1, column=1)
-        assessExistLabel.grid(row=2, column=1)
+        assessmentLabel.grid(row=2, column=1)
         assessmentTable.grid(row=3, column=1)
-        existLabel.place(x=40, y=330)
-        existingPolicy.place(x=200, y=330)
-        releLabel.place(x=40, y=390)
-        relevantProvision.place(x=200, y=390)
-        accompLabel2.place(x=40, y=450)
-        accomplishment2.place(x=200, y=450)
-        assessLabel2.place(x=40, y=510)
-        assessment2.place(x=200, y=510)
-        addButton2.place(x=450, y=390)
-        editButton2.place(x=450, y=450)
+        existLabel.place(x=150, y=480)
+        existingPolicy.place(x=40, y=510)
+        releLabel.place(x=520, y=480)
+        relevantProvision.place(x=410, y=510)
+        accompLabel2.place(x=900, y=480)
+        accomplishment2.place(x=780, y=510)
+        assessLabel2.place(x=1280, y=480)
+        assessment2.place(x=1150, y=510)
+        addButton2.place(x=640, y=690)
+        editButton2.place(x=790, y=690)
 
         def back_4():
+            global pageNumber
+            pageNumber -= 1
+            print(pageNumber)
+            mainProject.state('normal')
             frame5.destroy() 
             existLabel.destroy()
             existingPolicy.destroy()
+            existingPolicy.place_forget()
             releLabel.destroy()
             relevantProvision.destroy()
-            accomplishment2.destroy()
+            relevantProvision.place_forget()
             accompLabel2.destroy()
+            accomplishment2.destroy()
+            accomplishment2.place_forget()
             assessLabel2.destroy()
             assessment2.destroy()
+            assessment2.place_forget()
             btnBack4.destroy()
             btnNext4.destroy() 
             addButton2.destroy()
             editButton2.destroy()
             page_4()
-        
+            
+
         def next_4():
+            global pageNumber
+            pageNumber += 1
+            print(pageNumber)
+            global p5rootcause
+            p5rootcause = rootCause.get()
+            if not p5rootcause.strip():
+                status.config(
+                    text="Enter root cause",
+                    foreground="red",
+                )
+                return
+            
+            mainProject.state('normal')
             frame5.destroy() 
             existLabel.destroy()
             existingPolicy.destroy()
+            existingPolicy.place_forget()
             releLabel.destroy()
             relevantProvision.destroy()
-            accomplishment2.destroy()
+            relevantProvision.place_forget()
             accompLabel2.destroy()
+            accomplishment2.destroy()
+            accomplishment2.place_forget()
             assessLabel2.destroy()
             assessment2.destroy()
+            assessment2.place_forget()
             btnBack4.destroy()
             btnNext4.destroy() 
             addButton2.destroy()
@@ -777,33 +1029,63 @@ def createNewProject():
 
         btnBack4 = Button(mainProject, text = "Back", width=10, command = lambda: back_4())
         btnNext4 = Button(mainProject, text = "Next", width=10, command = lambda: next_4())
-        btnBack4.place(x=600, y=390)
-        btnNext4.place(x=600, y=450)
+        btnBack4.place(x=640, y=750)
+        btnNext4.place(x=790, y=750)
+        status.place(x=10, y=700)
+
+    global p6policyproblem, p6policyissue
+    p6policyproblem = " "
+    p6policyissue = " "
 
     def page_6():                                                   # write problematic situation and undesirable effects
         mainProject.geometry("660x210")
 
         frame6 = tk.LabelFrame(mainProject)
 
+        status.config(text="")
+
         policyProbLabel = Label(frame6, text = "Policy Problem")
         policyProb = scrolledtext.ScrolledText(frame6, height = 8, width=30)
         
         policyIssueLabel = Label(frame6, text = "Policy Issue Statement")
-        policyIssue = scrolledtext.ScrolledText(frame6, height = 8, width=30)
+        policyIss = scrolledtext.ScrolledText(frame6, height = 8, width=30)
         
         frame6.place(x=40, y=10)
+        status.place(x=10, y=170)
         policyProbLabel.grid(row=1, column=0, sticky = W, padx=7)
         policyProb.grid(row=2, column=0, sticky = W, padx=7)
         policyIssueLabel.grid(row=1, column=1, sticky = W, padx=7)
-        policyIssue.grid(row=2, column=1, sticky = W, padx=7)
+        policyIss.grid(row=2, column=1, sticky = W, padx=7)
 
         def back_5():
+            global pageNumber
+            pageNumber -= 1
+            print(pageNumber)
             frame6.destroy() 
             btnBack5.destroy()
             btnNext5.destroy() 
             page_5()
         
         def next_5():
+            global p6policyproblem, p6policyissue
+            p6policyproblem = policyProb.get("1.0", tk.END)
+            if not p6policyproblem.strip():
+                status.config(
+                text="Enter policy\nproblem",
+                foreground="red",
+            )
+                return
+                    
+            p6policyissue = policyIss.get("1.0", tk.END)
+            if not p6policyissue.strip():
+                status.config(
+                text="Enter policy\nissue statement",
+                foreground="red",
+            )
+                return
+            global pageNumber
+            pageNumber += 1
+            print(pageNumber)
             frame6.destroy() 
             btnBack5.destroy()
             btnNext5.destroy() 
@@ -814,8 +1096,12 @@ def createNewProject():
         btnBack5.place(x=140, y=170)
         btnNext5.place(x=400, y=170)
 
+    p7policyGoalsandObjectives = []
+    p7indicators = []
+
     def page_7():
-        mainProject.geometry("740x500")
+        mainProject.geometry("880x500")
+        style.configure('Treeview', rowheight=40)
 
         # write problematic situation and undesirable effects
 
@@ -823,60 +1109,74 @@ def createNewProject():
 
         goalsObjLabel = Label(frame7, text = "Goals and Objectives of the Proposal")
         
-        goalsandObjTable=ttk.Treeview(frame7)
+        goalsandObjTable=ttk.Treeview(frame7, height=5)
         goalsandObjTable["columns"]=("1","2")
         goalsandObjTable['show']='headings'
         goalsandObjTable.column("1",width=350,anchor='c')
-        goalsandObjTable.column("2",width=350,anchor='c')
+        goalsandObjTable.column("2",width=500,anchor='c')
         goalsandObjTable.heading("1",text="Policy Goals and Objectives")
         goalsandObjTable.heading("2",text="Indicators")
+
+        for i in range(0, len(p7indicators)):
+            goalsandObjTable.insert("",'end', values=(p7policyGoalsandObjectives[i], p7indicators[i]))
 
         pgoLabel = Label(mainProject, text = "Policy Goals and Objectives")
         indiLabel = Label(mainProject, text = "Indicators")
 
         pgo = tk.Entry(mainProject, width=40) 
-        indi = tk.Entry(mainProject, width=40) 
+        indi = scrolledtext.ScrolledText(mainProject, height = 3, width=55) 
 
         addButton3 = tk.Button(mainProject, text='Add', width=10, command=lambda: add_data3())  
         editButton3 = tk.Button(mainProject, text="Edit", width=10, command=lambda: edit_data3())
 
         def show_data3(a):
             pgo.delete(0,END)
-            indi.delete(0,END)
+            indi.delete("1.0", tk.END)
 
             selectedItem = goalsandObjTable.selection()[0]
             pgo.insert(0, goalsandObjTable.item(selectedItem)['values'][0])
-            indi.insert(0, goalsandObjTable.item(selectedItem)['values'][1])
+            indi.insert("1.0", goalsandObjTable.item(selectedItem)['values'][1])
 
         goalsandObjTable.bind("<<TreeviewSelect>>", show_data3)
 
         def edit_data3():
-            pgoText = pgo.get()                         # read policy goal and objective
-            indiText = indi.get()                       # read indicator
+            pgoText = pgo.get()                                         # read policy goal and objective
+            indiText = indi.get("1.0", tk.END)                          # read indicator
 
             selected_item = goalsandObjTable.selection()[0]
             goalsandObjTable.item(selected_item, text="blub", values=(pgoText, indiText))
 
+            p7policyGoalsandObjectives.pop(goalsandObjTable.index(selected_item))
+            p7policyGoalsandObjectives.insert(goalsandObjTable.index(selected_item), pgoText)
+            p7indicators.pop(goalsandObjTable.index(selected_item))
+            p7indicators.insert(goalsandObjTable.index(selected_item), indiText)
+
         def add_data3():
-            pgoText = pgo.get()                         # read policy goal and objective
-            indiText = indi.get()                       # read indicator
+            pgoText = pgo.get()                                         # read policy goal and objective
+            indiText = indi.get("1.0", tk.END)                          # read indicator
+
+            p7policyGoalsandObjectives.append(pgoText)
+            p7indicators.append(indiText)
 
             goalsandObjTable.insert("",'end', values=(pgoText, indiText))
-            pgoText.delete('1.0',END)  # reset the text entry box
-            indiText.delete('1.0',END)  # reset the text entry box
+            pgo.delete(0,END)  # reset the text entry box
+            indi.delete('1.0',END)  # reset the text entry box
             pgo.focus() 
 
         frame7.place(x=10, y=10)
         goalsObjLabel.grid(row=0, column=1)
         goalsandObjTable.grid(row=1, column=1)
-        pgoLabel.place(x=100, y=270)
+        pgoLabel.place(x=110, y=270)
         pgo.place(x=60, y=300)
-        indiLabel.place(x=510, y=270)
-        indi.place(x=420, y=300)
-        addButton3.place(x=130, y=330)
-        editButton3.place(x=500, y=330)
+        indiLabel.place(x=590, y=270)
+        indi.place(x=390, y=290)
+        addButton3.place(x=260, y=380)
+        editButton3.place(x=520, y=380)
 
         def back_6():
+            global pageNumber
+            pageNumber -= 1
+            print(pageNumber)
             frame7.destroy() 
             pgoLabel.destroy()
             pgo.destroy()
@@ -893,7 +1193,7 @@ def createNewProject():
             pgoLabel.destroy()
             pgo.destroy()
             indiLabel.destroy()
-            indi.destroy()
+            indi.place_forget()
             addButton3.destroy()
             editButton3.destroy()
             btnBack6.destroy()
@@ -902,23 +1202,35 @@ def createNewProject():
 
         btnBack6 = Button(mainProject, text = "Back", width=10, command = lambda: back_6())
         btnNext6 = Button(mainProject, text = "Next", width=10, command = lambda: next_6())
-        btnBack6.place(x=130, y=420)
-        btnNext6.place(x=500, y=420)
+        btnBack6.place(x=260, y=440)
+        btnNext6.place(x=520, y=440)
+
+    p8stakeholders = []
+    p8actors = []
 
     def page_8():
+        style.configure('Treeview', rowheight=20)
         mainProject.geometry("740x500")
 
         frame8 = tk.LabelFrame(mainProject)
 
         staAndActLabel = Label(frame8, text = "Stakeholders and Actors")
         
-        staAndActTable=ttk.Treeview(frame8)
+        staAndActTable=ttk.Treeview(frame8, height=10)
         staAndActTable["columns"]=("1","2")
         staAndActTable['show']='headings'
         staAndActTable.column("1",width=350,anchor='c')
         staAndActTable.column("2",width=350,anchor='c')
         staAndActTable.heading("1",text="Stakeholders")
         staAndActTable.heading("2",text="Actors")
+
+        for i in range(0, len(p8stakeholders)):
+            staAndActTable.insert("",'end', values=(p8stakeholders[i], p8actors[i]))
+
+        sb = Scrollbar(frame8, orient=VERTICAL)
+
+        staAndActTable.configure(yscrollcommand=sb.set)  # connect to Treeview
+        sb.config(command=staAndActTable.yview)
 
         global stakeholders, actors, addButton4, editButton4
         stakeholdersLabel = Label(mainProject, text = "Stakeholders")
@@ -947,26 +1259,38 @@ def createNewProject():
             selected_item = staAndActTable.selection()[0]
             staAndActTable.item(selected_item, text="blub", values=(stakeholdersText, actorsText))
 
+            p8stakeholders.pop(staAndActTable.index(selected_item))
+            p8stakeholders.insert(staAndActTable.index(selected_item), stakeholdersText)
+            p8actors.pop(staAndActTable.index(selected_item))
+            p8actors.insert(staAndActTable.index(selected_item), actorsText)
+
         def add_data4():
             stakeholdersText = stakeholders.get()           # read stakeholders
             actorsText = actors.get()                       # read actors
 
             staAndActTable.insert("",'end', values=(stakeholdersText, actorsText))
-            stakeholdersText.delete('1.0',END)  # reset the text entry box
-            actorsText.delete('1.0',END)  # reset the text entry box
+            stakeholders.delete('1.0',END)  # reset the text entry box
+            actors.delete('1.0',END)  # reset the text entry box
             stakeholders.focus() 
 
+            p8stakeholders.append(stakeholdersText)
+            p8actors.append(actorsText)
+        
         frame8.place(x=10, y=10)
-        staAndActLabel.grid(row=0, column=1)
-        staAndActTable.grid(row=1, column=1)
+        staAndActLabel.grid(row=0, column=0, columnspan=2)
+        staAndActTable.grid(row=1, column=0)
+        sb.grid(row=0, column=1, rowspan=2)
         stakeholdersLabel.place(x=140, y=270)
         stakeholders.place(x=60, y=300)
         actorsLabel.place(x=520, y=270)
         actors.place(x=420, y=300)
-        addButton4.place(x=130, y=330)
-        editButton4.place(x=500, y=330)
+        addButton4.place(x=185, y=360)
+        editButton4.place(x=445, y=360)
 
         def back_7():
+            global pageNumber
+            pageNumber -= 1
+            print(pageNumber)
             global stakeholders, actors, addButton4, editButton4
             frame8.destroy()      
             btnNext7.destroy()    
@@ -996,11 +1320,16 @@ def createNewProject():
 
         btnBack7 = Button(mainProject, text = "Back", width=10, command = lambda: back_7())
         btnNext7 = Button(mainProject, text = "Next", width=10, command = lambda: next_7())
-        btnBack7.place(x=130, y=420)
-        btnNext7.place(x=500, y=420)
+        btnBack7.place(x=185, y=420)
+        btnNext7.place(x=445, y=420)
 
+    global p9alternatives
+    p9alternatives = []
+    
     def page_9():               
-        mainProject.geometry("885x515")
+        mainProject.geometry("870x545")
+
+        style.configure('Treeview', rowheight=15)
 
         frame9 = tk.LabelFrame(mainProject)
         frame9.columnconfigure(0, weight=2)
@@ -1022,7 +1351,7 @@ def createNewProject():
         assessAlterLabel = Label(frame9, text = "Assessment of the Policy Alternatives")
         assessAlterLabel.grid(row=0, column=0, columnspan=2)
 
-        assessAlterTable=ttk.Treeview(frame9)
+        assessAlterTable=ttk.Treeview(frame9, height=10)
         assessAlterTable["columns"]=("1", "2")  
         assessAlterTable['show']='headings'  
         assessAlterTable.column("1", width=140, anchor='c')
@@ -1055,14 +1384,19 @@ def createNewProject():
 
             selected_item = assessAlterTable.selection()[0]
             assessAlterTable.item(selected_item, text="blub", values=(policyAlternativeNoText, policyAlternativesText))
+            
+            p9alternatives.pop(assessAlterTable.index(selected_item))
+            p9alternatives.insert(assessAlterTable.index(selected_item), policyAlternativesText)
 
         def add_data5():
             policyAlternativeNoText = policyAlternativeNo.get()           # read stakeholders
             policyAlternativesText = policyAlternatives.get()             # read actors
 
+            p9alternatives.append(policyAlternativesText)
+
             assessAlterTable.insert("",'end', values=(policyAlternativeNoText, policyAlternativesText))
-            policyAlternativeNoText.delete('1.0',END)  # reset the text entry box
-            policyAlternativesText.delete('1.0',END)  # reset the text entry box
+            policyAlternativeNo.delete('1.0',END)  # reset the text entry box
+            policyAlternatives.delete('1.0',END)  # reset the text entry box
             stakeholders.focus() 
 
         frame9.place(x=10, y=10)
@@ -1081,26 +1415,26 @@ def createNewProject():
 
         assessAlterTable.grid(row=1, rowspan=7, column=0, columnspan=2)
 
-        polAltNoLabel.place(x=140, y=360)
-        policyAlternativeNo.place(x=135, y=390)
-        polAltLabel.place(x=520, y=360)
-        policyAlternatives.place(x=420, y=390)
-        addButton5.place(x=155, y=420)
-        editButton5.place(x=530, y=420)
-        computeButton.place(x=590, y=300)
+        polAltNoLabel.place(x=139, y=300)
+        policyAlternativeNo.place(x=135, y=330)
+        polAltLabel.place(x=520, y=300)
+        policyAlternatives.place(x=420, y=330)
+        addButton5.place(x=265, y=400)
+        editButton5.place(x=550, y=400)
+        computeButton.place(x=590, y=250)
 
         varEffec = IntVar(value=0)
         varCostEff = IntVar(value=0)
         varAccept = IntVar(value=0)
     
         R1_2 = Radiobutton(frame9, text="SLR", variable=varEffec, value=1)
-        R2_2 = Radiobutton(frame9, text="MLR", variable=varEffec, value=2)
+        R2_2 = Radiobutton(frame9, text="MR", variable=varEffec, value=2)
         R3_2 = Radiobutton(frame9, text="LogR", variable=varEffec, value=3)
         R4_2 = Radiobutton(frame9, text="FGD", variable=varEffec, value=4)
         R5_2 = Radiobutton(frame9, text="Tangible Cost-Benefit Analysis\nw/ Discounting", variable=varCostEff, value=1)
         R6_2 = Radiobutton(frame9, text="Tangible Cost-Benefit Analysis\nw/o Discounting", variable=varCostEff, value=2)
         R7_2 = Radiobutton(frame9, text="Intangible Cost-Benefit Analysis", variable=varCostEff, value=3)
-        R8_2 = Radiobutton(frame9, text="PRINCE", variable=varAccept, value=1)
+        R8_2 = Radiobutton(frame9, text="PRINCE Method", variable=varAccept, value=1)
         R9_2 = Radiobutton(frame9, text="Stakeholder Analysis", variable=varAccept, value=2)
 
         R1_2.grid(row=3, column=2)
@@ -1113,9 +1447,37 @@ def createNewProject():
         R8_2.grid(row=4, column=4)
         R9_2.grid(row=8, column=4)
 
+        def back_8():
+            global pageNumber
+            pageNumber -= 1
+            print(pageNumber)
+            frame9.destroy()       
+            polAltLabel.destroy()
+            policyAlternatives.destroy()
+            polAltNoLabel.destroy()
+            policyAlternativeNo.destroy()
+            addButton5.destroy()
+            editButton5.destroy()   
+            computeButton.destroy()   
+            btnBack8.destroy()
+            btnNext8.destroy()
+            page_8()
+
+        def next_8():
+            frame9.destroy()       
+            polAltLabel.destroy()
+            policyAlternatives.destroy()
+            polAltNoLabel.destroy()
+            policyAlternativeNo.destroy()
+            addButton5.destroy()
+            editButton5.destroy()   
+            computeButton.destroy()   
+            btnBack8.destroy()
+            btnNext8.destroy()
+            page_10()
 
         def compute():
-
+            print(p9alternatives)
             netBenefitWithout = []
             netBenefitWith = []
             
@@ -1123,34 +1485,377 @@ def createNewProject():
             print(crite)
 
             if int(varEffec.get()) == 1: 
-                effectiveness = Toplevel(main)
-                effectiveness.title("Policy Analytics 3.0 - Effectiveness: Simple LR")
-                effectiveness.geometry("830x480")
+                def windowPerAlt(a, policyAlt):
+                    effectiveness1 = Toplevel(main)
+                    effectiveness1.title("Effectiveness: Simple LR")
+                    effectiveness1.geometry("830x480")
+                    
+                    equation = "y = "+str(coefficientLR)+"x + "+str(interceptLR)+"\n"
+                    equationWithLabel = Label(effectiveness1, text="\nEquation  :  "+equation, font="Consolas", justify="left")
+                    equationWithLabel.pack()
+
+                    simpleLRLabel = Label(effectiveness1, text = "Alternative " + str(a+1) + " - " + policyAlt)
+                    simpleLRTable=ttk.Treeview(effectiveness1)
+                    simpleLRTable["columns"]=("1","2","3")
+                    simpleLRTable['show']='headings'
+                    simpleLRTable.column("1",width=130,anchor='c')
+                    simpleLRTable.column("2",width=130,anchor='c')
+                    simpleLRTable.column("3",width=130,anchor='c')
+                    simpleLRTable.heading("1",text="Year")
+                    simpleLRTable.heading("2",text="X")
+                    simpleLRTable.heading("3",text="Y")
+
+                    yearLabel = Label(effectiveness1, text = "Year")
+                    inputXLabel = Label(effectiveness1, text = "X")
+
+                    year = tk.Entry(effectiveness1, width=30)
+                    inputX = tk.Entry(effectiveness1, width=30) 
+
+                    addButton = tk.Button(effectiveness1, text='Add', width=10, command=lambda: add_data())  
+                    editButton = tk.Button(effectiveness1, text="Edit", width=10, command=lambda: edit_data())
+
+                    years = []
+
+                    def show_data(a):
+                        year.delete(0,END)
+                        inputX.delete(0,END)
+
+                        selectedItem = simpleLRTable.selection()[0]
+                        year.insert(0, simpleLRTable.item(selectedItem)['values'][0])
+                        inputX.insert(0, simpleLRTable.item(selectedItem)['values'][1])
+
+                    simpleLRTable.bind("<<TreeviewSelect>>", show_data)    
+
+                    am = 0
+                    def edit_data():
+                        yearText = year.get()                                   # get year
+
+                        selected_item = simpleLRTable.selection()[0]
+
+                        years.pop(simpleLRTable.index(selected_item))
+                        years.insert(simpleLRTable.index(selected_item), int(yearText))
+
+                        inputXText = float(inputX.get())                                                    # get X
+                        outputYText = float(inputX.get())*float(coefficientLR) + float(interceptLR)         # compute for Y
+                        
+                        simpleLRTable.item(selected_item, text="blub", values=(yearText, inputXText, outputYText))
+
+                    def add_data():
+                        yearText = year.get()                                   # get year
+                        inputXText = int(inputX.get())                        # get benefit
+                        outputYText = float(inputX.get())*float(coefficientLR) + float(interceptLR)         # compute for Y
+
+                        years.append(int(yearText))
+
+                        year.delete(0,END)
+                        inputX.delete(0,END)
+
+                        global assessmentTuple
+                        assessmentTuple = [yearText, inputXText, outputYText]
+
+                        # effortList.append(efforttuple)
+
+                        simpleLRTable.insert("",'end', values=(yearText, inputXText, outputYText))
+                        yearText.delete('1.0',END)                      # reset the text entry box
+                        inputX.delete('1.0',END)                        # reset the text entry box
+                        yearText.focus() 
+                    
+                    simpleLRLabel.pack()
+                    simpleLRTable.pack()
+                    yearLabel.place(x=210, y=360)
+                    year.place(x=300, y=360)
+                    inputXLabel.place(x=210, y=420)
+                    inputX.place(x=300, y=420)
+                    addButton.place(x=540, y=360)
+                    editButton.place(x=540, y=420)
+
+                a = 0
+
+                while (a < len(p9alternatives)):
+                    windowPerAlt(a, p9alternatives[a])
+                    a += 1
 
             elif int(varEffec.get()) == 2: 
-                effectiveness = Toplevel(main)
-                effectiveness.title("Policy Analytics 3.0 - Effectiveness: Multiple LR")
-                effectiveness.geometry("830x480")
+                def window1PerAlt(a, policyAlt):
+                    effectivenessMR1 = Toplevel(main)
+                    effectivenessMR1.title("Effectiveness: MR1")
+                    effectivenessMR1.geometry("830x480")
+                    
+                    equation = "y = "+str(coefficientMR1)+"x + "+str(interceptMR1)+"\n"
+                    equationWithLabel = Label(effectivenessMR1, text="\nEquation  :  "+equation, font="Consolas", justify="left")
+                    equationWithLabel.pack()
+
+                    MR1Label = Label(effectivenessMR1, text = "Alternative " + str(a+1) + " - " + policyAlt)
+                    MR1Table=ttk.Treeview(effectivenessMR1)
+                    MR1Table["columns"]=("1","2","3")
+                    MR1Table['show']='headings'
+                    MR1Table.column("1",width=130,anchor='c')
+                    MR1Table.column("2",width=130,anchor='c')
+                    MR1Table.column("3",width=130,anchor='c')
+                    MR1Table.heading("1",text="Year")
+                    MR1Table.heading("2",text="X")
+                    MR1Table.heading("3",text="Y")
+
+                    yearLabel = Label(effectivenessMR1, text = "Year")
+                    inputXLabel = Label(effectivenessMR1, text = "X")
+
+                    year = tk.Entry(effectivenessMR1, width=30)
+                    inputX = tk.Entry(effectivenessMR1, width=30) 
+
+                    addButton = tk.Button(effectivenessMR1, text='Add', width=10, command=lambda: add_data())  
+                    editButton = tk.Button(effectivenessMR1, text="Edit", width=10, command=lambda: edit_data())
+
+                    years = []
+
+                    def show_data(a):
+                        year.delete(0,END)
+                        inputX.delete(0,END)
+
+                        selectedItem = MR1Table.selection()[0]
+                        year.insert(0, MR1Table.item(selectedItem)['values'][0])
+                        inputX.insert(0, MR1Table.item(selectedItem)['values'][1])
+
+                    MR1Table.bind("<<TreeviewSelect>>", show_data)    
+
+                    am = 0
+                    def edit_data():
+                        yearText = year.get()                                   # get year
+
+                        selected_item = MR1Table.selection()[0]
+
+                        years.pop(MR1Table.index(selected_item))
+                        years.insert(MR1Table.index(selected_item), int(yearText))
+
+                        inputXText = float(inputX.get())                                                    # get X
+                        outputYText = float(inputX.get())*float(coefficientMR1) + float(interceptMR1)         # compute for Y
+                        
+                        MR1Table.item(selected_item, text="blub", values=(yearText, inputXText, outputYText))
+
+                    def add_data():
+                        yearText = year.get()                                   # get year
+                        inputXText = int(inputX.get())                        # get benefit
+                        outputYText = float(inputX.get())*float(coefficientMR1) + float(interceptMR2)         # compute for Y
+
+                        years.append(int(yearText))
+
+                        year.delete(0,END)
+                        inputX.delete(0,END)
+
+                        global assessmentTuple
+                        assessmentTuple = [yearText, inputXText, outputYText]
+
+                        # effortList.append(efforttuple)
+
+                        MR1Table.insert("",'end', values=(yearText, inputXText, outputYText))
+                        yearText.delete('1.0',END)                      # reset the text entry box
+                        inputX.delete('1.0',END)                        # reset the text entry box
+                        yearText.focus() 
+                    
+                    MR1Label.pack()
+                    MR1Table.pack()
+                    yearLabel.place(x=210, y=360)
+                    year.place(x=300, y=360)
+                    inputXLabel.place(x=210, y=420)
+                    inputX.place(x=300, y=420)
+                    addButton.place(x=540, y=360)
+                    editButton.place(x=540, y=420)
+
+                def window2PerAlt(a, policyAlt):
+                    effectivenessMR2 = Toplevel(main)
+                    effectivenessMR2.title("Effectiveness: MR2")
+                    effectivenessMR2.geometry("830x480")
+                    
+                    equation = "y = "+str(coefficientMR2)+"x + "+str(interceptMR2)+"\n"
+                    equationWithLabel = Label(effectivenessMR2, text="\nEquation  :  "+equation, font="Consolas", justify="left")
+                    equationWithLabel.pack()
+
+                    MR2Label = Label(effectivenessMR2, text = "Alternative " + str(a+1) + " - " + policyAlt)
+                    MR2Table=ttk.Treeview(effectivenessMR2)
+                    MR2Table["columns"]=("1","2","3")
+                    MR2Table['show']='headings'
+                    MR2Table.column("1",width=130,anchor='c')
+                    MR2Table.column("2",width=130,anchor='c')
+                    MR2Table.column("3",width=130,anchor='c')
+                    MR2Table.heading("1",text="Year")
+                    MR2Table.heading("2",text="X")
+                    MR2Table.heading("3",text="Y")
+
+                    yearLabel = Label(effectivenessMR2, text = "Year")
+                    inputXLabel = Label(effectivenessMR2, text = "X")
+
+                    year = tk.Entry(effectivenessMR2, width=30)
+                    inputX = tk.Entry(effectivenessMR2, width=30) 
+
+                    addButton = tk.Button(effectivenessMR2, text='Add', width=10, command=lambda: add_data())  
+                    editButton = tk.Button(effectivenessMR2, text="Edit", width=10, command=lambda: edit_data())
+
+                    years = []
+
+                    def show_data(a):
+                        year.delete(0,END)
+                        inputX.delete(0,END)
+
+                        selectedItem = MR2Table.selection()[0]
+                        year.insert(0, MR2Table.item(selectedItem)['values'][0])
+                        inputX.insert(0, MR2Table.item(selectedItem)['values'][1])
+
+                    MR2Table.bind("<<TreeviewSelect>>", show_data)    
+
+                    am = 0
+                    def edit_data():
+                        yearText = year.get()                                   # get year
+
+                        selected_item = MR2Table.selection()[0]
+
+                        years.pop(MR2Table.index(selected_item))
+                        years.insert(MR2Table.index(selected_item), int(yearText))
+
+                        inputXText = float(inputX.get())                                                    # get X
+                        outputYText = float(inputX.get())*float(coefficientMR2) + float(interceptMR2)         # compute for Y
+                        
+                        MR2Table.item(selected_item, text="blub", values=(yearText, inputXText, outputYText))
+
+                    def add_data():
+                        yearText = year.get()                                   # get year
+                        inputXText = int(inputX.get())                        # get benefit
+                        outputYText = float(inputX.get())*float(coefficientMR2) + float(interceptMR2)         # compute for Y
+
+                        years.append(int(yearText))
+
+                        year.delete(0,END)
+                        inputX.delete(0,END)
+
+                        global assessmentTuple
+                        assessmentTuple = [yearText, inputXText, outputYText]
+
+                        # effortList.append(efforttuple)
+
+                        MR2Table.insert("",'end', values=(yearText, inputXText, outputYText))
+                        yearText.delete('1.0',END)                      # reset the text entry box
+                        inputX.delete('1.0',END)                        # reset the text entry box
+                        yearText.focus() 
+                    
+                    MR2Label.pack()
+                    MR2Table.pack()
+                    yearLabel.place(x=210, y=360)
+                    year.place(x=300, y=360)
+                    inputXLabel.place(x=210, y=420)
+                    inputX.place(x=300, y=420)
+                    addButton.place(x=540, y=360)
+                    editButton.place(x=540, y=420)
+
+                a = 0
+
+                while (a < len(p9alternatives)):
+                    window1PerAlt(a, p9alternatives[a])
+                    window2PerAlt(a, p9alternatives[a])
+                    a += 1
 
             elif int(varEffec.get()) == 3: 
-                effectiveness = Toplevel(main)
-                effectiveness.title("Policy Analytics 3.0 - Effectiveness: LogR")
-                effectiveness.geometry("830x480")
+                def windowPerAlt(a, policyAlt):
+                    effectivenessLogR = Toplevel(main)
+                    effectivenessLogR.title("Effectiveness: LogR")
+                    effectivenessLogR.geometry("830x480")
+                    
+                    equation = "y = "+str(coefficientXLogR)+"x + "+str(interceptLogR+coefficientConstLogR)+"\n"
+                    equationWithLabel = Label(effectivenessLogR, text="\nEquation  :  "+equation, font="Consolas", justify="left")
+                    equationWithLabel.pack()
+
+                    LogRLabel = Label(effectivenessLogR, text = "Alternative " + str(a+1) + " - " + policyAlt)
+                    LogRTable=ttk.Treeview(effectivenessLogR)
+                    LogRTable["columns"]=("1","2","3")
+                    LogRTable['show']='headings'
+                    LogRTable.column("1",width=130,anchor='c')
+                    LogRTable.column("2",width=130,anchor='c')
+                    LogRTable.column("3",width=130,anchor='c')
+                    LogRTable.heading("1",text="Year")
+                    LogRTable.heading("2",text="X")
+                    LogRTable.heading("3",text="Y")
+
+                    yearLabel = Label(effectivenessLogR, text = "Year")
+                    inputXLabel = Label(effectivenessLogR, text = "X")
+
+                    year = tk.Entry(effectivenessLogR, width=30)
+                    inputX = tk.Entry(effectivenessLogR, width=30) 
+
+                    addButton = tk.Button(effectivenessLogR, text='Add', width=10, command=lambda: add_data())  
+                    editButton = tk.Button(effectivenessLogR, text="Edit", width=10, command=lambda: edit_data())
+
+                    years = []
+
+                    def show_data(a):
+                        year.delete(0,END)
+                        inputX.delete(0,END)
+
+                        selectedItem = LogRTable.selection()[0]
+                        year.insert(0, LogRTable.item(selectedItem)['values'][0])
+                        inputX.insert(0, LogRTable.item(selectedItem)['values'][1])
+
+                    LogRTable.bind("<<TreeviewSelect>>", show_data)    
+
+                    am = 0
+                    def edit_data():
+                        yearText = year.get()                                   # get year
+
+                        selected_item = LogRTable.selection()[0]
+
+                        years.pop(LogRTable.index(selected_item))
+                        years.insert(LogRTable.index(selected_item), int(yearText))
+
+                        inputXText = float(inputX.get())                                                                            # get X
+                        log_odds = float(inputX.get())*float(coefficientXLogR) + float(interceptLogR+coefficientConstLogR)          # compute for Y
+                        odds = np.exp(log_odds)
+                        outputYText = odds / (1 + odds)
+                        
+                        LogRTable.item(selected_item, text="blub", values=(yearText, inputXText, outputYText))
+
+                    def add_data():
+                        yearText = year.get()                                   # get year
+                        
+                        years.append(int(yearText))
+
+                        inputXText = float(inputX.get())                                                                            # get X
+                        log_odds = float(inputX.get())*float(coefficientXLogR) + float(interceptLogR+coefficientConstLogR)          # compute for Y
+                        odds = np.exp(log_odds)
+                        outputYText = odds / (1 + odds)
+
+                        year.delete(0,END)
+                        inputX.delete(0,END)
+
+                        global assessmentTuple
+                        assessmentTuple = [yearText, inputXText, outputYText]
+
+                        # effortList.append(efforttuple)
+
+                        LogRTable.insert("",'end', values=(yearText, inputXText, outputYText))
+                        year.delete(0,END)                      # reset the text entry box
+                        inputX.delete(0,END)                        # reset the text entry box
+                        yearText.focus() 
+                    
+                    LogRLabel.pack()
+                    LogRTable.pack()
+                    yearLabel.place(x=210, y=360)
+                    year.place(x=300, y=360)
+                    inputXLabel.place(x=210, y=420)
+                    inputX.place(x=300, y=420)
+                    addButton.place(x=540, y=360)
+                    editButton.place(x=540, y=420)
+
+                a = 0
+
+                while (a < len(p9alternatives)):
+                    windowPerAlt(a, p9alternatives[a])
+                    a += 1
 
             elif int(varEffec.get()) == 4: 
-                effectiveness = Toplevel(main)
-                effectiveness.title("Policy Analytics 3.0 - Effectiveness: FGD")
-                effectiveness.geometry("830x480")
+                effectiveness4 = Toplevel(main)
+                effectiveness4.title("Effectiveness: FGD")
+                effectiveness4.geometry("830x480")
 
             if int(varCostEff.get()) == 1: 
-                effectiveness = Toplevel(main)
-                effectiveness.title("Policy Analytics 3.0 - Cost-efficiency: Tangible Cost-Benefit Analysis w/ Discounting")
-                effectiveness.geometry("830x600")
-
                 popup = Toplevel(root)
                 popup.geometry("200x200")
-                popup.title("Policy Analytics 3.0 - Enter Discount Rate")
-
+                popup.title("Enter Discount Rate")
 
                 discountLabel = Label(popup, text = "Enter discount rate (1-100): ")
                 discountEntry = Entry(popup, width=10)
@@ -1162,393 +1867,824 @@ def createNewProject():
                     print(discount)
                     popup.update()
                     popup.destroy()
+                
+                def windowPerAlt(a, policyAlt):
+                    nu = 0
+                    tangiblePerAlternative = Toplevel(main)
+                    tangiblePerAlternative.title("Tangible BCA with Discounting: Alternative " + str(a+1) + " - " + policyAlt)
+                    tangiblePerAlternative.geometry("810x600")
 
-                discountLabel.place(x=10, y=10)
-                discountEntry.place(x=10, y=70)
-                discountButton.place(x=10, y=100)
+                    totalDiscBenefit = 0
+                    totalDiscCost = 0
 
-                tangibleCBAwithLabel = Label(effectiveness, text = "Tangible Cost-Benefit Analysis w/ Discounting")
-                tangibleCBAwithTable=ttk.Treeview(effectiveness)
-                tangibleCBAwithTable["columns"]=("1","2","3","4")
-                tangibleCBAwithTable['show']='headings'
-                tangibleCBAwithTable.column("1",width=200,anchor='c')
-                tangibleCBAwithTable.column("2",width=200,anchor='c')
-                tangibleCBAwithTable.column("3",width=200,anchor='c')
-                tangibleCBAwithTable.column("4",width=200,anchor='c')
-                tangibleCBAwithTable.heading("1",text="Alternative")
-                tangibleCBAwithTable.heading("2",text="Benefit")
-                tangibleCBAwithTable.heading("3",text="Cost")
-                tangibleCBAwithTable.heading("4",text="Net Benefit")
+                    analysisFrame = tk.LabelFrame(tangiblePerAlternative)
 
-                alterLabel = Label(effectiveness, text = "Alternative")
-                benefLabel = Label(effectiveness, text = "Benefit")
-                costLabel = Label(effectiveness, text = "Cost")
+                    yearlytangibleCBAwithLabel = Label(analysisFrame, text = "Alternative " + str(a+1) + " - " + policyAlt)
+                    yearlytangibleCBAwithTable=ttk.Treeview(analysisFrame)
+                    yearlytangibleCBAwithTable["columns"]=("1","2","3","4","5","6")
+                    yearlytangibleCBAwithTable['show']='headings'
+                    yearlytangibleCBAwithTable.column("1",width=130,anchor='c')
+                    yearlytangibleCBAwithTable.column("2",width=130,anchor='c')
+                    yearlytangibleCBAwithTable.column("3",width=130,anchor='c')
+                    yearlytangibleCBAwithTable.column("4",width=130,anchor='c')
+                    yearlytangibleCBAwithTable.column("5",width=130,anchor='c')
+                    yearlytangibleCBAwithTable.column("6",width=130,anchor='c')
+                    yearlytangibleCBAwithTable.heading("1",text="Year")
+                    yearlytangibleCBAwithTable.heading("2",text="Benefit")
+                    yearlytangibleCBAwithTable.heading("3",text="Cost")
+                    yearlytangibleCBAwithTable.heading("4",text="df")
+                    yearlytangibleCBAwithTable.heading("5",text="Discounted Benefit")
+                    yearlytangibleCBAwithTable.heading("6",text="Discounted Cost")
 
-                alternative = tk.Entry(effectiveness, width=30)
-                benefit = tk.Entry(effectiveness, width=30) 
-                cost = tk.Entry(effectiveness, width=30) 
+                    yearLabel = Label(tangiblePerAlternative, text = "Year")
+                    benefLabel = Label(tangiblePerAlternative, text = "Benefit")
+                    costLabel = Label(tangiblePerAlternative, text = "Cost")
+                    totalLabel = Label(tangiblePerAlternative, text = "Total: ")
 
-                addButton = tk.Button(effectiveness, text='Add', width=10, command=lambda: add_data15())  
-                editButton = tk.Button(effectiveness, text="Edit", width=10, command=lambda: edit_data15())
+                    year = tk.Entry(tangiblePerAlternative, width=30)
+                    benefit = tk.Entry(tangiblePerAlternative, width=30) 
+                    cost = tk.Entry(tangiblePerAlternative, width=30) 
 
-                def show_data15(a):
-                    alternative.delete(0,END)
-                    benefit.delete(0,END)
-                    cost.delete(0,END)
+                    addButton = tk.Button(tangiblePerAlternative, text='Add', width=10, command=lambda: add_data())  
+                    editButton = tk.Button(tangiblePerAlternative, text="Edit", width=10, command=lambda: edit_data())
+                    computeTotalButton = tk.Button(tangiblePerAlternative, text="Compute Total", width=50, command=lambda: compute_total())
 
-                    selectedItem = tangibleCBAwithTable.selection()[0]
-                    alternative.insert(0, tangibleCBAwithTable.item(selectedItem)['values'][0])
-                    benefit.insert(0, tangibleCBAwithTable.item(selectedItem)['values'][1])
-                    cost.insert(0, tangibleCBAwithTable.item(selectedItem)['values'][2])
+                    years = []
 
-                tangibleCBAwithTable.bind("<<TreeviewSelect>>", show_data15)
+                    def show_data(a):
+                        year.delete(0,END)
+                        benefit.delete(0,END)
+                        cost.delete(0,END)
 
-                def edit_data15():
-                    alternativeText = alternative.get()                                         # read existing policy
-                    benefitText = int(benefit.get())                                            # read relevant provision
-                    costText = int(cost.get())                                                  # read accomplishment 
-                    netBenefit = int(benefitText) - int(costText)    
-                    print(netBenefit)                                                           # read assessment                 
-                                            
-                    selected_item = tangibleCBAwithTable.selection()[0]
-                    tangibleCBAwithTable.item(selected_item, text="blub", values=(alternativeText, benefitText, costText, netBenefit))
+                        selectedItem = yearlytangibleCBAwithTable.selection()[0]
+                        year.insert(0, yearlytangibleCBAwithTable.item(selectedItem)['values'][0])
+                        benefit.insert(0, yearlytangibleCBAwithTable.item(selectedItem)['values'][1])
+                        cost.insert(0, yearlytangibleCBAwithTable.item(selectedItem)['values'][2])
 
-                def add_data15():
-                    alternativeText = alternative.get()                                                 # read existing policy
-                    benefitText = int(benefit.get())*(1-discount)                                                        # read relevant provision
-                    costText = int(cost.get())*(1-discount)                                                              # read accomplishment 
-                    netBenefit = int(benefit.get())*(1-discount) - int(cost.get())*(1-discount)                     # read assessment      
+                    yearlytangibleCBAwithTable.bind("<<TreeviewSelect>>", show_data)    
 
-                    global assessmentTuple
-                    assessmentTuple = [alternativeText, benefitText, costText, netBenefit]
+                    am = 0
+                    def edit_data():
+                        nonlocal nu, totalDiscBenefit, totalDiscCost
+                        yearText = year.get()                                   # get year
 
-                    # effortList.append(efforttuple)
 
-                    tangibleCBAwithTable.insert("",'end', values=(alternativeText, benefitText, costText, netBenefit))
-                    alternativeText.delete('1.0',END)               # reset the text entry box
-                    benefitText.delete('1.0',END)                   # reset the text entry box
-                    costText.delete('1.0',END)                      # reset the text entry box
-                    alternativeText.focus() 
+                        selected_item = yearlytangibleCBAwithTable.selection()[0]
+                        
+                        totalDiscBenefit -= round(float(yearlytangibleCBAwithTable.item(selected_item)['values'][4]), 2)
+                        totalDiscCost -= round(float(yearlytangibleCBAwithTable.item(selected_item)['values'][5]), 2)
 
-                tangibleCBAwithLabel.grid(row=0, column=1)
-                tangibleCBAwithTable.grid(row=1, column=1)
-                alterLabel.place(x=40, y=330)
-                alternative.place(x=200, y=330)
-                benefLabel.place(x=40, y=390)
-                benefit.place(x=200, y=390)
-                costLabel.place(x=40, y=450)
-                cost.place(x=200, y=450)
-                addButton.place(x=450, y=390)
-                editButton.place(x=450, y=450)
+                        years.pop(yearlytangibleCBAwithTable.index(selected_item))
+                        years.insert(yearlytangibleCBAwithTable.index(selected_item), int(yearText))
+
+                        benefitText = float(benefit.get())                        # get benefit
+                        costText = float(cost.get())                              # get cost
+                        df = round(1/((1+discount)**(int(yearText) - int(years[0]))), 5)
+                        discountedBenefit = round(float(benefitText)*df, 2)                 # compute for and set discountedBenefit 
+                        discountedCost = round(float(costText)*df, 2)                       # compute for and set discountedCost
+
+                        totalDiscBenefit += discountedBenefit
+                        totalDiscCost += discountedCost
+                        print(totalDiscBenefit, totalDiscCost)
+
+                        yearlytangibleCBAwithTable.item(selected_item, text="blub", values=(yearText, benefitText, costText, df, discountedBenefit, discountedCost))
+
+                    def add_data():
+                        nonlocal nu, totalDiscBenefit, totalDiscCost
+                        print(year.get())
+                        print(benefit.get())
+                        print(cost.get())
+
+                        yearText = year.get()                                   # get year
+                        benefitText = float(benefit.get())                        # get benefit
+                        costText = float(cost.get())                              # get cost
+
+                        years.append(int(yearText))
+
+                        year.delete(0,END)
+                        benefit.delete(0,END)
+                        cost.delete(0,END)
+                        df = round(1/((1+discount)**nu), 5)                               # set df to discount function
+                        discountedBenefit = round(float(benefitText)*df, 2)                 # compute for and set discountedBenefit 
+                        discountedCost = round(float(costText)*df, 2)                       # compute for and set discountedCost
+                        nu += 1
+
+                        totalDiscBenefit += discountedBenefit
+                        totalDiscCost += discountedCost
+                        print(totalDiscBenefit, totalDiscCost)
+
+                        global assessmentTuple
+                        assessmentTuple = [yearText, benefitText, costText, df, discountedBenefit, discountedCost]
+
+                        # effortList.append(efforttuple)
+
+                        yearlytangibleCBAwithTable.insert("",'end', values=(yearText, benefitText, costText, df, discountedBenefit, discountedCost))
+                        yearText.delete('1.0',END)               # reset the text entry box
+                        benefitText.delete('1.0',END)                   # reset the text entry box
+                        costText.delete('1.0',END)                      # reset the text entry box
+                        yearText.focus() 
+
+                    def compute_total():
+                        popupTotal = Toplevel(tangiblePerAlternative)
+                        popupTotal.geometry("400x280")
+                        popupTotal.title("Totals")
+
+                        totDBLabel = Label(popupTotal, text = "Total Discounted Benefits:   ")
+                        totDCLabel = Label(popupTotal, text = "Total Discounted Costs:    ")
+                        BCRatioLabel = Label(popupTotal, text = "Benefit-Cost Ratio:   ")
+
+                        BCRatio = round(float(totalDiscBenefit/totalDiscCost), 2)
+                        
+                        totDBLabel2 = Label(popupTotal, text = str(totalDiscBenefit))
+                        totDCLabel2 = Label(popupTotal, text = str(totalDiscCost))
+                        BCRatioLabel2 = Label(popupTotal, text = str(BCRatio))
+
+                        totDBLabel.place(x=70, y=40)
+                        totDCLabel.place(x=70, y=100)
+                        BCRatioLabel.place(x=70, y=160)
+                        totDBLabel2.place(x=260, y=40)
+                        totDCLabel2.place(x=260, y=100)
+                        BCRatioLabel2.place(x=260, y=160)
+                    
+                    analysisFrame.place(x=10, y=10)
+                    yearlytangibleCBAwithLabel.grid(row=0, column=1)
+                    yearlytangibleCBAwithTable.grid(row=1, column=1)
+                    yearLabel.place(x=100, y=330)
+                    year.place(x=260, y=330)
+                    benefLabel.place(x=100, y=390)
+                    benefit.place(x=260, y=390)
+                    costLabel.place(x=100, y=450)
+                    cost.place(x=260, y=450)
+                    addButton.place(x=550, y=390)
+                    editButton.place(x=550, y=450)
+                    computeTotalButton.place(x=220, y=540)
+
+                a = 0
+
+                while (a < len(p9alternatives)):
+                    windowPerAlt(a, p9alternatives[a])
+                    a += 1
+
+                discountLabel.place(x = 25, y = 10)
+                discountEntry.place(x = 70, y = 50)
+                discountButton.place(x = 63, y = 100)
 
             elif int(varCostEff.get()) == 2: 
-                effectiveness = Toplevel(main)
-                effectiveness.title("Policy Analytics 3.0 - Cost-efficiency: Tangible Cost-Benefit Analysis w/o Discounting")
-                effectiveness.geometry("830x600")
+                def windowPerAlt(a, policyAlt):
+                    nu = 0
+                    tangibleWithoutPerAlternative = Toplevel(main)
+                    tangibleWithoutPerAlternative.title("Tangible BCA without Discounting: Alternative " + str(a+1) + " - " + policyAlt)
+                    tangibleWithoutPerAlternative.geometry("620x600")
+                    
+                    analysisFrame = tk.LabelFrame(tangibleWithoutPerAlternative)
 
-                tangibleCBALabel = Label(effectiveness, text = "Tangible Cost-Benefit Analysis w/o Discounting")
-                tangibleCBATable=ttk.Treeview(effectiveness)
-                tangibleCBATable["columns"]=("1","2","3","4")
-                tangibleCBATable['show']='headings'
-                tangibleCBATable.column("1",width=200,anchor='c')
-                tangibleCBATable.column("2",width=200,anchor='c')
-                tangibleCBATable.column("3",width=200,anchor='c')
-                tangibleCBATable.column("4",width=200,anchor='c')
-                tangibleCBATable.heading("1",text="Alternative")
-                tangibleCBATable.heading("2",text="Benefit")
-                tangibleCBATable.heading("3",text="Cost")
-                tangibleCBATable.heading("4",text="Net Benefit")
+                    yearlytangibleCBAwithoutLabel = Label(analysisFrame, text = "Alternative " + str(a+1) + " - " + policyAlt)
+                    yearlytangibleCBAwithoutTable=ttk.Treeview(analysisFrame)
+                    yearlytangibleCBAwithoutTable["columns"]=("1","2","3")
+                    yearlytangibleCBAwithoutTable['show']='headings'
+                    yearlytangibleCBAwithoutTable.column("1",width=200,anchor='c')
+                    yearlytangibleCBAwithoutTable.column("2",width=200,anchor='c')
+                    yearlytangibleCBAwithoutTable.column("3",width=200,anchor='c')
+                    yearlytangibleCBAwithoutTable.heading("1",text="Year")
+                    yearlytangibleCBAwithoutTable.heading("2",text="Benefit")
+                    yearlytangibleCBAwithoutTable.heading("3",text="Cost")
 
-                alterLabel = Label(effectiveness, text = "Alternative")
-                benefLabel = Label(effectiveness, text = "Benefit")
-                costLabel = Label(effectiveness, text = "Cost")
+                    yearLabel = Label(tangibleWithoutPerAlternative, text = "Year")
+                    benefLabel = Label(tangibleWithoutPerAlternative, text = "Benefit")
+                    costLabel = Label(tangibleWithoutPerAlternative, text = "Cost")
 
-                alternative = tk.Entry(effectiveness, width=30)
-                benefit = tk.Entry(effectiveness, width=30) 
-                cost = tk.Entry(effectiveness, width=30) 
+                    year = tk.Entry(tangibleWithoutPerAlternative, width=30)
+                    benefit = tk.Entry(tangibleWithoutPerAlternative, width=30) 
+                    cost = tk.Entry(tangibleWithoutPerAlternative, width=30) 
 
-                addButton = tk.Button(effectiveness, text='Add', width=10, command=lambda: add_data15())  
-                editButton = tk.Button(effectiveness, text="Edit", width=10, command=lambda: edit_data15())
+                    addButton = tk.Button(tangibleWithoutPerAlternative, text='Add', width=10, command=lambda: add_data())  
+                    editButton = tk.Button(tangibleWithoutPerAlternative, text="Edit", width=10, command=lambda: edit_data())
 
-                def show_data15(a):
-                    alternative.delete(0,END)
-                    benefit.delete(0,END)
-                    cost.delete(0,END)
+                    def show_data(a):
+                        year.delete(0,END)
+                        benefit.delete(0,END)
+                        cost.delete(0,END)
 
-                    selectedItem = tangibleCBATable.selection()[0]
-                    alternative.insert(0, tangibleCBATable.item(selectedItem)['values'][0])
-                    benefit.insert(0, tangibleCBATable.item(selectedItem)['values'][1])
-                    cost.insert(0, tangibleCBATable.item(selectedItem)['values'][2])
+                        selectedItem = yearlytangibleCBAwithoutTable.selection()[0]
+                        year.insert(0, yearlytangibleCBAwithoutTable.item(selectedItem)['values'][0])
+                        benefit.insert(0, yearlytangibleCBAwithoutTable.item(selectedItem)['values'][1])
+                        cost.insert(0, yearlytangibleCBAwithoutTable.item(selectedItem)['values'][2])
 
-                tangibleCBATable.bind("<<TreeviewSelect>>", show_data15)
+                    yearlytangibleCBAwithoutTable.bind("<<TreeviewSelect>>", show_data)    
 
-                def edit_data15():
-                    alternativeText = alternative.get()                     # read existing policy
-                    benefitText = int(benefit.get())                        # read relevant provision
-                    costText = int(cost.get())                              # read accomplishment 
-                    netBenefit = int(benefitText) - int(costText)    
-                    print(netBenefit)                                       # read assessment                 
-                                            
-                    selected_item = tangibleCBATable.selection()[0]
-                    tangibleCBATable.item(selected_item, text="blub", values=(alternativeText, benefitText, costText, netBenefit))
+                    def edit_data():
+                        yearText = year.get()                                   # get year
+                        benefitText = int(benefit.get())                        # get benefit
+                        costText = int(cost.get())                              # get cost
 
-                def add_data15():
-                    alternativeText = alternative.get()                     # read existing policy
-                    benefitText = benefit.get()                             # read relevant provision
-                    costText = cost.get()                                   # read accomplishment 
-                    netBenefit = int(benefitText) - int(costText)                   # read assessment      
+                        selected_item = yearlytangibleCBAwithoutTable.selection()[0]
+                        yearlytangibleCBAwithoutTable.item(selected_item, text="blub", values=(yearText, benefitText, costText))
 
-                    global assessmentTuple
-                    assessmentTuple = [alternativeText, benefitText, costText, netBenefit]
+                    def add_data():
+                        nonlocal nu
 
-                    # effortList.append(efforttuple)
+                        yearText = year.get()                                   # get year
+                        benefitText = int(benefit.get())                        # get benefit
+                        costText = int(cost.get())                              # get cost
 
-                    tangibleCBATable.insert("",'end', values=(alternativeText, benefitText, costText, netBenefit))
-                    alternativeText.delete('1.0',END)               # reset the text entry box
-                    benefitText.delete('1.0',END)                   # reset the text entry box
-                    costText.delete('1.0',END)                      # reset the text entry box
-                    alternativeText.focus() 
+                        year.delete(0,END)
+                        benefit.delete(0,END)
+                        cost.delete(0,END)
+                        nu += 1
+                        global assessmentTuple
+                        assessmentTuple = [yearText, benefitText, costText]
 
-                tangibleCBALabel.grid(row=0, column=1)
-                tangibleCBATable.grid(row=1, column=1)
-                alterLabel.place(x=40, y=330)
-                alternative.place(x=200, y=330)
-                benefLabel.place(x=40, y=390)
-                benefit.place(x=200, y=390)
-                costLabel.place(x=40, y=450)
-                cost.place(x=200, y=450)
-                addButton.place(x=450, y=390)
-                editButton.place(x=450, y=450)
+                        # effortList.append(efforttuple)
+
+                        yearlytangibleCBAwithoutTable.insert("",'end', values=(yearText, benefitText, costText))
+                        yearText.delete('1.0',END)               # reset the text entry box
+                        benefitText.delete('1.0',END)                   # reset the text entry box
+                        costText.delete('1.0',END)                      # reset the text entry box
+                        yearText.focus() 
+                    
+                    analysisFrame.place(x=10, y=10)
+                    yearlytangibleCBAwithoutLabel.grid(row=0, column=1)
+                    yearlytangibleCBAwithoutTable.grid(row=1, column=1)
+                    yearLabel.place(x=40, y=330)
+                    year.place(x=200, y=330)
+                    benefLabel.place(x=40, y=390)
+                    benefit.place(x=200, y=390)
+                    costLabel.place(x=40, y=450)
+                    cost.place(x=200, y=450)
+                    addButton.place(x=450, y=390)
+                    editButton.place(x=450, y=450)
+
+                a = 0
+
+                while (a < len(p9alternatives)):
+                    windowPerAlt(a, p9alternatives[a])
+                    a += 1
 
             elif int(varCostEff.get()) == 3:
-                effectiveness = Toplevel(main)
-                effectiveness.title("Policy Analytics 3.0 - Cost-efficiency: Intangible Cost-Benefit Analysis")
-                effectiveness.geometry("830x600")
+                def windowPerAlt(a, policyAlt):
+                    nu = 0
+                    intangiblePerAlternative = Toplevel(main)
+                    intangiblePerAlternative.title("Intangible BCA: Alternative " + str(a+1) + " - " + policyAlt)
+                    intangiblePerAlternative.geometry("830x600")
+                
+                a = 0
 
-                intangibleCBALabel = Label(effectiveness, text = "Intangible Cost-Benefit Analysis")
-                intangibleCBATable=ttk.Treeview(effectiveness)
-                intangibleCBATable["columns"]=("1","2","3")
-                intangibleCBATable['show']='headings'
-                intangibleCBATable.column("1",width=200,anchor='c')
-                intangibleCBATable.column("2",width=200,anchor='c')
-                intangibleCBATable.column("3",width=200,anchor='c')
-                intangibleCBATable.heading("1",text="Alternative")
-                intangibleCBATable.heading("2",text="Benefit")
-                intangibleCBATable.heading("3",text="Cost")
-
-                alterLabel = Label(effectiveness, text = "Alternative")
-                benefLabel = Label(effectiveness, text = "Benefit")
-                costLabel = Label(effectiveness, text = "Cost")
-
-                alternative = tk.Entry(effectiveness, width=30)
-                benefit = tk.Entry(effectiveness, width=30) 
-                cost = tk.Entry(effectiveness, width=30) 
-
-                addButton = tk.Button(effectiveness, text='Add', width=10, command=lambda: add_data15())  
-                editButton = tk.Button(effectiveness, text="Edit", width=10, command=lambda: edit_data15())
-
-                def show_data15(a):
-                    alternative.delete(0,END)
-                    benefit.delete(0,END)
-                    cost.delete(0,END)
-
-                    selectedItem = intangibleCBATable.selection()[0]
-                    alternative.insert(0, intangibleCBATable.item(selectedItem)['values'][0])
-                    benefit.insert(0, intangibleCBATable.item(selectedItem)['values'][1])
-                    cost.insert(0, intangibleCBATable.item(selectedItem)['values'][2])
-
-                intangibleCBATable.bind("<<TreeviewSelect>>", show_data15)
-
-                def edit_data15():
-                    alternativeText = alternative.get()                     # read existing policy
-                    benefitText = int(benefit.get())                        # read relevant provision
-                    costText = int(cost.get())                              # read accomplishment 
-                    netBenefit = int(benefitText) - int(costText)    
-                    print(netBenefit)                                       # read assessment                 
-                                            
-                    selected_item = intangibleCBATable.selection()[0]
-                    intangibleCBATable.item(selected_item, text="blub", values=(alternativeText, benefitText, costText, netBenefit))
-
-                def add_data15():
-                    alternativeText = alternative.get()                     # read existing policy
-                    benefitText = benefit.get()                             # read relevant provision
-                    costText = cost.get()                                   # read accomplishment 
-                    netBenefit = int(benefitText) - int(costText)                   # read assessment      
-
-                    global assessmentTuple
-                    assessmentTuple = [alternativeText, benefitText, costText, netBenefit]
-
-                    # effortList.append(efforttuple)
-
-                    intangibleCBATable.insert("",'end', values=(alternativeText, benefitText, costText, netBenefit))
-                    alternativeText.delete('1.0',END)               # reset the text entry box
-                    benefitText.delete('1.0',END)                   # reset the text entry box
-                    costText.delete('1.0',END)                      # reset the text entry box
-                    alternativeText.focus() 
-
-                intangibleCBALabel.grid(row=0, column=1)
-                intangibleCBATable.grid(row=1, column=1)
-                alterLabel.place(x=40, y=330)
-                alternative.place(x=200, y=330)
-                benefLabel.place(x=40, y=390)
-                benefit.place(x=200, y=390)
-                costLabel.place(x=40, y=450)
-                cost.place(x=200, y=450)
-                addButton.place(x=450, y=390)
-                editButton.place(x=450, y=450)
+                while (a < len(p9alternatives)):
+                    windowPerAlt(a, p9alternatives[a])
+                    a += 1
 
             if int(varAccept.get()) == 1:
-                effectiveness = Toplevel(main)
-                effectiveness.title("Policy Analytics 3.0 - Effectiveness: PRINCE Method")
-                effectiveness.geometry("830x480")
+                def windowPerAlt(a, policyAlt):
+                    princeMethod = Toplevel(main)
+                    princeMethod.title("PRINCE Method: Alternative " + str(a+1) + " - " + policyAlt)
+                    princeMethod.geometry("670x600")
 
-                stakeholderLabel = Label(effectiveness, text = "PRINCE Method")
-                stakeholderTable=ttk.Treeview(effectiveness)
-                stakeholderTable["columns"]=("1","2","3")
-                stakeholderTable['show']='headings'
-                stakeholderTable.column("1",width=200,anchor='c')
-                stakeholderTable.column("2",width=200,anchor='c')
-                stakeholderTable.column("3",width=200,anchor='c')
-                stakeholderTable.heading("1",text="Supporters")
-                stakeholderTable.heading("2",text="Neutral")
-                stakeholderTable.heading("3",text="Oppositors")
+                    analysisFrame = tk.LabelFrame(princeMethod)
 
-                suppoLabel = Label(effectiveness, text = "Supporter")
-                neutrLabel = Label(effectiveness, text = "Neutral")
-                oppoLabel = Label(effectiveness, text = "Oppositor")
+                    princeLabel = Label(analysisFrame, text = "PRINCE Method")
+                    princeTable=ttk.Treeview(analysisFrame)
+                    princeTable["columns"]=("1","2","3","4","5")
+                    princeTable['show']='headings'
+                    princeTable.column("1",width=130,anchor='c')
+                    princeTable.column("2",width=130,anchor='c')
+                    princeTable.column("3",width=130,anchor='c')
+                    princeTable.column("4",width=130,anchor='c')
+                    princeTable.column("5",width=130,anchor='c')
+                    princeTable.heading("1",text="Player")
+                    princeTable.heading("2",text="Issue Position")
+                    princeTable.heading("3",text="Power")
+                    princeTable.heading("4",text="Priority")
+                    princeTable.heading("5",text="PRINCE Score")
 
-                suppo = tk.Entry(effectiveness, width=30)
-                neutr = tk.Entry(effectiveness, width=30) 
-                oppos = tk.Entry(effectiveness, width=30) 
+                    playerLabel = Label(princeMethod, text = "Player")
+                    issueposLabel = Label(princeMethod, text = "Issue\nPosition")
+                    powerLabel = Label(princeMethod, text = "Power")
+                    prioLabel = Label(princeMethod, text = "Priority")
 
-                addButton = tk.Button(effectiveness, text='Add', width=10, command=lambda: add_data())  
-                editButton = tk.Button(effectiveness, text="Edit", width=10, command=lambda: edit_data())
+                    player = tk.Entry(princeMethod, width=30)
+                    issuepos = tk.Entry(princeMethod, width=30) 
+                    power = tk.Entry(princeMethod, width=30) 
+                    prio = tk.Entry(princeMethod, width=30) 
 
-                def show_data():
-                    suppo.delete(0,END)
-                    neutr.delete(0,END)
-                    oppos.delete(0,END)
+                    addButton = tk.Button(princeMethod, text='Add', width=10, command=lambda: add_data())  
+                    editButton = tk.Button(princeMethod, text="Edit", width=10, command=lambda: edit_data())
 
-                    selectedItem = stakeholderTable.selection()[0]
-                    suppo.insert(0, stakeholderTable.item(selectedItem)['values'][0])
-                    neutr.insert(0, stakeholderTable.item(selectedItem)['values'][1])
-                    oppos.insert(0, stakeholderTable.item(selectedItem)['values'][2])
+                    def show_data(a):
+                        player.delete(0,END)
+                        issuepos.delete(0,END)
+                        power.delete(0,END)
+                        prio.delete(0,END)
 
-                stakeholderTable.bind("<<TreeviewSelect>>", show_data)
+                        selectedItem = princeTable.selection()[0]
+                        player.insert(0, princeTable.item(selectedItem)['values'][0])
+                        issuepos.insert(0, princeTable.item(selectedItem)['values'][1])
+                        power.insert(0, princeTable.item(selectedItem)['values'][2])
+                        prio.insert(0, princeTable.item(selectedItem)['values'][3])
 
-                def edit_data():
-                    suppoText = suppo.get()                     # read supporter textbox
-                    neutrText = neutr.get()                     # read neutral textbox
-                    opposText = oppos.get()                     # read opposition textbox             
-                                            
-                    selected_item = tangibleCBATable.selection()[0]
-                    tangibleCBATable.item(selected_item, text="blub", values=(suppoText, neutrText, opposText))
+                    princeTable.bind("<<TreeviewSelect>>", show_data)
 
-                def add_data():
-                    suppoText = suppo.get()                     # read supporter textbox
-                    neutrText = neutr.get()                     # read neutral textbox
-                    opposText = oppos.get()                     # read opposition textbox    
+                    def edit_data():
+                        playerText = player.get()                               # read player textbox
+                        issueposText = int(issuepos.get())                      # read issue position textbox
+                        powerText = int(power.get())                            # read power textbox        
+                        prioText = int(prio.get())                              # read priority textbox     
 
-                    global assessmentTuple
-                    assessmentTuple = [suppoText, neutrText, opposText]
+                        grades = [issueposText, powerText, prioText]
+                        pc = 1
+                        for g in grades:
+                            if g != 0:
+                                pc *= g       
+                                                
+                        selected_item = princeTable.selection()[0]
+                        princeTable.item(selected_item, text="blub", values=(playerText, issueposText, powerText, prioText, pc))
 
-                    # effortList.append(efforttuple)
+                    def add_data():
+                        playerText = player.get()                               # read player textbox
+                        issueposText = int(issuepos.get())                      # read issue position textbox
+                        powerText = int(power.get())                            # read power textbox        
+                        prioText = int(prio.get())                              # read priority textbox 
 
-                    tangibleCBATable.insert("",'end', values=(suppoText, neutrText, opposText))
-                    suppoText.delete('1.0',END)               # reset the text entry box
-                    neutrText.delete('1.0',END)               # reset the text entry box
-                    opposText.delete('1.0',END)               # reset the text entry box
-                    suppoText.focus() 
+                        grades = [issueposText, powerText, prioText]
+                        pc = 1
+                        for g in grades:
+                            if g != 0:
+                                pc *= g 
 
-                stakeholderLabel.grid(row=0, column=1)
-                stakeholderTable.grid(row=1, column=1)
-                suppoLabel.place(x=40, y=330)
-                suppo.place(x=200, y=330)
-                neutrLabel.place(x=40, y=390)
-                neutr.place(x=200, y=390)
-                oppoLabel.place(x=40, y=450)
-                oppos.place(x=200, y=450)
-                addButton.place(x=450, y=390)
-                editButton.place(x=450, y=450)
-            
+                        global assessmentTuple
+                        assessmentTuple = [playerText, issueposText, powerText, prioText]
+
+                        # effortList.append(efforttuple)
+
+                        princeTable.insert("",'end', values=(playerText, issueposText, powerText, prioText, pc))
+                        player.delete(0,END)
+                        issuepos.delete(0,END)
+                        power.delete(0,END)
+                        prio.delete(0,END)
+                        player.focus() 
+
+                    analysisFrame.place(x=10, y=10)
+                    princeLabel.grid(row=0, column=1)
+                    princeTable.grid(row=1, column=1)
+                    playerLabel.place(x=40, y=330)
+                    player.place(x=200, y=330)
+                    issueposLabel.place(x=40, y=390)
+                    issuepos.place(x=200, y=390)
+                    powerLabel.place(x=40, y=450)
+                    power.place(x=200, y=450)
+                    prioLabel.place(x=40, y=510)
+                    prio.place(x=200, y=510)
+                    addButton.place(x=450, y=390)
+                    editButton.place(x=450, y=450)
+
+                a = 0
+
+                while (a < len(p9alternatives)):
+                    windowPerAlt(a, p9alternatives[a])
+                    a += 1    
 
             elif int(varAccept.get()) == 2:
-                effectiveness = Toplevel(main)
-                effectiveness.title("Policy Analytics 3.0 - Effectiveness: Stakeholder Analysis")
-                effectiveness.geometry("830x480")
+                def windowPerAlt(a, policyAlt):
+                    stakeholderWindow = Toplevel(main)
+                    stakeholderWindow.title("Stakeholder Analysis: Alternative " + str(a+1) + " - " + policyAlt)
+                    stakeholderWindow.geometry("790x600")
 
-                stakeholderLabel = Label(effectiveness, text = "Stakeholder Analysis")
-                stakeholderTable=ttk.Treeview(effectiveness)
-                stakeholderTable["columns"]=("1","2","3")
-                stakeholderTable['show']='headings'
-                stakeholderTable.column("1",width=200,anchor='c')
-                stakeholderTable.column("2",width=200,anchor='c')
-                stakeholderTable.column("3",width=200,anchor='c')
-                stakeholderTable.heading("1",text="Supporters")
-                stakeholderTable.heading("2",text="Neutral")
-                stakeholderTable.heading("3",text="Oppositors")
+                    analysisFrame = tk.LabelFrame(stakeholderWindow)
 
-                suppoLabel = Label(effectiveness, text = "Supporter")
-                neutrLabel = Label(effectiveness, text = "Neutral")
-                oppoLabel = Label(effectiveness, text = "Oppositor")
+                    stakeholderLabel = Label(analysisFrame, text = "Stakeholder Analysis")
+                    stakeholderTable=ttk.Treeview(analysisFrame)
+                    stakeholderTable["columns"]=("1","2","3","4")
+                    stakeholderTable['show']='headings'
+                    stakeholderTable.column("1",width=190,anchor='c')
+                    stakeholderTable.column("2",width=190,anchor='c')
+                    stakeholderTable.column("3",width=190,anchor='c')
+                    stakeholderTable.column("4",width=190,anchor='c')
+                    stakeholderTable.heading("1",text="Players (Stakeholder + Actor)")
+                    stakeholderTable.heading("2",text="Positions/Stands")
+                    stakeholderTable.heading("3",text="Motivations/Values/Beliefs")
+                    stakeholderTable.heading("4",text="Sources of Power")
 
-                suppo = tk.Entry(effectiveness, width=30)
-                neutr = tk.Entry(effectiveness, width=30) 
-                oppos = tk.Entry(effectiveness, width=30) 
+                    player_stakeactorLabel = Label(stakeholderWindow, text = "Player (Stakeholder + Actor)")
+                    positionLabel = Label(stakeholderWindow, text = "Position/Stand")
+                    motivationLabel = Label(stakeholderWindow, text = "Motivation/Value/Belief")
+                    sourceLabel = Label(stakeholderWindow, text = "Source")
 
-                addButton = tk.Button(effectiveness, text='Add', width=10, command=lambda: add_data())  
-                editButton = tk.Button(effectiveness, text="Edit", width=10, command=lambda: edit_data())
+                    player_stakeactor = tk.Entry(stakeholderWindow, width=30)
+                    position = tk.Entry(stakeholderWindow, width=30) 
+                    motivation = tk.Entry(stakeholderWindow, width=30) 
+                    source = tk.Entry(stakeholderWindow, width=30) 
 
-                def show_data():
-                    suppo.delete(0,END)
-                    neutr.delete(0,END)
-                    oppos.delete(0,END)
+                    addButton = tk.Button(stakeholderWindow, text='Add', width=10, command=lambda: add_data())  
+                    editButton = tk.Button(stakeholderWindow, text="Edit", width=10, command=lambda: edit_data())
 
-                    selectedItem = stakeholderTable.selection()[0]
-                    suppo.insert(0, stakeholderTable.item(selectedItem)['values'][0])
-                    neutr.insert(0, stakeholderTable.item(selectedItem)['values'][1])
-                    oppos.insert(0, stakeholderTable.item(selectedItem)['values'][2])
+                    def show_data(a):
+                        player_stakeactor.delete(0,END)
+                        position.delete(0,END)
+                        motivation.delete(0,END)
+                        source.delete(0,END)
 
-                stakeholderTable.bind("<<TreeviewSelect>>", show_data)
+                        selectedItem = stakeholderTable.selection()[0]
+                        player_stakeactor.insert(0, stakeholderTable.item(selectedItem)['values'][0])
+                        position.insert(0, stakeholderTable.item(selectedItem)['values'][1])
+                        motivation.insert(0, stakeholderTable.item(selectedItem)['values'][2])
+                        source.insert(0, stakeholderTable.item(selectedItem)['values'][3])
 
-                def edit_data():
-                    suppoText = suppo.get()                     # read supporter textbox
-                    neutrText = neutr.get()                     # read neutral textbox
-                    opposText = oppos.get()                     # read opposition textbox             
-                                            
-                    selected_item = tangibleCBATable.selection()[0]
-                    tangibleCBATable.item(selected_item, text="blub", values=(suppoText, neutrText, opposText))
 
-                def add_data():
-                    suppoText = suppo.get()                     # read supporter textbox
-                    neutrText = neutr.get()                     # read neutral textbox
-                    opposText = oppos.get()                     # read opposition textbox    
+                    stakeholderTable.bind("<<TreeviewSelect>>", show_data)
 
-                    global assessmentTuple
-                    assessmentTuple = [suppoText, neutrText, opposText]
+                    def edit_data():
+                        player_stakeactorText = player_stakeactor.get()     # read player(s + a) textbox
+                        positionText = position.get()                       # read position textbox
+                        motivationText = motivation.get()                   # read motivation textbox        
+                        sourceText = source.get()                           # read source textbox     
+    
+                        selected_item = stakeholderTable.selection()[0]
+                        stakeholderTable.item(selected_item, text="blub", values=(player_stakeactorText, positionText, motivationText, sourceText))
 
-                    # effortList.append(efforttuple)
+                    def add_data():
+                        player_stakeactorText = player_stakeactor.get()     # read player(s + a) textbox
+                        positionText = position.get()                       # read position textbox
+                        motivationText = motivation.get()                   # read motivation textbox        
+                        sourceText = source.get()                           # read source textbox   
 
-                    tangibleCBATable.insert("",'end', values=(suppoText, neutrText, opposText))
-                    suppoText.delete('1.0',END)               # reset the text entry box
-                    neutrText.delete('1.0',END)               # reset the text entry box
-                    opposText.delete('1.0',END)               # reset the text entry box
-                    suppoText.focus() 
+                        global assessmentTuple
+                        assessmentTuple = [player_stakeactorText, positionText, motivationText, sourceText]
 
-                stakeholderLabel.grid(row=0, column=1)
-                stakeholderTable.grid(row=1, column=1)
-                suppoLabel.place(x=40, y=330)
-                suppo.place(x=200, y=330)
-                neutrLabel.place(x=40, y=390)
-                neutr.place(x=200, y=390)
-                oppoLabel.place(x=40, y=450)
-                oppos.place(x=200, y=450)
-                addButton.place(x=450, y=390)
-                editButton.place(x=450, y=450)
-            
-            def results():
-                return
-            
+                        # effortList.append(efforttuple)
+
+                        stakeholderTable.insert("",'end', values=(player_stakeactorText, positionText, motivationText, sourceText))
+                        player_stakeactor.delete(0,END)
+                        position.delete(0,END)
+                        motivation.delete(0,END)
+                        source.delete(0,END)
+                        player_stakeactor.focus() 
+
+                    analysisFrame.place(x=10, y=10)
+                    stakeholderLabel.grid(row=0, column=1)
+                    stakeholderTable.grid(row=1, column=1)
+                    player_stakeactorLabel.place(x=40, y=330)
+                    player_stakeactor.place(x=200, y=330)
+                    positionLabel.place(x=40, y=390)
+                    position.place(x=200, y=390)
+                    motivationLabel.place(x=40, y=450)
+                    motivation.place(x=200, y=450)
+                    sourceLabel.place(x=40, y=510)
+                    source.place(x=200, y=510)
+                    addButton.place(x=450, y=390)
+                    editButton.place(x=450, y=450)
+
+                a = 0
+
+                while (a < len(p9alternatives)):
+                    windowPerAlt(a, p9alternatives[a])
+                    a += 1    
+
+
+        btnNext8 = Button(mainProject, text = "Next", width=10, command = lambda: next_8())
+        btnNext8.place(x=550, y=440)         
+        btnBack8 = Button(mainProject, text = "Back", width=10, command = lambda: back_8())
+        btnBack8.place(x=265, y=440)         
+    
+    def page_10():
+        style.configure('Treeview', rowheight=60)
+        mainProject.geometry("1090x530")
+
+        frame10 = tk.LabelFrame(mainProject)
+
+        implementationPlanLabel = Label(frame10, text = "Policy Implementation Plan")
+        implementationPlanTable=ttk.Treeview(frame10, selectmode="browse", height=3)
+        implementationPlanTable["columns"]=("1","2","3","4","5")
+        implementationPlanTable['show']='headings'
+        implementationPlanTable.column("1",width=300,anchor='c')
+        implementationPlanTable.column("2",width=250,anchor='c')
+        implementationPlanTable.column("3",width=180,anchor='c')
+        implementationPlanTable.column("4",width=140,anchor='c')
+        implementationPlanTable.column("5",width=180,anchor='c')
+        implementationPlanTable.heading("1",text="Critical Actions")
+        implementationPlanTable.heading("2",text="Responsible/Accountable Units")
+        implementationPlanTable.heading("3",text="Timeframes")
+        implementationPlanTable.heading("4",text="Budgets")
+        implementationPlanTable.heading("5",text="Budget Sources")
+
+        critALabel = Label(mainProject, text = "Critical Action")
+        raUnitLabel = Label(mainProject, text = "Responsible/\nAccountable Unit")
+        timeframeLabel = Label(mainProject, text = "Timeframe")
+        budgetLabel = Label(mainProject, text = "Budget")
+        budgSoLabel = Label(mainProject, text = "Budget Source")
+
+        criticalAction = scrolledtext.ScrolledText(mainProject, height = 4, width=30)
+        respaccoUnit = scrolledtext.ScrolledText(mainProject, height = 4, width=25)
+        timeframe = scrolledtext.ScrolledText(mainProject, height = 4, width=18)
+        budget = scrolledtext.ScrolledText(mainProject, height = 4, width=14)
+        budgetSource = scrolledtext.ScrolledText(mainProject, height = 4, width=17)
+
+        addButton10 = tk.Button(mainProject, text='Add', width=10, command=lambda: add_data10())  
+        editButton10 = tk.Button(mainProject, text="Edit", width=10, command=lambda: edit_data10())
+
+        def show_data10(a):
+            criticalAction.delete("1.0", tk.END)
+            respaccoUnit.delete("1.0", tk.END)
+            timeframe.delete("1.0", tk.END)
+            budget.delete("1.0", tk.END)
+            budgetSource.delete("1.0", tk.END)
+
+            selectedItem = implementationPlanTable.selection()[0]
+            criticalAction.insert("1.0", implementationPlanTable.item(selectedItem)['values'][0])
+            respaccoUnit.insert("1.0", implementationPlanTable.item(selectedItem)['values'][1])
+            timeframe.insert("1.0", implementationPlanTable.item(selectedItem)['values'][2])
+            budget.insert("1.0", implementationPlanTable.item(selectedItem)['values'][3])
+            budgetSource.insert("1.0", implementationPlanTable.item(selectedItem)['values'][4])
+
+        implementationPlanTable.bind("<<TreeviewSelect>>", show_data10)
+
+        def edit_data10():
+            criticalActionText = criticalAction.get("1.0", tk.END)                  # read existing policy
+            respaccoUnitText = respaccoUnit.get("1.0", tk.END)                      # read relevant provision
+            timeframeText = timeframe.get("1.0", tk.END)                            # read accomplishment 
+            budgetText = budget.get("1.0", tk.END)                                  # read assessment          
+            budgetSourceText = budgetSource.get("1.0", tk.END)                      # read assessment                  
+                                    
+            selected_item = implementationPlanTable.selection()[0]
+            implementationPlanTable.item(selected_item, text="blub", values=(criticalActionText, respaccoUnitText, timeframeText, budgetText, budgetSourceText))
+
+        def add_data10():
+            criticalActionText = criticalAction.get("1.0", tk.END)                  # read existing policy
+            respaccoUnitText = respaccoUnit.get("1.0", tk.END)                      # read relevant provision
+            timeframeText = timeframe.get("1.0", tk.END)                            # read accomplishment 
+            budgetText = budget.get("1.0", tk.END)                                  # read assessment          
+            budgetSourceText = budgetSource.get("1.0", tk.END)                      # read assessment      
+
+            # global assessmentTuple
+            # assessmentTuple = [existingPolicyText, relevantProvisionText, accomplishment2Text, assessment2Text]
+
+            # effortList.append(efforttuple)
+
+            implementationPlanTable.insert("",'end', values=(criticalActionText, respaccoUnitText, timeframeText, budgetText, budgetSourceText))
+            criticalAction.delete('1.0',tk.END)                    # reset the text entry box
+            respaccoUnit.delete('1.0',tk.END)                 # reset the text entry box
+            timeframe.delete('1.0',tk.END)                   # reset the text entry box
+            budget.delete('1.0',tk.END)                       # reset the text entry box
+            budgetSource.focus() 
+
+        frame10.place(x=10, y=10)
+        implementationPlanLabel.grid(row=2, column=1)
+        implementationPlanTable.grid(row=3, column=1)
+        critALabel.place(x=120, y=250)
+        criticalAction.place(x=38, y=300)
+        raUnitLabel.place(x=390, y=250)
+        respaccoUnit.place(x=330, y=300)
+        timeframeLabel.place(x=620, y=250)
+        timeframe.place(x=570, y=300)
+        budgetLabel.place(x=790, y=250)
+        budget.place(x=750, y=300)
+        budgSoLabel.place(x=925, y=250)
+        budgetSource.place(x=900, y=300)
+        addButton10.place(x=370, y=400)
+        editButton10.place(x=620, y=400)
+
+        def back_9():
+            global pageNumber
+            pageNumber -= 1
+            print(pageNumber)
+            frame10.destroy() 
+            critALabel.destroy()
+            criticalAction.destroy()
+            criticalAction.place_forget()
+            raUnitLabel.destroy()
+            respaccoUnit.destroy()
+            respaccoUnit.place_forget()
+            timeframeLabel.destroy()
+            timeframe.destroy()
+            timeframe.place_forget()
+            budgetLabel.destroy()
+            budget.destroy()
+            budget.place_forget()
+            budgSoLabel.destroy()
+            budgetSource.destroy()
+            budgetSource.place_forget()
+            btnBack9.destroy()
+            btnNext9.destroy() 
+            addButton10.destroy()
+            editButton10.destroy()
+            page_9()
+        
+        def next_9():
+            frame10.destroy() 
+            critALabel.destroy()
+            criticalAction.destroy()
+            criticalAction.place_forget()
+            raUnitLabel.destroy()
+            respaccoUnit.destroy()
+            respaccoUnit.place_forget()
+            timeframeLabel.destroy()
+            timeframe.destroy()
+            timeframe.place_forget()
+            budgetLabel.destroy()
+            budget.destroy()
+            budget.place_forget()
+            budgSoLabel.destroy()
+            budgetSource.destroy()
+            budgetSource.place_forget()
+            btnBack9.destroy()
+            btnNext9.destroy() 
+            addButton10.destroy()
+            editButton10.destroy()
+            page_11()
+
+        btnBack9 = Button(mainProject, text = "Back", width=10, command = lambda: back_9())
+        btnNext9 = Button(mainProject, text = "Next", width=10, command = lambda: next_9())
+        btnBack9.place(x=370, y=460)
+        btnNext9.place(x=620, y=460)
+
+    def page_11():
+        style.configure('Treeview', rowheight=120)
+        mainProject.state('zoomed')
+
+        frame11 = tk.LabelFrame(mainProject)
+
+        policyAssessmentLabel = Label(frame11, text = "Policy Assessment: Monitoring and Evaluation Plan")
+        policyAssessmentTable=ttk.Treeview(frame11, selectmode="browse", height=3)
+        policyAssessmentTable["columns"]=("1","2","3","4","5","6","7")
+        policyAssessmentTable['show']='headings'
+        policyAssessmentTable.column("1",width=214,anchor='c')
+        policyAssessmentTable.column("2",width=214,anchor='c')
+        policyAssessmentTable.column("3",width=214,anchor='c')
+        policyAssessmentTable.column("4",width=214,anchor='c')
+        policyAssessmentTable.column("5",width=214,anchor='c')
+        policyAssessmentTable.column("6",width=214,anchor='c')
+        policyAssessmentTable.column("7",width=214,anchor='c')
+        policyAssessmentTable.heading("1",text="Goals and Objectives")
+        policyAssessmentTable.heading("2",text="SMART Indicators")
+        policyAssessmentTable.heading("3",text="Sources of Data")
+        policyAssessmentTable.heading("4",text="Data Collection Frequencies")
+        policyAssessmentTable.heading("5",text="Unit-In-Charge of Data\nCollection and Analysis")
+        policyAssessmentTable.heading("6",text="Outputs of M&E")
+        policyAssessmentTable.heading("7",text="M&E Report Users")
+
+        for i in range(0, len(p7policyGoalsandObjectives)):
+            policyAssessmentTable.insert("",'end', values=(p7policyGoalsandObjectives[i], p7indicators[i]))
+
+        goalAndObjectiveLabel = Label(mainProject, text = "Goal and Objective")
+        smartIndicatorLabel = Label(mainProject, text = "SMART Indicator")
+        sourceofDataLabel = Label(mainProject, text = "Source of Data")
+        dcfLabel = Label(mainProject, text = "Data Collection Frequency")
+        uicLabel = Label(mainProject, text = "Unit-In-Charge of Data\nCollection and Analysis")
+        MEoutputLabel = Label(mainProject, text = "Output of M&E")
+        MEuserLabel = Label(mainProject, text = "M&E Report User")
+
+        goalAndObjective = scrolledtext.ScrolledText(mainProject, height = 4, width=22)
+        smartIndicator = scrolledtext.ScrolledText(mainProject, height = 4, width=22)
+        sourceofData = scrolledtext.ScrolledText(mainProject, height = 4, width=22)
+        dcf = scrolledtext.ScrolledText(mainProject, height = 4, width=22)
+        uic = scrolledtext.ScrolledText(mainProject, height = 4, width=22)
+        MEoutput = scrolledtext.ScrolledText(mainProject, height = 4, width=22)
+        MEuser = scrolledtext.ScrolledText(mainProject, height = 4, width=22)
+
+        addButton11 = tk.Button(mainProject, text='Add', width=10, command=lambda: add_data11())  
+        editButton11 = tk.Button(mainProject, text="Edit", width=10, command=lambda: edit_data11())
+
+        def show_data11(a):
+            goalAndObjective.delete("1.0", tk.END)
+            smartIndicator.delete("1.0", tk.END)
+            sourceofData.delete("1.0", tk.END)
+            dcf.delete("1.0", tk.END)
+            uic.delete("1.0", tk.END)
+            MEoutput.delete("1.0", tk.END)
+            MEuser.delete("1.0", tk.END)
+
+            selectedItem = policyAssessmentTable.selection()[0]
+            goalAndObjective.insert("1.0", policyAssessmentTable.item(selectedItem)['values'][0])
+            smartIndicator.insert("1.0", policyAssessmentTable.item(selectedItem)['values'][1])
+            sourceofData.insert("1.0", policyAssessmentTable.item(selectedItem)['values'][2])
+            dcf.insert("1.0", policyAssessmentTable.item(selectedItem)['values'][3])
+            uic.insert("1.0", policyAssessmentTable.item(selectedItem)['values'][4])
+            MEoutput.insert("1.0", policyAssessmentTable.item(selectedItem)['values'][5])
+            MEuser.insert("1.0", policyAssessmentTable.item(selectedItem)['values'][6])
+
+        policyAssessmentTable.bind("<<TreeviewSelect>>", show_data11)
+
+        def edit_data11():
+            goalAndObjectiveText = goalAndObjective.get("1.0", tk.END)                          # read existing policy
+            smartIndicatorText = smartIndicator.get("1.0", tk.END)                              # read relevant provision
+            sourceofDataText = sourceofData.get("1.0", tk.END)                                  # read accomplishment 
+            dcfText = dcf.get("1.0", tk.END)                                                    # read assessment          
+            uicText = uic.get("1.0", tk.END)                                                    # read assessment      
+            MEoutputText = MEoutput.get("1.0", tk.END)                                          # read assessment          
+            MEuserText = MEuser.get("1.0", tk.END)                                              # read assessment                     
+                                    
+            selected_item = policyAssessmentTable.selection()[0]
+            policyAssessmentTable.item(selected_item, text="blub", values=(goalAndObjectiveText, smartIndicatorText, sourceofDataText, dcfText, uicText, MEoutputText, MEuserText))
+
+        def add_data11():
+            goalAndObjectiveText = goalAndObjective.get("1.0", tk.END)                          # read existing policy
+            smartIndicatorText = smartIndicator.get("1.0", tk.END)                              # read relevant provision
+            sourceofDataText = sourceofData.get("1.0", tk.END)                                  # read accomplishment 
+            dcfText = dcf.get("1.0", tk.END)                                                    # read assessment          
+            uicText = uic.get("1.0", tk.END)                                                    # read assessment      
+            MEoutputText = MEoutput.get("1.0", tk.END)                                          # read assessment          
+            MEuserText = MEuser.get("1.0", tk.END)                                              # read assessment       
+
+            # global assessmentTuple
+            # assessmentTuple = [existingPolicyText, relevantProvisionText, accomplishment2Text, assessment2Text]
+
+            # effortList.append(efforttuple)
+            policyAssessmentTable.insert("",'end', values=(goalAndObjectiveText, smartIndicatorText, sourceofDataText, dcfText, uicText, MEoutputText, MEuserText))
+            goalAndObjective.delete("1.0", tk.END)
+            smartIndicator.delete("1.0", tk.END)
+            sourceofData.delete("1.0", tk.END)
+            dcf.delete("1.0", tk.END)
+            uic.delete("1.0", tk.END)
+            MEoutput.delete("1.0", tk.END)
+            MEuser.delete("1.0", tk.END)
+
+        frame11.place(x=10, y=10)
+        policyAssessmentLabel.grid(row=2, column=1)
+        policyAssessmentTable.grid(row=3, column=1)
+        goalAndObjectiveLabel.place(x=70, y=450)
+        goalAndObjective.place(x=20, y=490)
+        smartIndicatorLabel.place(x=290, y=450)
+        smartIndicator.place(x=237, y=490)
+        sourceofDataLabel.place(x=510, y=450)
+        sourceofData.place(x=453, y=490)
+        dcfLabel.place(x=700, y=450)
+        dcf.place(x=670, y=490)
+        uicLabel.place(x=925, y=440)
+        uic.place(x=886, y=490)
+        MEoutputLabel.place(x=1160, y=450)
+        MEoutput.place(x=1103, y=490)
+        MEuserLabel.place(x=1350, y=450)
+        MEuser.place(x=1320, y=490)
+        addButton11.place(x=590, y=580)
+        editButton11.place(x=840, y=580)
+
+        def back_10():
+            global pageNumber
+            pageNumber -= 1
+            print(pageNumber)
+            mainProject.state("normal")
+            frame11.destroy() 
+            goalAndObjectiveLabel.destroy()
+            goalAndObjective.destroy()
+            goalAndObjective.place_forget()
+            smartIndicatorLabel.destroy()
+            smartIndicator.destroy()
+            smartIndicator.place_forget()
+            sourceofDataLabel.destroy()
+            sourceofData.destroy()
+            sourceofData.place_forget()
+            dcfLabel.destroy()
+            dcf.destroy()
+            dcf.place_forget()
+            uicLabel.destroy()
+            uic.destroy()
+            uic.place_forget()
+            MEoutputLabel.destroy()
+            MEoutput.destroy()
+            MEoutput.place_forget()
+            MEuserLabel.destroy()
+            MEuser.destroy()
+            MEuser.place_forget()
+            btnBack10.destroy()
+            btnNext10.destroy() 
+            addButton11.destroy()
+            editButton11.destroy()
+            page_10()
+        
+        def next_10():
+            global pageNumber
+            pageNumber += 1
+            print(pageNumber)
+            mainProject.state("normal")
+            frame11.destroy() 
+            goalAndObjectiveLabel.destroy()
+            goalAndObjective.destroy()
+            goalAndObjective.place_forget()
+            smartIndicatorLabel.destroy()
+            smartIndicator.destroy()
+            smartIndicator.place_forget()
+            sourceofDataLabel.destroy()
+            sourceofData.destroy()
+            sourceofData.place_forget()
+            dcfLabel.destroy()
+            dcf.destroy()
+            dcf.place_forget()
+            uicLabel.destroy()
+            uic.destroy()
+            uic.place_forget()
+            MEoutputLabel.destroy()
+            MEoutput.destroy()
+            MEoutput.place_forget()
+            MEuserLabel.destroy()
+            MEuser.destroy()
+            MEuser.place_forget()
+            btnBack10.destroy()
+            btnNext10.destroy() 
+            addButton11.destroy()
+            editButton11.destroy()
+
+        btnBack10 = Button(mainProject, text = "Back", width=10, command = lambda: back_10())
+        btnNext10 = Button(mainProject, text = "Next", width=10, command = lambda: next_10())
+        btnBack10.place(x=590, y=640)
+        btnNext10.place(x=840, y=640)
 
     # projectTitle.config(bg="white")
     # fontSize.config(bg="white")
@@ -1575,21 +2711,79 @@ def createNewProject():
     # json.dump(data, fileobject)
     # fileobject.close()
 
+def save():
+    global pageNumber
+    
+    pdf = FPDF()   
+
+    pdf.add_page()
+    
+    pdf.set_font(family="Arial", style='B', size=int(p1fontsize))
+    
+    pdf.cell(0, 8, txt = p1projecttitle, ln = 2, border = 0, align = 'C', fill = FALSE)
+    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
+    pdf.cell(0, 8, txt = p1analysts, ln = 2, border = 0, align = 'C', fill = FALSE)
+    pdf.cell(0, 8, txt = p1policyanalysis, ln = 2, border = 0, align = 'C', fill = FALSE)
+    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
+    pdf.cell(0, 8, txt = "\nProblematic Situation: ", ln = 2, border = 0, align = 'J', fill = FALSE)
+    pdf.set_font(family="Arial", style='', size=int(p1fontsize))
+    pdf.multi_cell(0, 10, txt = p2problematicsituation, border = 0, align = 'J', fill = FALSE)
+    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
+    pdf.cell(0, 8, txt = "\nUndesirable Effects: ", ln = 2, border = 0, align = 'J', fill = FALSE)
+    pdf.set_font(family="Arial", style='', size=int(p1fontsize))
+    pdf.multi_cell(0, 10, txt = p2undesirableeffects, border = 0, align = 'J', fill = FALSE)
+    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
+    pdf.cell(0, 8, txt = "\nRoot Cause: ", ln = 2, border = 0, align = 'J', fill = FALSE)
+    pdf.set_font(family="Arial", style='', size=int(p1fontsize))
+    pdf.multi_cell(0, 10, txt = p5rootcause, border = 0, align = 'J', fill = FALSE)
+    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
+    pdf.cell(0, 8, txt = "\nPolicy Problem: ", ln = 2, border = 0, align = 'J', fill = FALSE)
+    pdf.set_font(family="Arial", style='', size=int(p1fontsize))
+    pdf.multi_cell(0, 10, txt = p6policyproblem, border = 0, align = 'J', fill = FALSE)
+    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
+    pdf.cell(0, 8, txt = "\nPolicy Issue Statement: ", ln = 2, border = 0, align = 'J', fill = FALSE)
+    pdf.set_font(family="Arial", style='', size=int(p1fontsize))
+    pdf.multi_cell(0, 10, txt = p6policyissue, border = 0, align = 'J', fill = FALSE)
+  
+    #regplot_image = Image.open(r'regplot.png')
+    #pdf.image(regplot_image)
+    
+    pdf.add_page()
+    if int(pageNumber) >= 5:
+        pdf.multi_cell(0, 10, txt ="Regression Analysis\n", border = 0, align = 'C', fill = FALSE)
+        pdf.multi_cell(0, 10, txt = p4summaryPDF, border = 0, align = 'C', fill = FALSE)
+        pdf.image('regplot.png', x=20, y=100, w=160)
+
+
+    # save the pdf with name .pdf
+    pdf.output(p1projecttitle+".pdf")   
+
+
+def print_file():
+    
+    pdffilename = p1projecttitle+".pdf"
+    print(pdffilename)
+
+    # Open input PDF file
+    os.startfile(pdffilename, 'Print')
+
+root.protocol('WM_DELETE_WINDOW', quit)
+
+def quit():
+    
+    raise SystemExit('Closed')
+    sys.exit()
+    root.destroy
 
 menubar = Menu(root) 
 
 file1 = Menu(menubar, tearoff = 0) 
 menubar.add_cascade(label ='File', menu = file1) 
 file1.add_command(label ='Create New', command = lambda: createNewProject())
-file1.add_command(label ='Save') 
+file1.add_command(label ='Save', command = lambda: save()) 
+file1.add_command(label ='Print', command = lambda: print_file()) 
 file1.add_separator() 
-file1.add_command(label ='Exit', command = root.destroy)
-
-file2 = Menu(menubar, tearoff = 0) 
-menubar.add_cascade(label ='Settings', menu = file2) 
-file2.add_command(label ='Change Font Size', command = lambda: changeFontSize()) 
-file2.add_command(label ='Change Font Style') 
-file2.add_command(label ='Change Indentation') 
+file1.add_command(label ='Exit', command = lambda: quit())
 
 root.config(menu=menubar)
 
