@@ -2342,16 +2342,424 @@ def createNewProject():
         btnNext8 = Button(mainProject, text = "Next", width=10, command = lambda: next_8())
         btnNext8.place(x=550, y=440)         
         btnBack8 = Button(mainProject, text = "Back", width=10, command = lambda: back_8())
-        btnBack8.place(x=265, y=440)         
-    
+        btnBack8.place(x=265, y=440)      
+
     def page_10():
         style.configure('Treeview', rowheight=60)
-        mainProject.geometry("1090x530")
+        mainProject.geometry("1090x540")
 
         frame10 = tk.LabelFrame(mainProject)
 
-        implementationPlanLabel = Label(frame10, text = "Policy Implementation Plan")
-        implementationPlanTable=ttk.Treeview(frame10, selectmode="browse", height=3)
+        assessPALabel = Label(frame10, text = "Assessments of the Policy Alternatives: Spillovers, Externalities, and Constraints")
+        assessPATable=ttk.Treeview(frame10, selectmode="browse", height=3)
+        assessPATable["columns"]=("1","2","3","4","5")
+        assessPATable['show']='headings'
+        assessPATable.column("1",width=300,anchor='c')
+        assessPATable.column("2",width=250,anchor='c')
+        assessPATable.column("3",width=180,anchor='c')
+        assessPATable.column("4",width=140,anchor='c')
+        assessPATable.column("5",width=180,anchor='c')
+        assessPATable.heading("1",text="Alternative")
+        assessPATable.heading("2",text="Spillovers")
+        assessPATable.heading("3",text="Externalities")
+        assessPATable.heading("4",text="Constraints")
+        assessPATable.heading("5",text="Mitigating Measures")
+
+        for i in range(0, len(p9alternatives)):
+            numb = str(i+1)+":"
+            altText = ["Alt", numb, p9alternatives[i]]
+            alter = " ".join(altText)
+            assessPATable.insert("",'end', values=(alter.replace(" ", "\ ")))
+
+        
+        alternaLabel = Label(mainProject, text = "Alternative")
+        spillovLabel = Label(mainProject, text = "Spillovers")
+        externaLabel = Label(mainProject, text = "Externalities")
+        constraLabel = Label(mainProject, text = "Constraints")
+        mitmeasLabel = Label(mainProject, text = "Mitigating Measures")
+
+        alternative = Entry(mainProject, width=150)
+        spillover = scrolledtext.ScrolledText(mainProject, height = 4, width=25)
+        externality = scrolledtext.ScrolledText(mainProject, height = 4, width=25)
+        constraint = scrolledtext.ScrolledText(mainProject, height = 4, width=25)
+        mitimeasure = scrolledtext.ScrolledText(mainProject, height = 4, width=25)
+
+        addButton10 = tk.Button(mainProject, text='Add', width=10, command=lambda: add_data10())  
+        editButton10 = tk.Button(mainProject, text="Edit", width=10, command=lambda: edit_data10())
+
+        def show_data10(a):
+            alternative.delete(0, END)
+            spillover.delete("1.0", tk.END)
+            externality.delete("1.0", tk.END)
+            constraint.delete("1.0", tk.END)
+            mitimeasure.delete("1.0", tk.END)
+
+            selectedItem = assessPATable.selection()[0]
+            
+            alternative.insert(0, assessPATable.item(selectedItem)['values'][0])
+            spillover.insert("1.0", assessPATable.item(selectedItem)['values'][1])
+            externality.insert("1.0", assessPATable.item(selectedItem)['values'][2])
+            constraint.insert("1.0", assessPATable.item(selectedItem)['values'][3])
+            mitimeasure.insert("1.0", assessPATable.item(selectedItem)['values'][4])
+
+        assessPATable.bind("<<TreeviewSelect>>", show_data10)
+
+        def edit_data10():
+            alternativeText = alternative.get()                                     # read alternative
+            spilloverText = spillover.get("1.0", tk.END)                            # read spillover
+            externalityText = externality.get("1.0", tk.END)                        # read externality 
+            constraintText = constraint.get("1.0", tk.END)                          # read constraint         
+            mitimeasureText = mitimeasure.get("1.0", tk.END)                        # read mitimeasure                  
+                                    
+            selected_item = assessPATable.selection()[0]
+            assessPATable.item(selected_item, text="blub", values=(alternativeText, spilloverText, externalityText, constraintText, mitimeasureText))
+
+        def add_data10():
+            alternativeText = alternative.get()                                     # read alternative
+            spilloverText = spillover.get("1.0", tk.END)                            # read spillover
+            externalityText = externality.get("1.0", tk.END)                        # read externality 
+            constraintText = constraint.get("1.0", tk.END)                          # read constraint         
+            mitimeasureText = mitimeasure.get("1.0", tk.END)                        # read mitimeasure 
+
+            # global assessmentTuple
+            # assessmentTuple = [existingPolicyText, relevantProvisionText, accomplishment2Text, assessment2Text]
+
+            # effortList.append(efforttuple)
+
+            assessPATable.insert("",'end', values=(alternativeText, spilloverText, externalityText, constraintText, mitimeasureText))
+            
+            alternative.delete(0, END)                              # reset text entry boxes
+            spillover.delete('1.0',tk.END)                          
+            externality.delete('1.0',tk.END)                        
+            constraint.delete('1.0',tk.END)                   
+            mitimeasure.delete('1.0',tk.END)                  
+            mitimeasure.focus() 
+
+        frame10.place(x=10, y=10)
+        assessPALabel.grid(row=2, column=1)
+        assessPATable.grid(row=3, column=1)
+        alternaLabel.place(x=540, y=250)
+        alternative.place(x=100, y=270)
+        spillovLabel.place(x=100, y=310)
+        spillover.place(x=20, y=350)
+        externaLabel.place(x=370, y=310)
+        externality.place(x=290, y=350)
+        constraLabel.place(x=640, y=310)
+        constraint.place(x=560, y=350)
+        mitmeasLabel.place(x=880, y=310)
+        mitimeasure.place(x=830, y=350)
+        addButton10.place(x=370, y=430)
+        editButton10.place(x=620, y=430)
+
+        def back_9():
+            global pageNumber
+            pageNumber -= 1
+            print(pageNumber)
+            frame10.destroy() 
+            alternaLabel.destroy()
+            alternative.destroy()
+            spillovLabel.destroy()
+            spillover.destroy()
+            spillover.place_forget()
+            externaLabel.destroy()
+            externality.destroy()
+            externality.place_forget()
+            constraLabel.destroy()
+            constraint.destroy()
+            constraint.place_forget()
+            mitmeasLabel.destroy()
+            mitimeasure.destroy()
+            mitimeasure.place_forget()
+            btnBack9.destroy()
+            btnNext9.destroy() 
+            addButton10.destroy()
+            editButton10.destroy()
+            page_9()
+        
+        def next_9():
+            frame10.destroy()            
+            alternaLabel.destroy()
+            alternative.destroy()
+            spillovLabel.destroy()
+            spillover.destroy()
+            spillover.place_forget()
+            externaLabel.destroy()
+            externality.destroy()
+            externality.place_forget()
+            constraLabel.destroy()
+            constraint.destroy()
+            constraint.place_forget()
+            mitmeasLabel.destroy()
+            mitimeasure.destroy()
+            mitimeasure.place_forget()
+            btnBack9.destroy()
+            btnNext9.destroy() 
+            addButton10.destroy()
+            editButton10.destroy()
+            page_11()
+
+        btnBack9 = Button(mainProject, text = "Back", width=10, command = lambda: back_9())
+        btnNext9 = Button(mainProject, text = "Next", width=10, command = lambda: next_9())
+        btnBack9.place(x=370, y=500)
+        btnNext9.place(x=620, y=500)
+
+    def page_11():
+        mainProject.geometry("660x290")
+        frame11 = tk.LabelFrame(mainProject)
+
+        status.config(text="")
+        status.place(x=10, y=210)
+        
+        p11Label = Label(mainProject, text = "Description of the Best/Optimal Policy Alternative")
+
+        descrLabel = Label(frame11, text = "Description")
+        descr = scrolledtext.ScrolledText(frame11, height = 8, width=30)
+        
+        reaSelLabel = Label(frame11, text = "Reasons for Selection")
+        reaSel = scrolledtext.ScrolledText(frame11, height = 8, width=30)
+        
+        frame11.place(x=40, y=40)
+        p11Label.place(x=170, y=10)
+        descrLabel.grid(row=1, column=0, sticky = W, padx=7)
+        descr.grid(row=2, column=0, sticky = W, padx=7)
+        reaSelLabel.grid(row=1, column=1, sticky = W, padx=7)
+        reaSel.grid(row=2, column=1, sticky = W, padx=7)
+        
+        def back_10():
+            global pageNumber
+            frame11.destroy() 
+            p11Label.destroy() 
+            btnBack10.destroy()
+            btnNext10.destroy() 
+
+            pageNumber -= 1
+            print(pageNumber)
+            page_10()
+        
+        def next_10():
+            global pageNumber
+
+            global p11BPAdescription, p11BPAreasonSelect
+            p11BPAdescription = descr.get("1.0", tk.END)
+            if not p11BPAdescription.strip():
+                status.config(
+                text="Enter description",
+                foreground="red",
+            )
+                return
+                    
+            p11BPAreasonSelect = reaSel.get("1.0", tk.END)
+            if not p11BPAreasonSelect.strip():
+                status.config(
+                text="Enter reason\nfor selection",
+                foreground="red",
+            )
+                return
+        
+            # fileobject.writelines(problematicsituation+"\n"+undesirableeffects+"\n")
+            save()
+
+            frame11.destroy() 
+            p11Label.destroy()
+            btnBack10.destroy()
+            btnNext10.destroy()
+
+            pageNumber += 1
+            print(pageNumber)
+            page_12()
+
+        btnBack10 = Button(mainProject, text = "Back", width=10, command = lambda: back_10())
+        btnNext10 = Button(mainProject, text = "Next", width=10, command = lambda: next_10())
+        btnBack10.place(x=140, y=210)
+        btnNext10.place(x=400, y=210)
+
+    def page_12():
+        mainProject.geometry("660x500")
+        frame12 = tk.LabelFrame(mainProject)
+
+        status.config(text="")
+        status.place(x=10, y=370)
+
+        p12Label = Label(mainProject, text = "Description of the Best/Optimal Policy Alternative")
+
+        spilloverLabel = Label(frame12, text = "Spillover")
+        spillover = scrolledtext.ScrolledText(frame12, height = 8, width=30)
+        
+        externalityLabel = Label(frame12, text = "Externalities")
+        externality = scrolledtext.ScrolledText(frame12, height = 8, width=30)
+
+        constraintLabel = Label(frame12, text = "Constraints")
+        constraint = scrolledtext.ScrolledText(frame12, height = 8, width=30)
+        
+        mitiMeasureLabel = Label(frame12, text = "Mitigating Measures")
+        mitiMeasure = scrolledtext.ScrolledText(frame12, height = 8, width=30)
+        
+        frame12.place(x=40, y=40)
+        p12Label.place(x=170, y=10)
+        spilloverLabel.grid(row=1, column=0, sticky = W, padx=7)
+        spillover.grid(row=2, column=0, sticky = W, padx=7)
+        externalityLabel.grid(row=1, column=1, sticky = W, padx=7)
+        externality.grid(row=2, column=1, sticky = W, padx=7)
+        constraintLabel.grid(row=3, column=0, sticky = W, padx=7)
+        constraint.grid(row=4, column=0, sticky = W, padx=7)
+        mitiMeasureLabel.grid(row=3, column=1, sticky = W, padx=7)
+        mitiMeasure.grid(row=4, column=1, sticky = W, padx=7)
+        
+        def back_11():
+            global pageNumber
+            frame12.destroy() 
+            p12Label.destroy()
+            btnBack11.destroy()
+            btnNext11.destroy() 
+
+            pageNumber -= 1
+            print(pageNumber)
+            page_11()
+        
+        def next_11():
+            global pageNumber
+
+            global p12BPAspillover, p12BPAexternality, p12BPAconstraint, p12BPAmitigatingmeasure
+            p12BPAspillover = spillover.get("1.0", tk.END)
+            if not p12BPAspillover.strip():
+                status.config(
+                text="Enter spillover",
+                foreground="red",
+            )
+                return
+                    
+            p12BPAexternality = externality.get("1.0", tk.END)
+            if not p12BPAexternality.strip():
+                status.config(
+                text="Enter externality",
+                foreground="red",
+            )
+                return
+            
+            p12BPAconstraint = constraint.get("1.0", tk.END)
+            if not p12BPAconstraint.strip():
+                status.config(
+                text="Enter constraint",
+                foreground="red",
+            )
+                return
+                    
+            p12BPAmitigatingmeasure = mitiMeasure.get("1.0", tk.END)
+            if not p12BPAmitigatingmeasure.strip():
+                status.config(
+                text="Enter mitigating\nmeasure",
+                foreground="red",
+            )
+                return
+        
+            # fileobject.writelines(problematicsituation+"\n"+undesirableeffects+"\n")
+            save()
+
+            frame12.destroy() 
+            p12Label.destroy()
+            btnBack11.destroy()
+            btnNext11.destroy() 
+            
+            pageNumber += 1
+            print(pageNumber)
+            page_13()
+
+        btnBack11 = Button(mainProject, text = "Back", width=10, command = lambda: back_11())
+        btnNext11 = Button(mainProject, text = "Next", width=10, command = lambda: next_11())
+        btnBack11.place(x=140, y=370)
+        btnNext11.place(x=400, y=370)
+
+
+    def page_13():
+        mainProject.geometry("660x500")
+        frame13 = tk.LabelFrame(mainProject)
+
+        status.config(text="")
+
+        p13Label = Label(mainProject, text = "Requirements for the Implementation of the Best/Optimal Policy Alternative")
+
+        p13whatLabel = Label(frame13, text = "What type of legislation is needed? Why?")
+        p13what = scrolledtext.ScrolledText(frame13, height = 8, width=30)
+        
+        p13whoLabel = Label(frame13, text = "Who will implement? Why?")
+        p13who = scrolledtext.ScrolledText(frame13, height = 8, width=30)
+
+        p13howLabel = Label(frame13, text = "How much to implement and where to source funds?")
+        p13how = scrolledtext.ScrolledText(frame13, height = 8, width=30)
+        
+        frame13.place(x=40, y=40)
+        p13Label.place(x=150, y=10)
+        p13whatLabel.grid(row=1, column=0, sticky = W, padx=7)
+        p13what.grid(row=2, column=0, sticky = W, padx=7)
+        p13whoLabel.grid(row=1, column=1, sticky = W, padx=7)
+        p13who.grid(row=2, column=1, sticky = W, padx=7)
+        p13howLabel.grid(row=3, column=0, sticky = W, padx=7)
+        p13how.grid(row=4, column=0, sticky = W, padx=7)
+        
+        def back_12():
+            global pageNumber
+            frame13.destroy() 
+            p13Label.destroy()
+            btnBack12.destroy()
+            btnNext12.destroy() 
+            
+            pageNumber -= 1
+            print(pageNumber)
+            page_12()
+        
+        def next_12():
+            global pageNumber
+
+            global p13BPAwhat, p13BPAwho, p13BPAhow
+            p13BPAwhat = p13what.get("1.0", tk.END)
+            if not p13BPAwhat.strip():
+                status.config(
+                text="Enter the type\nof legislation needed",
+                foreground="red",
+            )
+                return
+                    
+            p13BPAwho = p13who.get("1.0", tk.END)
+            if not p13BPAwho.strip():
+                status.config(
+                text="Enter who will\nimplement",
+                foreground="red",
+            )
+                return
+            
+            p13BPAhow = p13how.get("1.0", tk.END)
+            if not p13BPAhow.strip():
+                status.config(
+                text="Enter how much\nto implement",
+                foreground="red",
+            )
+                return
+    
+            # fileobject.writelines(problematicsituation+"\n"+undesirableeffects+"\n")
+            save()
+
+            frame13.destroy() 
+            p13Label.destroy()
+            btnBack12.destroy()
+            btnNext12.destroy() 
+            
+            pageNumber += 1
+            print(pageNumber)
+            page_14()
+
+        btnBack12 = Button(mainProject, text = "Back", width=10, command = lambda: back_12())
+        btnNext12 = Button(mainProject, text = "Next", width=10, command = lambda: next_12())
+        btnBack12.place(x=140, y=370)
+        btnNext12.place(x=400, y=370)
+
+    def page_14():
+        style.configure('Treeview', rowheight=60)
+        mainProject.geometry("1090x530")
+
+        frame14 = tk.LabelFrame(mainProject)
+
+        implementationPlanLabel = Label(frame14, text = "Policy Implementation Plan")
+        implementationPlanTable=ttk.Treeview(frame14, selectmode="browse", height=3)
         implementationPlanTable["columns"]=("1","2","3","4","5")
         implementationPlanTable['show']='headings'
         implementationPlanTable.column("1",width=300,anchor='c')
@@ -2377,10 +2785,10 @@ def createNewProject():
         budget = scrolledtext.ScrolledText(mainProject, height = 4, width=14)
         budgetSource = scrolledtext.ScrolledText(mainProject, height = 4, width=17)
 
-        addButton10 = tk.Button(mainProject, text='Add', width=10, command=lambda: add_data10())  
-        editButton10 = tk.Button(mainProject, text="Edit", width=10, command=lambda: edit_data10())
+        addButton14 = tk.Button(mainProject, text='Add', width=10, command=lambda: add_data14())  
+        editButton14 = tk.Button(mainProject, text="Edit", width=10, command=lambda: edit_data14())
 
-        def show_data10(a):
+        def show_data14(a):
             criticalAction.delete("1.0", tk.END)
             respaccoUnit.delete("1.0", tk.END)
             timeframe.delete("1.0", tk.END)
@@ -2394,9 +2802,9 @@ def createNewProject():
             budget.insert("1.0", implementationPlanTable.item(selectedItem)['values'][3])
             budgetSource.insert("1.0", implementationPlanTable.item(selectedItem)['values'][4])
 
-        implementationPlanTable.bind("<<TreeviewSelect>>", show_data10)
+        implementationPlanTable.bind("<<TreeviewSelect>>", show_data14)
 
-        def edit_data10():
+        def edit_data14():
             criticalActionText = criticalAction.get("1.0", tk.END)                  # read existing policy
             respaccoUnitText = respaccoUnit.get("1.0", tk.END)                      # read relevant provision
             timeframeText = timeframe.get("1.0", tk.END)                            # read accomplishment 
@@ -2406,7 +2814,7 @@ def createNewProject():
             selected_item = implementationPlanTable.selection()[0]
             implementationPlanTable.item(selected_item, text="blub", values=(criticalActionText, respaccoUnitText, timeframeText, budgetText, budgetSourceText))
 
-        def add_data10():
+        def add_data14():
             criticalActionText = criticalAction.get("1.0", tk.END)                  # read existing policy
             respaccoUnitText = respaccoUnit.get("1.0", tk.END)                      # read relevant provision
             timeframeText = timeframe.get("1.0", tk.END)                            # read accomplishment 
@@ -2425,7 +2833,7 @@ def createNewProject():
             budget.delete('1.0',tk.END)                       # reset the text entry box
             budgetSource.focus() 
 
-        frame10.place(x=10, y=10)
+        frame14.place(x=10, y=10)
         implementationPlanLabel.grid(row=2, column=1)
         implementationPlanTable.grid(row=3, column=1)
         critALabel.place(x=120, y=250)
@@ -2438,37 +2846,38 @@ def createNewProject():
         budget.place(x=750, y=300)
         budgSoLabel.place(x=925, y=250)
         budgetSource.place(x=900, y=300)
-        addButton10.place(x=370, y=400)
-        editButton10.place(x=620, y=400)
+        addButton14.place(x=370, y=400)
+        editButton14.place(x=620, y=400)
 
-        def back_9():
+        def back_13():
             global pageNumber
+            frame14.destroy() 
+            critALabel.destroy()
+            criticalAction.destroy()
+            criticalAction.place_forget()
+            raUnitLabel.destroy()
+            respaccoUnit.destroy()
+            respaccoUnit.place_forget()
+            timeframeLabel.destroy()
+            timeframe.destroy()
+            timeframe.place_forget()
+            budgetLabel.destroy()
+            budget.destroy()
+            budget.place_forget()
+            budgSoLabel.destroy()
+            budgetSource.destroy()
+            budgetSource.place_forget()
+            btnBack13.destroy()
+            btnNext13.destroy() 
+            addButton14.destroy()
+            editButton14.destroy()
+
             pageNumber -= 1
             print(pageNumber)
-            frame10.destroy() 
-            critALabel.destroy()
-            criticalAction.destroy()
-            criticalAction.place_forget()
-            raUnitLabel.destroy()
-            respaccoUnit.destroy()
-            respaccoUnit.place_forget()
-            timeframeLabel.destroy()
-            timeframe.destroy()
-            timeframe.place_forget()
-            budgetLabel.destroy()
-            budget.destroy()
-            budget.place_forget()
-            budgSoLabel.destroy()
-            budgetSource.destroy()
-            budgetSource.place_forget()
-            btnBack9.destroy()
-            btnNext9.destroy() 
-            addButton10.destroy()
-            editButton10.destroy()
-            page_9()
+            page_13()
         
-        def next_9():
-            frame10.destroy() 
+        def next_13():
+            frame14.destroy() 
             critALabel.destroy()
             criticalAction.destroy()
             criticalAction.place_forget()
@@ -2484,25 +2893,28 @@ def createNewProject():
             budgSoLabel.destroy()
             budgetSource.destroy()
             budgetSource.place_forget()
-            btnBack9.destroy()
-            btnNext9.destroy() 
-            addButton10.destroy()
-            editButton10.destroy()
-            page_11()
+            btnBack13.destroy()
+            btnNext13.destroy() 
+            addButton14.destroy()
+            editButton14.destroy()
 
-        btnBack9 = Button(mainProject, text = "Back", width=10, command = lambda: back_9())
-        btnNext9 = Button(mainProject, text = "Next", width=10, command = lambda: next_9())
-        btnBack9.place(x=370, y=460)
-        btnNext9.place(x=620, y=460)
+            pageNumber -= 1
+            print(pageNumber)
+            page_15()
 
-    def page_11():
+        btnBack13 = Button(mainProject, text = "Back", width=10, command = lambda: back_13())
+        btnNext13 = Button(mainProject, text = "Next", width=10, command = lambda: next_13())
+        btnBack13.place(x=370, y=460)
+        btnNext13.place(x=620, y=460)
+
+    def page_15():
         style.configure('Treeview', rowheight=120)
         mainProject.state('zoomed')
 
-        frame11 = tk.LabelFrame(mainProject)
+        frame15 = tk.LabelFrame(mainProject)
 
-        policyAssessmentLabel = Label(frame11, text = "Policy Assessment: Monitoring and Evaluation Plan")
-        policyAssessmentTable=ttk.Treeview(frame11, selectmode="browse", height=3)
+        policyAssessmentLabel = Label(frame15, text = "Policy Assessment: Monitoring and Evaluation Plan")
+        policyAssessmentTable=ttk.Treeview(frame15, selectmode="browse", height=3)
         policyAssessmentTable["columns"]=("1","2","3","4","5","6","7")
         policyAssessmentTable['show']='headings'
         policyAssessmentTable.column("1",width=214,anchor='c')
@@ -2539,10 +2951,10 @@ def createNewProject():
         MEoutput = scrolledtext.ScrolledText(mainProject, height = 4, width=22)
         MEuser = scrolledtext.ScrolledText(mainProject, height = 4, width=22)
 
-        addButton11 = tk.Button(mainProject, text='Add', width=10, command=lambda: add_data11())  
-        editButton11 = tk.Button(mainProject, text="Edit", width=10, command=lambda: edit_data11())
+        addButton15 = tk.Button(mainProject, text='Add', width=10, command=lambda: add_data15())  
+        editButton15 = tk.Button(mainProject, text="Edit", width=10, command=lambda: edit_data15())
 
-        def show_data11(a):
+        def show_data15(a):
             goalAndObjective.delete("1.0", tk.END)
             smartIndicator.delete("1.0", tk.END)
             sourceofData.delete("1.0", tk.END)
@@ -2560,9 +2972,9 @@ def createNewProject():
             MEoutput.insert("1.0", policyAssessmentTable.item(selectedItem)['values'][5])
             MEuser.insert("1.0", policyAssessmentTable.item(selectedItem)['values'][6])
 
-        policyAssessmentTable.bind("<<TreeviewSelect>>", show_data11)
+        policyAssessmentTable.bind("<<TreeviewSelect>>", show_data15)
 
-        def edit_data11():
+        def edit_data15():
             goalAndObjectiveText = goalAndObjective.get("1.0", tk.END)                          # read existing policy
             smartIndicatorText = smartIndicator.get("1.0", tk.END)                              # read relevant provision
             sourceofDataText = sourceofData.get("1.0", tk.END)                                  # read accomplishment 
@@ -2574,7 +2986,7 @@ def createNewProject():
             selected_item = policyAssessmentTable.selection()[0]
             policyAssessmentTable.item(selected_item, text="blub", values=(goalAndObjectiveText, smartIndicatorText, sourceofDataText, dcfText, uicText, MEoutputText, MEuserText))
 
-        def add_data11():
+        def add_data15():
             goalAndObjectiveText = goalAndObjective.get("1.0", tk.END)                          # read existing policy
             smartIndicatorText = smartIndicator.get("1.0", tk.END)                              # read relevant provision
             sourceofDataText = sourceofData.get("1.0", tk.END)                                  # read accomplishment 
@@ -2596,7 +3008,7 @@ def createNewProject():
             MEoutput.delete("1.0", tk.END)
             MEuser.delete("1.0", tk.END)
 
-        frame11.place(x=10, y=10)
+        frame15.place(x=10, y=10)
         policyAssessmentLabel.grid(row=2, column=1)
         policyAssessmentTable.grid(row=3, column=1)
         goalAndObjectiveLabel.place(x=70, y=450)
@@ -2613,48 +3025,49 @@ def createNewProject():
         MEoutput.place(x=1103, y=490)
         MEuserLabel.place(x=1350, y=450)
         MEuser.place(x=1320, y=490)
-        addButton11.place(x=590, y=580)
-        editButton11.place(x=840, y=580)
+        addButton15.place(x=590, y=580)
+        editButton15.place(x=840, y=580)
 
-        def back_10():
+        def back_14():
             global pageNumber
+            mainProject.state("normal")
+            frame15.destroy() 
+            goalAndObjectiveLabel.destroy()
+            goalAndObjective.destroy()
+            goalAndObjective.place_forget()
+            smartIndicatorLabel.destroy()
+            smartIndicator.destroy()
+            smartIndicator.place_forget()
+            sourceofDataLabel.destroy()
+            sourceofData.destroy()
+            sourceofData.place_forget()
+            dcfLabel.destroy()
+            dcf.destroy()
+            dcf.place_forget()
+            uicLabel.destroy()
+            uic.destroy()
+            uic.place_forget()
+            MEoutputLabel.destroy()
+            MEoutput.destroy()
+            MEoutput.place_forget()
+            MEuserLabel.destroy()
+            MEuser.destroy()
+            MEuser.place_forget()
+            btnBack14.destroy()
+            btnNext14.destroy() 
+            addButton15.destroy()
+            editButton15.destroy()
+
             pageNumber -= 1
             print(pageNumber)
-            mainProject.state("normal")
-            frame11.destroy() 
-            goalAndObjectiveLabel.destroy()
-            goalAndObjective.destroy()
-            goalAndObjective.place_forget()
-            smartIndicatorLabel.destroy()
-            smartIndicator.destroy()
-            smartIndicator.place_forget()
-            sourceofDataLabel.destroy()
-            sourceofData.destroy()
-            sourceofData.place_forget()
-            dcfLabel.destroy()
-            dcf.destroy()
-            dcf.place_forget()
-            uicLabel.destroy()
-            uic.destroy()
-            uic.place_forget()
-            MEoutputLabel.destroy()
-            MEoutput.destroy()
-            MEoutput.place_forget()
-            MEuserLabel.destroy()
-            MEuser.destroy()
-            MEuser.place_forget()
-            btnBack10.destroy()
-            btnNext10.destroy() 
-            addButton11.destroy()
-            editButton11.destroy()
-            page_10()
+            page_14()
         
-        def next_10():
-            global pageNumber
-            pageNumber += 1
-            print(pageNumber)
+        def next_14():
+            # global pageNumber
+            # pageNumber += 1
+            # print(pageNumber)
             mainProject.state("normal")
-            frame11.destroy() 
+            frame15.destroy() 
             goalAndObjectiveLabel.destroy()
             goalAndObjective.destroy()
             goalAndObjective.place_forget()
@@ -2676,15 +3089,15 @@ def createNewProject():
             MEuserLabel.destroy()
             MEuser.destroy()
             MEuser.place_forget()
-            btnBack10.destroy()
-            btnNext10.destroy() 
-            addButton11.destroy()
-            editButton11.destroy()
+            btnBack14.destroy()
+            btnNext14.destroy() 
+            addButton15.destroy()
+            editButton15.destroy()
 
-        btnBack10 = Button(mainProject, text = "Back", width=10, command = lambda: back_10())
-        btnNext10 = Button(mainProject, text = "Next", width=10, command = lambda: next_10())
-        btnBack10.place(x=590, y=640)
-        btnNext10.place(x=840, y=640)
+        btnBack14 = Button(mainProject, text = "Back", width=10, command = lambda: back_14())
+        btnNext14 = Button(mainProject, text = "Next", width=10, command = lambda: next_14())
+        btnBack14.place(x=590, y=640)
+        btnNext14.place(x=840, y=640)
 
     # projectTitle.config(bg="white")
     # fontSize.config(bg="white")
@@ -2771,9 +3184,11 @@ root.protocol('WM_DELETE_WINDOW', quit)
 
 def quit():
     
+    global pageNumber
+    pageNumber = 0
     raise SystemExit('Closed')
+    root.destroy()
     sys.exit()
-    root.destroy
 
 menubar = Menu(root) 
 
