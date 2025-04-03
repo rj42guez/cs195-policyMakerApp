@@ -3180,14 +3180,10 @@ def print_file():
     # Open input PDF file
     os.startfile(pdffilename, 'Print')
 
-root.protocol('WM_DELETE_WINDOW', quit)
-
 def quit():
     
     global pageNumber
     pageNumber = 0
-    raise SystemExit('Closed')
-    root.destroy()
     sys.exit()
 
 menubar = Menu(root) 
