@@ -81,9 +81,9 @@ introLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Fran
 aboutLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Policy Analytics 1.0 is a tool for learning policy analysis. This software can be used in training programs and classroom learning. It provides a step-by-step procedure that allows users to input and process basic essential data for problem structuring, forecasting and assessment of policy alternatives, recommending or prescribing the best/optimal policy alternative, designing an implementation plan, and building a monitoring and evaluation plan. Its outputs can be used in writing a complete policy issue paper. It is based on the “Elements of the Policy Issue Paper” in Annex 1 of Public Policy Analysis: An Integrated Approach by William N. Dunn (2018) with modifications based on the teaching and training experiences of its creator, Dr. Ebinezer R. Florano, Professor of Public Policy at the University of the Philippines, National College of Public Administration and Governance and Convenor of the UPCIDS Data Science for Public Policy Program (DSPPP).")
 arrLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "All rights reserved@2024 – UPCIDS-DSPPP")
 creatorLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Creator: Dr. Ebinezer R. Florano")
-programmerLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Programmers: Raphael Justin Portuguez and Emmerson Isip")
+programmerLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Programmers: Emmerson Isip, Gabriel Ramos, and Raphael Justin Portuguez")
 reveiwerLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Reviewers: Colin Rosales, Danne Nicole Pinpin, and Jean Phoebe Yao")
-adminLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Administrative Assistance: Lilian J. Marfil and Zhelly Ann Linsangan")
+adminLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Administrative Assistance: Lilian J. Marfil, Pedro J. Madarang, and Zhelly Ann Linsangan")
 
 dspppLogo = (Image.open("logo_DSPPP.png"))
 cidsLogo = (Image.open("logo_UP_CIDS.png"))
@@ -159,6 +159,9 @@ def createNewProject():
     p4summaryPDF = " "
 
     def page_1():
+        global pageNumber
+        pageNumber += 1
+        print(pageNumber)
         mainProject.title("Create New Project")
         mainProject.geometry("660x210")
 
@@ -291,6 +294,7 @@ def createNewProject():
             
             global pageNumber
             pageNumber += 1
+            print(pageNumber)
             frame1.destroy()
             btnCreate.destroy() 
             btnClear1.destroy()  
@@ -3167,10 +3171,8 @@ def save():
         pdf.multi_cell(0, 10, txt = p4summaryPDF, border = 0, align = 'C', fill = FALSE)
         pdf.image('regplot.png', x=20, y=100, w=160)
 
-
     # save the pdf with name .pdf
     pdf.output(p1projecttitle+".pdf")   
-
 
 def print_file():
     
