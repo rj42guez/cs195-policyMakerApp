@@ -15,7 +15,7 @@ import fpdf
 from fpdf import FPDF
 
 import pandas as pd
-import numpy as np
+import numpy as np 
 import matplotlib.pyplot as plt 
 import scipy as sp
 
@@ -33,6 +33,7 @@ size = 10
 root = Tk()
 root.title("Policy Analytics 1.0")
 root.geometry("1300x700")
+root.state('zoomed')
 
 # getting screen's width in pixels
 height = root.winfo_screenheight()
@@ -43,47 +44,20 @@ main = tk.PanedWindow(root, background="#ffffff")
 
 main.pack(side="top", fill="both", expand=True)
 
-# activeKey = "password12345"
-
-# enterActiveKey = input("Please enter the activation key down below:\n")
-# if activeKey == enterActiveKey:
-#     print("Activation key is successful.")
-# while activeKey != enterActiveKey:
-#     print("Activation key is incorrect. Please re-run the program")
-#     break
-
 left_pane = tk.Frame(main, background="#76090c", width=200)
-right_pane = tk.PanedWindow(main, background="#ffffff", width=200)
+middle_pane = tk.Frame(main, background="#ffffff", width=1520)
+right_pane = tk.PanedWindow(main, background="#76090c", width=200)
 main.add(left_pane)
+main.add(middle_pane)
 main.add(right_pane)
 
-# def changeFontSize():
-#     popup = Toplevel(root)
-#     popup.geometry("200x200")
-#     popup.title("UPD Policy Maker 1.0 - Change Font Size")
-
-#     label = Label(popup, text = "Change font size: ")
-#     fontSize = Entry(popup, width=10)
-
-#     def change():
-#         size = int(fontSize.get())
-#         print(size)
-#         popup.update()
-#         popup.destroy()
-
-#     label.place(x=10, y=10)
-#     fontSize.place(x=70, y=10)
-
-#     button = Button(popup, text = "Change", command = change)
-#     button.place(x=10, y=30)
-
-introLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin Gothic Heavy", 14), text = "Welcome to Policy Analytics 1.0")
-aboutLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Policy Analytics 1.0 is a tool for learning policy analysis. This software can be used in training programs and classroom learning. It provides a step-by-step procedure that allows users to input and process basic essential data for problem structuring, forecasting and assessment of policy alternatives, recommending or prescribing the best/optimal policy alternative, designing an implementation plan, and building a monitoring and evaluation plan. Its outputs can be used in writing a complete policy issue paper. It is based on the “Elements of the Policy Issue Paper” in Annex 1 of Public Policy Analysis: An Integrated Approach by William N. Dunn (2018) with modifications based on the teaching and training experiences of its creator, Dr. Ebinezer R. Florano, Professor of Public Policy at the University of the Philippines, National College of Public Administration and Governance and Convenor of the UPCIDS Data Science for Public Policy Program (DSPPP).")
-arrLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "All rights reserved@2024 – UPCIDS-DSPPP")
-creatorLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Creator: Dr. Ebinezer R. Florano")
-programmerLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Programmers: Emmerson Isip, Gabriel Ramos, and Raphael Justin Portuguez")
-reveiwerLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Reviewers: Colin Rosales, Danne Nicole Pinpin, and Jean Phoebe Yao")
-adminLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Administrative Assistance: Lilian J. Marfil, Pedro J. Madarang, and Zhelly Ann Linsangan")
+introLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin Gothic Heavy", 14), wraplength=1400, justify="center", text = "Welcome to Policy Analytics 1.0")
+aboutLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="center", text = "Policy Analytics 1.0 is a tool for learning policy analysis. This software can be used in training programs and classroom learning. It provides a step-by-step procedure that allows users to input and process basic essential data for problem structuring, forecasting and assessment of policy alternatives, recommending or prescribing the best/optimal policy alternative, designing an implementation plan, and building a monitoring and evaluation plan. Its outputs can be used in writing a complete policy issue paper. It is based on the “Elements of the Policy Issue Paper” in Annex 1 of Public Policy Analysis: An Integrated Approach by William N. Dunn (2018) with modifications based on the teaching and training experiences of its creator, Dr. Ebinezer R. Florano, Professor of Public Policy at the University of the Philippines, National College of Public Administration and Governance and Convenor of the UPCIDS Data Science for Public Policy Program (DSPPP).")
+arrLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="center", text = "All rights reserved@2024 – UPCIDS-DSPPP")
+creatorLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="center", text = "Creator: Dr. Ebinezer R. Florano")
+programmerLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="center", text = "Programmers: Emmerson Isip, Gabriel Ramos, and Raphael Justin Portuguez")
+reveiwerLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="center", text = "Reviewers: Colin Rosales, Danne Nicole Pinpin, and Jean Phoebe Yao")
+adminLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="center", text = "Administrative Assistance: Lilian J. Marfil, Pedro J. Madarang, and Zhelly Ann Linsangan")
 
 dspppLogo = (Image.open("logo_DSPPP.png"))
 cidsLogo = (Image.open("logo_UP_CIDS.png"))
@@ -103,9 +77,9 @@ main.columnconfigure(3, weight=1)
 main.columnconfigure(4, weight=1)
 main.columnconfigure(5, weight=1)
 
-introLabel.place(x=600, y=23)
+introLabel.place(x=800, y=23)
 aboutLabel.place(x=240, y=63)
-arrLabel.place(x=595, y=200)
+arrLabel.place(x=805, y=200)
 
 upLabel=Label(main, image=up)
 upLabel.place(x=380, y=250)
@@ -164,21 +138,6 @@ def createNewProject():
         print(pageNumber)
         mainProject.title("Create New Project")
         mainProject.geometry("660x210")
-
-        # mainFrame1_1 = tk.Frame(mainProject)
-        # mainFrame1_1.pack(fill=BOTH,expand=1)
-        # mainFrame2_1 = tk.LabelFrame(mainFrame1_1)
-        # mainFrame2_1.pack(fill=X,side=BOTTOM)
-        # canvas1 = Canvas(mainFrame1_1)
-        # canvas1.pack(side=LEFT,fill=BOTH,expand=1)
-
-        # sbx1 = ttk.Scrollbar(mainFrame2_1,orient=HORIZONTAL,command=canvas1.xview)
-        # sbx1.pack(side=BOTTOM,fill=X)
-        # sby1 = ttk.Scrollbar(mainFrame1_1,orient=VERTICAL,command=canvas1.yview)
-        # sby1.pack(side=RIGHT,fill=Y)
-        # canvas1.configure(xscrollcommand=sbx1.set)
-        # canvas1.configure(yscrollcommand=sby1.set)
-        # canvas1.bind("<Configure>",lambda e: canvas1.config(scrollregion= canvas1.bbox(ALL))) 
 
         frame1 = tk.LabelFrame(mainProject)
 
@@ -2902,7 +2861,7 @@ def createNewProject():
             addButton14.destroy()
             editButton14.destroy()
 
-            pageNumber -= 1
+            pageNumber += 1
             print(pageNumber)
             page_15()
 
@@ -3162,20 +3121,18 @@ def save():
     pdf.set_font(family="Arial", style='', size=int(p1fontsize))
     pdf.multi_cell(0, 10, txt = p6policyissue, border = 0, align = 'J', fill = FALSE)
   
-    #regplot_image = Image.open(r'regplot.png')
-    #pdf.image(regplot_image)
-    
     pdf.add_page()
-    if int(pageNumber) >= 5:
+    if int(pageNumber) == 5:
         pdf.multi_cell(0, 10, txt ="Regression Analysis\n", border = 0, align = 'C', fill = FALSE)
         pdf.multi_cell(0, 10, txt = p4summaryPDF, border = 0, align = 'C', fill = FALSE)
         pdf.image('regplot.png', x=20, y=100, w=160)
 
     # save the pdf with name .pdf
-    pdf.output(p1projecttitle+".pdf")   
+    
+    pdf.output(p1projecttitle+'.pdf', 'F')
 
 def print_file():
-    
+
     pdffilename = p1projecttitle+".pdf"
     print(pdffilename)
 
@@ -3186,6 +3143,7 @@ def quit():
     
     global pageNumber
     pageNumber = 0
+    print(pageNumber)
     sys.exit()
 
 menubar = Menu(root) 
