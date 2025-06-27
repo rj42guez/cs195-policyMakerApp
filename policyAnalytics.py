@@ -47,17 +47,18 @@ main.pack(side="top", fill="both", expand=True)
 left_pane = tk.Frame(main, background="#76090c", width=200)
 middle_pane = tk.Frame(main, background="#ffffff", width=1520)
 right_pane = tk.PanedWindow(main, background="#76090c", width=200)
-main.add(left_pane)
-main.add(middle_pane)
-main.add(right_pane)
 
-introLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin Gothic Heavy", 14), wraplength=1400, justify="center", text = "Welcome to Policy Analytics 1.0")
-aboutLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="center", text = "Policy Analytics 1.0 is a tool for learning policy analysis. This software can be used in training programs and classroom learning. It provides a step-by-step procedure that allows users to input and process basic essential data for problem structuring, forecasting and assessment of policy alternatives, recommending or prescribing the best/optimal policy alternative, designing an implementation plan, and building a monitoring and evaluation plan. Its outputs can be used in writing a complete policy issue paper. It is based on the “Elements of the Policy Issue Paper” in Annex 1 of Public Policy Analysis: An Integrated Approach by William N. Dunn (2018) with modifications based on the teaching and training experiences of its creator, Dr. Ebinezer R. Florano, Professor of Public Policy at the University of the Philippines, National College of Public Administration and Governance and Convenor of the UPCIDS Data Science for Public Policy Program (DSPPP).")
-arrLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="center", text = "All rights reserved@2024 – UPCIDS-DSPPP")
-creatorLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="center", text = "Creator: Dr. Ebinezer R. Florano")
-programmerLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="center", text = "Programmers: Emmerson Isip, Gabriel Ramos, and Raphael Justin Portuguez")
-reveiwerLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="center", text = "Reviewers: Colin Rosales, Danne Nicole Pinpin, and Jean Phoebe Yao")
-adminLabel = Label(main, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="center", text = "Administrative Assistance: Lilian J. Marfil, Pedro J. Madarang, and Zhelly Ann Linsangan")
+main.add(left_pane, stretch="never", minsize=150)
+main.add(middle_pane, stretch="always", minsize=500)
+main.add(right_pane, stretch="never", minsize=150)
+
+introLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin Gothic Heavy", 14), wraplength=1000, justify="center", text = "Welcome to Policy Analytics 1.0")
+aboutLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Policy Analytics 1.0 is a tool for learning policy analysis. This software can be used in training programs and classroom learning. It provides a step-by-step procedure that allows users to input and process basic essential data for problem structuring, forecasting and assessment of policy alternatives, recommending or prescribing the best/optimal policy alternative, designing an implementation plan, and building a monitoring and evaluation plan. Its outputs can be used in writing a complete policy issue paper. It is based on the “Elements of the Policy Issue Paper” in Annex 1 of Public Policy Analysis: An Integrated Approach by William N. Dunn (2018) with modifications based on the teaching and training experiences of its creator, Dr. Ebinezer R. Florano, Professor of Public Policy at the University of the Philippines, National College of Public Administration and Governance and Convenor of the UPCIDS Data Science for Public Policy Program (DSPPP).")
+arrLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="center", text = "All rights reserved@2024 – UPCIDS-DSPPP")
+creatorLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="left", text = "Creator: Dr. Ebinezer R. Florano")
+programmerLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="left", text = "Programmers: Emmerson Isip, Gabriel Ramos, and Raphael Justin Portuguez")
+reveiwerLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="left", text = "Reviewers: Colin Rosales, Danne Nicole Pinpin, and Jean Phoebe Yao")
+adminLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="left", text = "Administrative Assistance: Lilian J. Marfil, Pedro J. Madarang, and Zhelly Ann Linsangan")
 
 dspppLogo = (Image.open("logo_DSPPP.png"))
 cidsLogo = (Image.open("logo_UP_CIDS.png"))
@@ -70,6 +71,16 @@ up = ImageTk.PhotoImage(up)
 dsppp = ImageTk.PhotoImage(dsppp)
 cids = ImageTk.PhotoImage(cidsLogo)
 
+def update_wraplength(event):
+    # Subtract some padding (e.g., 100px) to prevent edge crowding
+    new_width = event.width - 100
+    for label in resizable_labels:
+        label.config(wraplength=new_width)
+
+resizable_labels = [introLabel, aboutLabel, arrLabel, creatorLabel, programmerLabel, reveiwerLabel, adminLabel]
+
+middle_pane.bind("<Configure>", update_wraplength)
+
 main.columnconfigure(0, weight=1)
 main.columnconfigure(1, weight=1)
 main.columnconfigure(2, weight=1)
@@ -77,22 +88,30 @@ main.columnconfigure(3, weight=1)
 main.columnconfigure(4, weight=1)
 main.columnconfigure(5, weight=1)
 
-introLabel.place(x=800, y=23)
-aboutLabel.place(x=240, y=63)
-arrLabel.place(x=805, y=200)
+# introLabel.place(x=800, y=23)
+# aboutLabel.place(x=240, y=63)
+# arrLabel.place(x=805, y=200)
 
-upLabel=Label(main, image=up)
-upLabel.place(x=380, y=250)
-dspppLabel=Label(main, image=dsppp)
-dspppLabel.place(x=630, y=250)
-cidsLabel=Label(main, image=cids)
-cidsLabel.place(x=880, y=250)
+introLabel.pack(pady=(20, 5), anchor="center")     
+aboutLabel.pack(pady=(20, 5), anchor="center")    
+arrLabel.pack(pady=(20, 5), anchor="center")     
 
-creatorLabel.place(x=380, y=400)
-programmerLabel.place(x=380, y=430)
-reveiwerLabel.place(x=380, y=460)
-adminLabel.place(x=380, y=490)
+logo_frame = tk.Frame(middle_pane, background="#ffffff")  
+logo_frame.pack(pady=20, anchor="center") 
 
+upLabel = Label(logo_frame, image=up, background="#ffffff")
+upLabel.pack(side=tk.LEFT, padx=20)  
+
+dspppLabel = Label(logo_frame, image=dsppp, background="#ffffff")
+dspppLabel.pack(side=tk.LEFT, padx=20)
+
+cidsLabel = Label(logo_frame, image=cids, background="#ffffff")
+cidsLabel.pack(side=tk.LEFT, padx=20)
+
+creatorLabel.pack(pady=(20,5), padx=50, anchor="w")
+programmerLabel.pack(pady=5, padx=50, anchor="w")
+reveiwerLabel.pack(pady=5, padx=50, anchor="w")
+adminLabel.pack(pady=5, padx=50, anchor="w")
 style = ttk.Style()
 
 def wrap(string, length=40):
