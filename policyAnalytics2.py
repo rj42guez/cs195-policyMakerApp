@@ -4,7 +4,7 @@ from tkinter import font
 from tkinter import ttk, messagebox # messagebox is a Hamdi addition
 from tkinter import scrolledtext 
 from tkinter import colorchooser
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename, asksaveasfilename   
 
 import textwrap
 import json
@@ -29,10 +29,11 @@ import sklearn as skl
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
 # Hamdi addition
-import tkinter.tix as tix
+# import tkinter.tix as tix
 
 global size, var, pageNumber
 size = 10
+save_file_path = None
 
 root = Tk()
 root.title("Policy Analytics 1.0")
@@ -119,14 +120,16 @@ adminLabel.pack(pady=5, padx=50, anchor="w")
 style = ttk.Style()
 
 # Menu setup
-def setup_menu():
-    menubar = tk.Menu(main)
-    file_menu = tk.Menu(menubar, tearoff=0)
-    file_menu.add_command(label="New", command=lambda: new_project())
-    file_menu.add_command(label="Open", command=lambda: open_project())
-    file_menu.add_command(label="Help", command=lambda: help_page())
-    menubar.add_cascade(label="File", menu=file_menu)
-    main.config(menu=menubar)
+# def setup_menu():
+#     menubar = tk.Menu(main)
+#     file_menu = tk.Menu(menubar, tearoff=0)
+#     file_menu.add_command(label="New", command=lambda: new_project())
+#     file_menu.add_command(label="Open", command=lambda: open_project())
+#     file_menu.add_command(label="Help", command=lambda: help_page())
+#     menubar.add_cascade(label="File", menu=file_menu)
+#     main.config(menu=menubar)
+
+# Nasa baba yung menu set-up - Bmae
 
 def new_project():
     global pageNumber
@@ -202,6 +205,14 @@ def createNewProject():
     global filename, fileobject
 
     mainProject = Toplevel(root)
+    mainProject.transient(root)           # Attach to root
+    mainProject.grab_set()                # Make it modal (disables root interaction)
+    mainProject.lift()                    # Raise it to the top
+    mainProject.focus_force()             # Bring focus
+    mainProject.attributes("-topmost", 1) # Stay on top initially
+    mainProject.after(10, lambda: mainProject.attributes("-topmost", 0))  # Release topmost after lift
+
+    ### To make sure it stays on top of the main window - Bmae
     
     varRoot1 = tk.IntVar()
     varRoot2 = tk.IntVar()
@@ -977,20 +988,27 @@ def createNewProject():
                     def __init__(self, root):
                         global textValue
                         textValue = tk.StringVar()
+
                         self.root = root
+                        self.root.title("Problem Tree Analysis")
+                    
                         self.canvas = tk.Canvas(root, bg="white")
                         self.canvas.pack(fill=tk.BOTH, expand=True)
+
                         self.current_shape = None
                         self.start_x = None
                         self.start_y = None
                         self.current_shape_item = None
+
                         self.color_button = ttk.Button(root, text="Color", command=self.choose_color)
                         self.pen_button = ttk.Button(root, text="Pen", command=self.use_pen)
                         self.rect_button = ttk.Button(root, text="Rectangle", command=self.create_rectangle)
                         self.circle_button = ttk.Button(root, text="Arrow", command=self.create_arrow)
                         self.clear_button = ttk.Button(root, text="Clear", command=self.clear_canvas)
                         self.text_frame = tk.Frame(root, height=100, width=200, relief="sunken", borderwidth=3)
+                        self.eraser_button = tk.Button(root, text="Eraser", command=self.use_eraser)
                         self.text_entry = tk.Entry(self.text_frame, textvariable=textValue, bg="white", width=20)
+
                         self.pen_button.pack(side=tk.LEFT)
                         self.clear_button.pack(side=tk.LEFT)
                         self.color_button.pack(side=tk.LEFT)
@@ -998,25 +1016,45 @@ def createNewProject():
                         self.circle_button.pack(side=tk.LEFT)
                         self.text_frame.pack(side=tk.LEFT)
                         self.text_entry.pack(side=tk.LEFT)
+
                         self.canvas.bind("<Button-1>", self.start_draw)
                         self.canvas.bind("<B1-Motion>", self.draw_shape)
                         self.canvas.bind("<ButtonRelease-1>", self.stop_draw)
                         self.canvas.bind("<Button-2>", self.add_text)
                         self.canvas.bind("<Button-3>", self.add_text)
+                        self.pen_active = False
+                        self.eraser_active = False
+
                     def add_text(self, event):
                         self.canvas.create_text(event.x, event.y, text=textValue.get())
+
                     def use_pen(self):
-                        self.current_shape = "pen"
+                        self.pen_active = True
+                        self.current_shape = None
+                        self.eraser_active = False
+
+                    def use_eraser(self):
+                        self.pen_active = False
+                        self.current_shape = None
+                        self.eraser_active = True
+
                     def choose_color(self):
                         global color
                         color = colorchooser.askcolor(title="Choose color")
                     def create_rectangle(self):
+                        self.eraser_active = False
+                        self.pen_active = False
                         self.current_shape = "rectangle"
                     def create_arrow(self):
+                        self.eraser_active = False
+                        self.pen_active = False
                         self.current_shape = "arrow"
                     def start_draw(self, event):
                         self.start_x = event.x
                         self.start_y = event.y
+                        if self.pen_active:
+                            # Just store the starting point; nothing to draw yet
+                            return
                         if self.current_shape == "rectangle":
                             self.current_shape_item = self.canvas.create_rectangle(
                                 self.start_x, self.start_y, self.start_x, self.start_y, outline=color[1]
@@ -1026,7 +1064,13 @@ def createNewProject():
                                 self.start_x, self.start_y, self.start_x, self.start_y, fill=color[1], arrow="last", width=5
                             )
                     def draw_shape(self, event):
-                        if self.current_shape_item:
+                        if self.pen_active:
+                            self.canvas.create_line(self.start_x, self.start_y, event.x, event.y, fill=color[1])
+                            self.start_x, self.start_y = event.x, event.y
+                        elif self.eraser_active:
+                            self.canvas.create_line(self.start_x, self.start_y, event.x, event.y, fill="white", width=10)
+                            self.start_x, self.start_y = event.x, event.y
+                        elif self.current_shape_item:
                             x, y = event.x, event.y
                             self.canvas.coords(self.current_shape_item, self.start_x, self.start_y, x, y)
                     def stop_draw(self, event):
@@ -3428,8 +3472,19 @@ def createNewProject():
     # fileobject.close()
 
 def save():
-    global pageNumber
+    global pageNumber, save_file_path
     
+    if save_file_path is None:
+        save_file_path = asksaveasfilename(
+            defaultextension=".pdf",
+            filetypes=[("PDF files", "*.pdf")],
+            initialfile=p1projecttitle + ".pdf",
+            title="Save PDF As"
+        )
+    if not save_file_path:
+        return  # User canceled save
+
+
     pdf = FPDF()   
 
     pdf.add_page()
@@ -3462,6 +3517,7 @@ def save():
     pdf.multi_cell(0, 10, txt = p6policyissue, border = 0, align = 'J', fill = FALSE)
   
     pdf.add_page()
+
     if int(pageNumber) == 5:
         pdf.multi_cell(0, 10, txt ="Regression Analysis\n", border = 0, align = 'C', fill = FALSE)
         pdf.multi_cell(0, 10, txt = p4summaryPDF, border = 0, align = 'C', fill = FALSE)
@@ -3469,7 +3525,7 @@ def save():
 
     # save the pdf with name .pdf
     
-    pdf.output(p1projecttitle+'.pdf', 'F')
+    pdf.output(save_file_path, 'F')
 
 def print_file():
 
@@ -3490,8 +3546,10 @@ menubar = Menu(root)
 
 file1 = Menu(menubar, tearoff = 0) 
 menubar.add_cascade(label ='File', menu = file1) 
-file1.add_command(label ='Create New', command = lambda: createNewProject())
+file1.add_command(label ='New', command = lambda: createNewProject())
+file1.add_command(label ='Open', command = lambda: open_project())
 file1.add_command(label ='Save', command = lambda: save()) 
+file1.add_command(label = 'Help', command = lambda: help_page())
 file1.add_command(label ='Print', command = lambda: print_file()) 
 file1.add_separator() 
 file1.add_command(label ='Exit', command = lambda: quit())
