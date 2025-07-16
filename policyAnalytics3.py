@@ -1,19 +1,33 @@
 import tkinter as tk
 from tkinter import *
 from tkinter import font
-from tkinter import ttk, messagebox # messagebox is a Hamdi addition
+from tkinter import ttk, messagebox, colorchooser
 from tkinter import scrolledtext 
 from tkinter import colorchooser
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename, asksaveasfilename
 
 import textwrap
 import json
 
 import PIL
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageGrab
 
 import fpdf
 from fpdf import FPDF
+
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Preformatted
+from reportlab.platypus import Image as RLImage
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib import colors
+from reportlab.lib.units import mm
+from reportlab.lib.enums import TA_LEFT, TA_CENTER
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.units import inch
+
+import os
+
 
 import pandas as pd
 import numpy as np 
@@ -29,10 +43,20 @@ import sklearn as skl
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
 # Hamdi addition
-import tkinter.tix as tix
+#import tkinter.tix as tix 
 
 global size, var, pageNumber
 size = 10
+global save_pdf_file_path, save_json_file_path, tree_file_path, image_filename
+save_pdf_file_path = None
+save_json_file_path = None
+tree_file_path = None
+
+global analysis_type
+analysis_type = ""
+
+global reg_sum
+reg_sum = ""
 
 root = Tk()
 root.title("Policy Analytics 1.0")
@@ -60,7 +84,7 @@ introLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font
 aboutLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Policy Analytics 1.0 is a tool for learning policy analysis. This software can be used in training programs and classroom learning. It provides a step-by-step procedure that allows users to input and process basic essential data for problem structuring, forecasting and assessment of policy alternatives, recommending or prescribing the best/optimal policy alternative, designing an implementation plan, and building a monitoring and evaluation plan. Its outputs can be used in writing a complete policy issue paper. It is based on the “Elements of the Policy Issue Paper” in Annex 1 of Public Policy Analysis: An Integrated Approach by William N. Dunn (2018) with modifications based on the teaching and training experiences of its creator, Dr. Ebinezer R. Florano, Professor of Public Policy at the University of the Philippines, National College of Public Administration and Governance and Convenor of the UPCIDS Data Science for Public Policy Program (DSPPP).")
 arrLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="center", text = "All rights reserved@2024 – UPCIDS-DSPPP")
 creatorLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="left", text = "Creator: Dr. Ebinezer R. Florano")
-programmerLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="left", text = "Programmers: Emmerson Isip, Gabriel Ramos, and Raphael Justin Portuguez")
+programmerLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="left", text = "Programmers: Bianca Amurao, Emmerson Isip, Gabriel Ramos, Mohammad Hamdi Tuan, and Raphael Justin Portuguez")
 reveiwerLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="left", text = "Reviewers: Colin Rosales, Danne Nicole Pinpin, and Jean Phoebe Yao")
 adminLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="left", text = "Administrative Assistance: Lilian J. Marfil, Pedro J. Madarang, and Zhelly Ann Linsangan")
 
@@ -92,10 +116,6 @@ main.columnconfigure(3, weight=1)
 main.columnconfigure(4, weight=1)
 main.columnconfigure(5, weight=1)
 
-# introLabel.place(x=800, y=23)
-# aboutLabel.place(x=240, y=63)
-# arrLabel.place(x=805, y=200)
-
 introLabel.pack(pady=(20, 5), anchor="center")     
 aboutLabel.pack(pady=(20, 5), anchor="center")    
 arrLabel.pack(pady=(20, 5), anchor="center")     
@@ -118,28 +138,253 @@ reveiwerLabel.pack(pady=5, padx=50, anchor="w")
 adminLabel.pack(pady=5, padx=50, anchor="w")
 style = ttk.Style()
 
+###Bmae addition: for saving and opening projects
+global p1projecttitle, p1analysts, p1fontstyle, p1policyanalysis, p1fontsize
+
+p1projecttitle = " "
+p1analysts = " "
+p1fontstyle = " "
+p1policyanalysis = " "
+p1fontstyle = " "
+p1fontsize = 12
+
+global p2problematicsituation, p2undesirableeffects
+
+p2problematicsituation = ""
+p2undesirableeffects = ""
+
+global p3efforts, p3accomplishments, p3assessments
+p3efforts = []
+p3accomplishments = []
+p3assessments = []
+
+global p5rootcause, p5existingpolicies, p5relevantprov, p5accomplishments, p5assessments    
+p5rootcause = " "
+p5existingpolicies = []
+p5relevantprov = []
+p5accomplishments = []
+p5assessments = []
+
+global p6policyproblem, p6policyissue
+p6policyproblem = " "
+p6policyissue = ""
+
+global p7policyGoalsandObjectives, p7indicators
+p7policyGoalsandObjectives = []
+p7indicators = []
+
+global p8stakeholders, p8actors
+p8stakeholders = []
+p8actors = []
+
+global p9altnum, p9alternatives
+p9altnum = []
+p9alternatives = []
+
+global p10spillovers, p10externalities, p10constraints, p10mitimeasures
+p10spillovers = []
+p10externalities = []
+p10constraints = []
+p10mitimeasures = []
+
+global p11BPAdescription, p11BPAreasonSelect
+p11BPAdescription = ""
+p11BPAreasonSelect = ""
+
+global p12BPAspillover, p12BPAexternality, p12BPAconstraint, p12BPAmitigatingmeasure
+p12BPAspillover = ""
+p12BPAexternality = ""
+p12BPAconstraint = ""
+p12BPAmitigatingmeasure = ""
+
+global p13BPAwho, p13BPAwhat, p13BPAhow
+p13BPAwho = ""
+p13BPAwhat = ""
+p13BPAhow = ""
+
+global p14criticalActions, p14responsible, p14timeline, p14budget, p14budgetsource
+p14criticalActions = []
+p14responsible = []
+p14timeline = []
+p14budget = []
+p14budgetsource = []
+
+global p15dataSources, p15frequency, p15responsible, p15output, p15report
+p15dataSources = []
+p15frequency = []
+p15responsible = []
+p15output = []
+p15report = []
+
+
+
 # Menu setup
-def setup_menu():
-    menubar = tk.Menu(main)
-    file_menu = tk.Menu(menubar, tearoff=0)
-    file_menu.add_command(label="New", command=lambda: new_project())
-    file_menu.add_command(label="Open", command=lambda: open_project())
-    file_menu.add_command(label="Help", command=lambda: help_page())
-    menubar.add_cascade(label="File", menu=file_menu)
-    main.config(menu=menubar)
+# def setup_menu():
+#     menubar = tk.Menu(main)
+#     file_menu = tk.Menu(menubar, tearoff=0)
+#     file_menu.add_command(label="New", command=lambda: new_project())
+#     file_menu.add_command(label="Open", command=lambda: open_project())
+#     file_menu.add_command(label="Help", command=lambda: help_page())
+#     menubar.add_cascade(label="File", menu=file_menu)
+#     main.config(menu=menubar)
+
+# Nasa baba yung menu set-up - Bmae
 
 def new_project():
-    global pageNumber
-    pageNumber = 1
-    for widget in mainProject.winfo_children():
-        widget.destroy()
-    page_1()  # Assumed defined elsewhere
+    global save_pdf_file_path, save_json_file_path
+    save_pdf_file_path = None
+    save_json_file_path = None
+
+    global p1projecttitle, p1analysts, p1fontstyle, p1policyanalysis, p1fontsize
+
+    p1projecttitle = " "
+    p1analysts = " "
+    p1fontstyle = " "
+    p1policyanalysis = " "
+    p1fontstyle = " "
+    p1fontsize = 12
+
+    global p2problematicsituation, p2undesirableeffects
+
+    p2problematicsituation = ""
+    p2undesirableeffects = ""
+
+    global p3efforts, p3accomplishments, p3assessments
+    p3efforts = []
+    p3accomplishments = []
+    p3assessments = []
+
+    global p5rootcause, p5existingpolicies, p5relevantprov, p5accomplishments, p5assessments    
+    p5rootcause = " "
+    p5existingpolicies = []
+    p5relevantprov = []
+    p5accomplishments = []
+    p5assessments = []
+
+    global p6policyproblem, p6policyissue
+    p6policyproblem = " "
+    p6policyissue = ""
+
+    global p7policyGoalsandObjectives, p7indicators
+    p7policyGoalsandObjectives = []
+    p7indicators = []
+
+    global p8stakeholders, p8actors
+    p8stakeholders = []
+    p8actors = []
+
+    global p9altnum, p9alternatives
+    p9altnum = []
+    p9alternatives = []
+
+    global p10spillovers, p10externalities, p10constraints, p10mitimeasures
+    p10spillovers = []
+    p10externalities = []
+    p10constraints = []
+    p10mitimeasures = []
+
+    global p11BPAdescription, p11BPAreasonSelect
+    p11BPAdescription = ""
+    p11BPAreasonSelect = ""
+
+    global p12BPAspillover, p12BPAexternality, p12BPAconstraint, p12BPAmitigatingmeasure
+    p12BPAspillover = ""
+    p12BPAexternality = ""
+    p12BPAconstraint = ""
+    p12BPAmitigatingmeasure = ""
+
+    global p13BPAwho, p13BPAwhat, p13BPAhow
+    p13BPAwho = ""
+    p13BPAwhat = ""
+    p13BPAhow = ""
+
+    global p14criticalActions, p14responsible, p14timeline, p14budget, p14budgetsource
+    p14criticalActions = []
+    p14responsible = []
+    p14timeline = []
+    p14budget = []
+    p14budgetsource = []
+
+    global p15dataSources, p15frequency, p15responsible, p15output, p15report
+    p15dataSources = []
+    p15frequency = []
+    p15responsible = []
+    p15output = []
+    p15report = []
+    createNewProject()
 
 def open_project():
+    global save_pdf_file_path, save_json_file_path
+    global p1projecttitle, p1analysts, p1fontstyle, p1policyanalysis, p1fontsize
+    global p2problematicsituation, p2undesirableeffects
+    global p3efforts, p3accomplishments, p3assessments
+    global p5rootcause, p5existingpolicies, p5relevantprov, p5accomplishments, p5assessments
+    global p6policyproblem, p6policyissue
+    global p7policyGoalsandObjectives, p7indicators
+    global p8stakeholders, p8actors
+    global p9altnum, p9alternatives
+    global p10spillovers, p10externalities, p10constraints, p10mitimeasures
+    global p11BPAdescription, p11BPAreasonSelect
+    global p12BPAspillover, p12BPAexternality, p12BPAconstraint, p12BPAmitigatingmeasure
+    global p13BPAwho, p13BPAwhat, p13BPAhow
+    global p14criticalActions, p14responsible, p14timeline, p14budget, p14budgetsource
+    global p15dataSources, p15frequency, p15responsible, p15output, p15report
+
+    
     filename = tk.filedialog.askopenfilename(filetypes=[("JSON Files", "*.json")])
     if filename:
-        # Logic to load project data (implement based on save format)
-        messagebox.showinfo("Open", "Project loading not fully implemented.")
+        with open(filename, "r") as f:
+            data = json.load(f)
+        save_pdf_file_path = data.get("save_pdf_file_path", None)
+        save_json_file_path = data.get("save_json_file_path", None)
+        p1projecttitle = data.get("p1projecttitle", "")
+        p1analysts = data.get("p1analysts", "")
+        p1fontstyle = data.get("p1fontstyle", "")
+        p1fontsize = data.get("p1fontsize", 12)
+        p1policyanalysis = data.get("p1policyanalysis", "")
+        p2problematicsituation = data.get("p2problematicsituation", "")
+        p2undesirableeffects = data.get("p2undesirableeffects", "")
+        p3efforts = data.get("p3efforts", [])
+        p3accomplishments = data.get("p3accomplishments", [])
+        p3assessments = data.get("p3assessments", [])
+        p5rootcause = data.get("p5rootcause", "")
+        p5existingpolicies = data.get("p5existingpolicies", [])
+        p5relevantprov = data.get("p5relevantprov", [])
+        p5accomplishments = data.get("p5accomplishments", [])
+        p5assessments = data.get("p5assessments", [])
+        p6policyproblem = data.get("p6policyproblem", "")
+        p6policyissue = data.get("p6policyissue", "")
+        p7policyGoalsandObjectives = data.get("p7policyGoalsandObjectives", [])
+        p7indicators = data.get("p7indicators", [])
+        p8stakeholders = data.get("p8stakeholders", [])
+        p8actors = data.get("p8actors", [])
+        p9altnum = data.get("p9altnum", [])
+        p9alternatives = data.get("p9alternatives", [])
+        p10spillovers = data.get("p10spillovers", [])
+        p10externalities = data.get("p10externalities", [])
+        p10constraints = data.get("p10constraints", [])
+        p10mitimeasures = data.get("p10mitimeasures", [])
+        p11BPAdescription = data.get("p11BPAdescription", )
+        p11BPAreasonSelect = data.get("p11BPAreasonSelect", "")
+        p12BPAspillover = data.get("p12BPAspillover", "")
+        p12BPAexternality = data.get("p12BPAexternality", "")
+        p12BPAconstraint = data.get("p12BPAconstraint", "")
+        p12BPAmitigatingmeasure = data.get("p12BPAmitigatingmeasure", "")
+        p13BPAwho = data.get("p13BPAwho", "")
+        p13BPAwhat = data.get("p13BPAwhat", "")
+        p13BPAhow = data.get("p13BPAhow", "")
+        p14criticalActions = data.get("p14criticalActions", [])
+        p14responsible = data.get("p14responsible", [])
+        p14timeline = data.get("p14timeline", [])
+        p14budget = data.get("p14budget", [])
+        p14budgetsource = data.get("p14budgetsource", [])
+        p15dataSources = data.get("p15dataSources", [])
+        p15frequency = data.get("p15frequency", [])
+        p15responsible = data.get("p15responsible", [])
+        p15output = data.get("p15output", [])
+        p15report = data.get("p15report", [])
+
+        createNewProject()
 
 def help_page():
     help_window = tk.Toplevel(main)
@@ -164,6 +409,9 @@ def help_page():
     - Save data automatically when navigating with 'Next'.
 
     Page Descriptions:
+    - Page 1: Set-up document (Project Title, Analysts, Font Style, Font Size, Levels of Analysis).
+    - Page 2: Describe the Problematic Situation and Its Undesirable Effects.
+    - Page 3: List Current Efforts, Accomplishments, and Assessments.
     - Page 4: Select statistical methods (Linear/Multiple/Logistic Regression, Problem Tree Analysis).
     - Page 5: Enter root cause and assess existing policies.
     - Page 6: Define policy problem and issue statement.
@@ -194,14 +442,17 @@ def createNewProject():
     global pageNumber
     pageNumber = 0
 
-    global p3efforts, p3accomplishments, p3assessments
-    p3efforts = []
-    p3accomplishments = []
-    p3assessments = []
-
     global filename, fileobject
+    global p4summaryPDF
+    p4summaryPDF = " "
 
     mainProject = Toplevel(root)
+    mainProject.transient(root)           # Attach to root
+    mainProject.grab_set()                # Make it modal (disables root interaction)
+    mainProject.lift()                    # Raise it to the top
+    mainProject.focus_force()             # Bring focus
+    mainProject.attributes("-topmost", 1) # Stay on top initially
+    mainProject.after(10, lambda: mainProject.attributes("-topmost", 0))  # Release topmost after lift
     
     varRoot1 = tk.IntVar()
     varRoot2 = tk.IntVar()
@@ -213,24 +464,20 @@ def createNewProject():
 
     status = ttk.Label(mainProject, text="")
     
-    global p1projecttitle, p1analysts, p1fontstyle, p1policyanalysis, p1fontstyle, p1fontsize
-    p1projecttitle = " "
-    p1analysts = " "
-    p1fontstyle = " "
-    p1policyanalysis = " "
-    p1fontstyle = " "
-    p1fontsize = 12
+    ##global p1projecttitle, p1analysts, p1fontstyle, p1policyanalysis, p1fontstyle, p1fontsize
+    ##p1projecttitle = " "
+    ##p1analysts = " "
+    ##p1fontstyle = " "
+    ##p1policyanalysis = " "
+    ##p1fontstyle = " "
+    ##p1fontsize = 12
 
-    assessmentTuple = []
     color = ("", "#000000")  # Default color for ShapeEditorApp
     interceptLR, coefficientLR = 0, 0
     interceptMR1, coefficientMR1 = 0, 0
     interceptMR2, coefficientMR2 = 0, 0
     interceptLogR, coefficientConstLogR, coefficientXLogR = 0, 0, 0
     discount = 0.05  # Default discount rate
-
-    global p4summaryPDF
-    p4summaryPDF = " "
     
     # Tooltip class
     class ToolTip:
@@ -319,75 +566,17 @@ def createNewProject():
         btn_back.place(relx=0.4, rely=0.95)
         btn_next.place(relx=0.5, rely=0.95)
         widgets_to_destroy.extend([canvas, scrollbar_y, scrollbar_x, zoom_in_button, zoom_out_button, progress, progress_label, workflow_canvas, btn_back, btn_next])
-        
-    def setup_page_common(page_num, title, frame, widgets_to_destroy, back_func, next_func):
-        mainProject.state('zoomed')
-        style.configure('Treeview', rowheight=120)
-        style.configure("TButton", foreground="black", font=("Arial", 10))
-
-        # Canvas with scrollbars
-        canvas = tk.Canvas(mainProject)
-        scrollbar_y = ttk.Scrollbar(mainProject, orient="vertical", command=canvas.yview)
-        scrollbar_x = ttk.Scrollbar(mainProject, orient="horizontal", command=canvas.xview)
-        canvas.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
-        scrollbar_y.pack(side="right", fill="y")
-        scrollbar_x.pack(side="bottom", fill="x")
-        canvas.pack(side="left", fill="both", expand=True)
-        canvas.create_window((0, 0), window=frame, anchor="nw")
-        frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-
-        # Zoom functionality
-        scale = 1.0
-        def zoom_in():
-            nonlocal scale
-            scale *= 1.1
-            canvas.scale("all", 0, 0, 1.1, 1.1)
-            canvas.configure(scrollregion=canvas.bbox("all"))
-        def zoom_out():
-            nonlocal scale
-            scale /= 1.1
-            canvas.scale("all", 0, 0, 1/1.1, 1/1.1)
-            canvas.configure(scrollregion=canvas.bbox("all"))
-        zoom_in_button = ttk.Button(mainProject, text="Zoom In", command=zoom_in)
-        zoom_out_button = ttk.Button(mainProject, text="Zoom Out", command=zoom_out)
-        zoom_in_button.place(relx=0.01, rely=0.01)
-        zoom_out_button.place(relx=0.08, rely=0.01)
-
-        # Progress bar and workflow map
-        progress = ttk.Progressbar(mainProject, length=200, maximum=15, value=page_num)
-        progress.place(relx=0.01, rely=0.05)
-        progress_label = tk.Label(mainProject, text=f"Page {page_num} of 15: {title}", font=("Arial", 12, "bold"))
-        progress_label.place(relx=0.01, rely=0.08)
-        workflow_canvas = tk.Canvas(mainProject, height=50, width=750)
-        workflow_canvas.place(relx=0.01, rely=0.12)
-        for i in range(1, 16):
-            x = (i-1)*50
-            workflow_canvas.create_rectangle(x, 10, x+40, 40, fill="lightblue" if i == page_num else "gray")
-            workflow_canvas.create_text(x+20, 25, text=str(i))
-            workflow_canvas.tag_bind(i, "<Button-1>", lambda e, p=i: jump_to_page(p))
-
-        def jump_to_page(p):
-            global pageNumber
-            pageNumber = p
-            for widget in mainProject.winfo_children():
-                widget.destroy()
-            globals()[f"page_{p}"]()
-
-        # Navigation buttons
-        btn_back = ttk.Button(mainProject, text="Back", command=back_func)
-        btn_next = ttk.Button(mainProject, text="Next", command=next_func)
-        ToolTip(btn_back, "Go to the previous page")
-        ToolTip(btn_next, "Proceed to the next page")
-        btn_back.place(relx=0.4, rely=0.95)
-        btn_next.place(relx=0.5, rely=0.95)
-        widgets_to_destroy.extend([canvas, scrollbar_y, scrollbar_x, zoom_in_button, zoom_out_button, progress, progress_label, workflow_canvas, btn_back, btn_next])
 
     def page_1():
         global pageNumber
         pageNumber += 1
         print(pageNumber)
         mainProject.title("Create New Project")
-        mainProject.geometry("660x210")
+        mainProject.geometry("660x225")
+
+        # Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 1 of 15: Set-up document", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
 
         frame1 = tk.LabelFrame(mainProject)
 
@@ -443,23 +632,25 @@ def createNewProject():
         national.grid(row=6, column=2, sticky = W, padx=56)
         local.grid(row=7, column=2, sticky = W, padx=56)
         organizational.grid(row=8, column=2, sticky = W, padx=56)
-    
+
+        projectTitle.insert(0, p1projecttitle)
+        analystName.insert(0, p1analysts)
+        polAnaTitle.insert(0, p1policyanalysis)
+        fontsList.set(p1fontstyle)
+        fontSize.insert(0, str(p1fontsize))
+
         def clear_page_1():
             projectTitle.config(bg="white")
             fontSize.config(bg="white")
             analystName.config(bg="white")
             polAnaTitle.config(bg="white")
             fontsList.set('')
-            # probSit.config(bg="white")
-            # undeEff.config(bg="white")
             
             projectTitle.delete(0, END)
             polAnaTitle.delete(0, END)
             analystName.delete(0, END)
             fontSize.delete(0, END)
             indentation.delete(0, END)
-            # probSit.delete("1.0", tk.END)
-            # undeEff.delete("1.0", tk.END)
 
         def create_project():    
             global p1projecttitle, p1analysts, p1fontstyle, p1policyanalysis, p1fontstyle, p1fontsize
@@ -515,16 +706,19 @@ def createNewProject():
         btnCreate.place(x=380, y=170)
         btnClear1.place(x=190, y=170)
         status.place(x=10, y=170)
-
     page_1()
 
-    global p2problematicsituation, p2undesirableeffects
-    p2problematicsituation = "problematic situation"
-    p2undesirableeffects = "undesirable effects"
-
     def page_2():                                                               # write problematic situation and undesirable effects
-        mainProject.geometry("660x210")
+
+        status = Label(mainProject, text="")
+        status.place(x=10, y=170)
+
+        mainProject.geometry("660x220")
+
+        ### Progress indicator
         frame2 = tk.LabelFrame(mainProject)
+        progress_label = tk.Label(mainProject, text="Page 2 of 15: Problematic Situation and Its Undesirable Effects.", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
 
         status.config(text="")
 
@@ -539,6 +733,9 @@ def createNewProject():
         probSit.grid(row=2, column=0, sticky = W, padx=7)
         undeEffLabel.grid(row=1, column=1, sticky = W, padx=7)
         undeEff.grid(row=2, column=1, sticky = W, padx=7)
+
+        probSit.insert("1.0", p2problematicsituation)
+        undeEff.insert("1.0", p2undesirableeffects)
         
         def back_1():
             global pageNumber
@@ -547,6 +744,7 @@ def createNewProject():
             frame2.destroy() 
             btnBack1.destroy()
             btnNext1.destroy() 
+            save()
             page_1()
         
         def next_1():
@@ -570,8 +768,7 @@ def createNewProject():
                 foreground="red",
             )
                 return
-        
-            # fileobject.writelines(problematicsituation+"\n"+undesirableeffects+"\n")
+    
             save()
 
             frame2.destroy() 
@@ -586,11 +783,14 @@ def createNewProject():
     
  
     def page_3():
+
+
         global p3efforts, p3accomplishments, p3assessments
         mainProject.geometry("1250x700")
         style = ttk.Style()
         style.configure('Treeview', rowheight=160)
         style.configure("TButton", foreground="black", font=("Arial", 10))  # Set button text to black
+
 
         # Undo stack
         undo_stack = []
@@ -626,9 +826,7 @@ def createNewProject():
         zoom_in_button.place(x=10, y=10)
         zoom_out_button.place(x=100, y=10)
 
-        # Progress indicator
-        progress_label = tk.Label(mainProject, text="Page 3 of 15: Current Efforts", font=("Arial", 12, "bold"))
-        progress_label.place(x=10, y=50)
+
 
         # Treeview with scrollbars
         currEffLabel = tk.Label(frame3, text="Current Efforts/Measures of the Government to Solve the Situational Problem")
@@ -680,6 +878,10 @@ def createNewProject():
         btnBack2.place(x=490, y=650)
         btnNext2.place(x=680, y=650)
 
+        if not effortsTable.get_children():
+            for e, a, s in zip(p3efforts, p3accomplishments, p3assessments):
+                effortsTable.insert("", "end", values=(wrap(e), wrap(a), wrap(s)))
+
         # Event handlers
         def show_data(a):
             effort.delete("1.0", tk.END)
@@ -713,6 +915,7 @@ def createNewProject():
             accomplishment.delete("1.0", tk.END)
             assessment.delete("1.0", tk.END)
             effort.focus()
+            save()
 
         def edit_data():
             effortText = effort.get("1.0", tk.END).strip()
@@ -728,6 +931,7 @@ def createNewProject():
             p3efforts[effortsTable.index(selected_item)] = effortText
             p3accomplishments[effortsTable.index(selected_item)] = accomplishmentText
             p3assessments[effortsTable.index(selected_item)] = assessmentText
+            save()
 
         def delete_data():
             selected_item = effortsTable.selection()
@@ -747,6 +951,7 @@ def createNewProject():
                 deleteButton.config(state="disabled")
             else:
                 messagebox.showwarning("Warning", "Please select an item to delete")
+            save()
 
         def undo():
             if not undo_stack:
@@ -771,6 +976,7 @@ def createNewProject():
                 p3efforts.insert(index, old_values[0])
                 p3accomplishments.insert(index, old_values[1])
                 p3assessments.insert(index, old_values[2])
+            save()
 
         # Keyboard shortcuts
         mainProject.bind("<Control-z>", lambda event: undo())
@@ -779,17 +985,10 @@ def createNewProject():
         accomplishment.bind("<Tab>", lambda event: assessment.focus_set())
         assessment.bind("<Tab>", lambda event: addButton.focus_set())
 
-        # Load saved data (if any)
-        try:
-            with open("page3_data.json", "r") as f:
-                data = json.load(f)
-                for e, a, s in zip(data["efforts"], data["accomplishments"], data["assessments"]):
-                    effortsTable.insert("", "end", values=(wrap(e), wrap(a), wrap(s)))
-                    p3efforts.append(e)
-                    p3accomplishments.append(a)
-                    p3assessments.append(s)
-        except FileNotFoundError:
-            pass
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 3 of 15: Current Efforts", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
+
 
         def back_2():
             global pageNumber
@@ -800,509 +999,900 @@ def createNewProject():
 
         def next_2():
             global pageNumber
-            with open("page3_data.json", "w") as f:
-                json.dump({
-                    "efforts": p3efforts,
-                    "accomplishments": p3accomplishments,
-                    "assessments": p3assessments
-                }, f)
             pageNumber += 1
             for widget in mainProject.winfo_children():
                 widget.destroy()
+            save()
             page_4()
 
     def page_4():
-        global var
-        var = tk.IntVar()
-        mainProject.state('zoomed')
-        style.configure("TButton", foreground="black", font=("Arial", 10))
+        mainProject.geometry("660x250")
+        # Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 4 of 15: Select Statistical Methods", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
         frame4 = tk.LabelFrame(mainProject)
-        widgets_to_destroy = [frame4]
 
-        # UI Elements
-        statistical_method = tk.Label(frame4, text="Statistical Method", font=("Arial", 12, "bold"))
-        qualita = tk.Label(frame4, text="Qualitative")
-        quantita = tk.Label(frame4, text="Quantitative")
-        r1 = ttk.Radiobutton(frame4, text="Linear Regression", variable=var, value=1)
-        r2 = ttk.Radiobutton(frame4, text="Multiple Regression", variable=var, value=2)
-        r3 = ttk.Radiobutton(frame4, text="Logistic Regression", variable=var, value=3)
-        r4 = ttk.Radiobutton(frame4, text="Problem Tree Analysis", variable=var, value=4)
-        statistical_method.grid(row=0, column=0, columnspan=2, pady=10)
-        quantita.grid(row=1, column=0, padx=10)
-        qualita.grid(row=1, column=1, padx=10)
-        r1.grid(row=2, column=0, padx=10, pady=5)
-        r2.grid(row=3, column=0, padx=10, pady=5)
-        r3.grid(row=4, column=0, padx=10, pady=5)
-        r4.grid(row=2, column=1, padx=10, pady=5)
+        global var, analysis_type
+        var = IntVar()
+            
+        StatisticalMethod = Label(frame4, text = "Statistical Method")
+        Qualita = Label(frame4, text = "Qualitative")
+        Quantita = Label(frame4, text = "Quantitative")
+        R1 = Radiobutton(frame4, text="Linear Regression", variable=var, value=1)
+        R2 = Radiobutton(frame4, text="Multiple Regression", variable=var, value=2)
+        R3 = Radiobutton(frame4, text="Logistic Regression", variable=var, value=3)
+        R4 = Radiobutton(frame4, text="Problem Tree Analysis", variable=var, value=4)
+
+        StatisticalMethod.place(x = 275, y=10)
+        frame4.place(x=190, y=50)
+        Quantita.grid(row=1, column=0)
+        Qualita.grid(row=1, column=1)
+        R1.grid(row=2, column=0)
+        R2.grid(row=3, column=0)
+        R3.grid(row=4, column=0)
+        R4.grid(row=2, column=1)
 
         def analyses():
-            if not var.get():
-                messagebox.showerror("Error", "Please select a statistical method")
-                return
-            analysis = tk.Toplevel(main)
-            analysis.geometry("1200x700")
-            if var.get() == 1:
+            global reg_sum
+            global analysis_type                    
+            if (int(var.get()) == 1):
+                analysis = Toplevel(main)
+                analysis.transient(root)
+                analysis.grab_set()
+                analysis.lift()
+                analysis.focus_force()
+                analysis.attributes("-topmost", 1)
+                analysis.after(10, lambda: analysis.attributes("-topmost", 0))
                 analysis.title("Analysis - Linear Regression")
-                filename = tk.filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
-                if not filename:
-                    return
+                analysis.geometry("1000x680")
+                analysis_type = "Linear Regression"
+
+                filename = askopenfilename(filetypes=[("CSV Files", "*.csv")])
+
+                if filename == "":
+                    page_4()
                 df = pd.read_csv(filename, usecols=[0,1])
                 X_train = df.iloc[:, [0]]
                 y_train = df.iloc[:, [1]]
+
                 print(df)
+
                 column_names = list(df.columns)
+
                 model = sm.OLS(y_train, sm.add_constant(X_train)).fit()
-                lb1 = tk.Label(analysis, text=model.summary(), font="Consolas", justify="left")
+
+                lb1 = Label(analysis,text=model.summary(), font="Consolas", justify="left")
                 lb1.pack()
-                reg = skl.LinearRegression().fit(X_train, y_train)
-                divider = "\n" + "*"*80 + "\n"
-                reg_title = "                       skLearn Linear Regression Results                        \n"
-                lb2 = tk.Label(analysis, text=divider+reg_title, font="Consolas", justify="left")
+
+                reg = skl.linear_model.LinearRegression().fit(X_train[:], y_train[:])
+
+                divider  = "\n******************************************************************************\n"
+                regTitle = "                       skLearn Linear Regression Results                        \n"
+                lb2 = Label(analysis,text=divider+regTitle, font="Consolas", justify="left")
                 lb2.pack()
-                score = f"Score:        {round(float(reg.score(X_train, y_train)), 5)}"
+
+                score = "Score:        " + str(round(float(reg.score(X_train, y_train)), 5))
                 global interceptLR, coefficientLR, interceptLRDisplay, coefficientLRDisplay
-                interceptLRDisplay = f"\nIntercept:    {round(float(reg.intercept_), 5)}"
+                interceptLRDisplay = "\nIntercept:    " + str(round(float(reg.intercept_), 5))
                 interceptLR = float(reg.intercept_)
-                coefficientLRDisplay = f"\nCoefficient:  {round(float(reg.coef_), 5)}"
+                coefficientLRDisplay = "\nCoefficient:  " + str(round(float(reg.coef_), 5))
                 coefficientLR = float(reg.coef_)
+
                 summary = score + interceptLRDisplay + coefficientLRDisplay
-                lb3 = tk.Label(analysis, text=summary, font="Consolas", justify="left")
+                lb3 = Label(analysis,text=summary, font="Consolas", justify="left")
                 lb3.pack()
+
                 global p4summaryPDF
-                p4summaryPDF = divider + reg_title + summary
-                plt.scatter(X_train, y_train, color="m", marker="o", s=30)
-                plt.plot(X_train, reg.predict(X_train), color="g")
+                p4summaryPDF = divider + regTitle + summary
+
+                reg_sum = regTitle + summary
+                
+                plt.scatter(X_train, y_train, color = "m", marker = "o", s = 30)
+
+                # plotting the regression line
+                plt.plot(X_train, reg.predict(X_train), color = "g")
+
+                # putting labels
                 plt.xlabel(column_names[0])
                 plt.ylabel(column_names[1])
+                image_filename = "page4_plot.png"
+                plt.savefig(image_filename)
                 plt.show()
-            elif var.get() == 2:
+                page_5()
+
+            elif(int(var.get()) == 2):
+                analysis = Toplevel(main)
+                analysis.transient(root)
+                analysis.grab_set()
+                analysis.lift()
+                analysis.focus_force()
+                analysis.attributes("-topmost", 1)
+                analysis.after(10, lambda: analysis.attributes("-topmost", 0))
                 analysis.title("Analysis - Multiple Regression Summary 1")
-                analysis2 = tk.Toplevel(main)
+                analysis.geometry("1200x680")
+                analysis_type = "Multiple Regression"
+
+                analysis2 = Toplevel(main)
                 analysis2.title("Analysis - Multiple Regression Summary 2")
-                analysis2.geometry("1200x700")
-                filename = tk.filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
-                if not filename:
-                    return
+                analysis2.geometry("1200x680")
+                analysis2 = Toplevel(main)
+                analysis2.transient(root)
+                analysis2.grab_set()
+                analysis2.lift()
+                analysis2.focus_force()
+                analysis2.attributes("-topmost", 1)
+                analysis2.after(10, lambda: analysis.attributes("-topmost", 0))
+
+                filename = askopenfilename(filetypes=[("CSV Files", "*.csv")])
                 df = pd.read_csv(filename)
+
                 data_x = df.iloc[:, 0:2]
                 data_x1 = df.iloc[:, [0]]
                 data_x2 = df.iloc[:, [1]]
                 data_y = df.iloc[:, [2]]
+
                 data_x = sm.add_constant(data_x)
-                ks = sm.OLS(data_y, data_x).fit()
-                print(ks.summary())
-                lb1 = tk.Label(analysis, text=ks.summary(), font="Consolas", justify="left")
+
+                ks = sm.OLS(data_y, data_x)
+                ks_res =ks.fit()
+                ks_res.summary()
+                
+                print(ks_res.summary())
+
+                lb1 = Label(analysis, text=ks_res.summary(), font="Consolas", justify="left")
                 lb1.pack()
-                column_headers = list(df.columns)
-                divider_a = "*"*80 + "\n"
-                reg_title_a = f"          skLearn Multiple Regression Results - {column_headers[0]}           \n"
-                lb2 = tk.Label(analysis2, text=divider_a+reg_title_a, font="Consolas", justify="left")
+
+                column_headers = list(df.columns.values)
+
+                dividerA  = "******************************************************************************\n"
+                regTitleA = "          skLearn Multiple Regression Results - "+column_headers[0]+"           \n"
+                lb2 = Label(analysis2, text=dividerA+regTitleA, font="Consolas", justify="left")
                 lb2.pack()
-                reg1 = skl.LinearRegression().fit(data_x1, data_y)
-                score = f"Score:        {reg1.score(data_x1, data_y)}"
+
+                reg1 = skl.linear_model.LinearRegression().fit(data_x1, data_y)
+
+                score = "Score:        " + str(reg1.score(data_x1, data_y))
                 global interceptMR1, coefficientMR1
-                interceptMR1Display = f"\nIntercept:    {reg1.intercept_}"
-                coefficientMR1Display = f"\nCoefficient:  {reg1.coef_}"
+                interceptMR1Display = "\nIntercept:    " + str(reg1.intercept_)
+                coefficientMR1Display = "\nCoefficient:  " + str(reg1.coef_)
                 interceptMR1 = float(reg1.intercept_)
                 coefficientMR1 = float(reg1.coef_)
-                summary3 = score + interceptMR1Display + coefficientMR1Display
-                lb3 = tk.Label(analysis2, text=summary3, font="Consolas", justify="left")
+
+                summary3 = score + interceptMR1Display + coefficientMR1Display 
+                lb3 = Label(analysis2, text=summary3, font="Consolas", justify="left")
                 lb3.pack()
-                divider_b = "*"*80 + "\n"
-                reg_title_b = f"          skLearn Multiple Regression Results - {column_headers[1]}            \n"
-                lb4 = tk.Label(analysis2, text=divider_b+reg_title_b, font="Consolas", justify="left")
+
+                dividerB  = "******************************************************************************\n"
+                regTitleB = "          skLearn Multiple Regression Results - "+column_headers[1]+"            \n"
+                lb4 = Label(analysis2, text=dividerB+regTitleB, font="Consolas", justify="left")
                 lb4.pack()
-                reg2 = skl.LinearRegression().fit(data_x2, data_y)
-                score = f"Score:        {reg2.score(data_x2, data_y)}"
+
+                reg2 = skl.linear_model.LinearRegression().fit(data_x2, data_y)
+
+                score = "Score:        " + str(reg2.score(data_x2, data_y))
                 global interceptMR2, coefficientMR2
-                interceptMR2Display = f"\nIntercept:    {reg2.intercept_}"
-                coefficientMR2Display = f"\nCoefficient:  {reg2.coef_}"
+                interceptMR2Display = "\nIntercept:    " + str(reg2.intercept_)
+                coefficientMR2Display = "\nCoefficient:  " + str(reg2.coef_)
                 interceptMR2 = float(reg2.intercept_)
                 coefficientMR2 = float(reg2.coef_)
+
                 summary4 = score + interceptMR2Display + coefficientMR2Display
-                lb5 = tk.Label(analysis2, text=summary4, font="Consolas", justify="left")
+                lb5 = Label(analysis2, text=summary4, font="Consolas", justify="left")
                 lb5.pack()
+
+                reg_sum = regTitleA + summary3 + "    \n    \n" + regTitleB + summary4
+
                 fig = plt.figure()
                 ax = fig.add_subplot(111, projection='3d')
                 ax.scatter(data_x1, data_x2, data_y, c='blue', marker='o')
+
+                # set your labels
                 ax.set_xlabel(column_headers[0])
                 ax.set_ylabel(column_headers[1])
                 ax.set_zlabel(column_headers[2])
+
                 plt.savefig('regplot.png')
+                image_filename = "page4_plot.png"
+                plt.savefig(image_filename)
                 plt.show()
-            elif var.get() == 3:
+
+                page_5()
+                
+
+                # l = tk.Label(frame, text="Hello", font="-size 50")
+                # l.pack()
+
+                # l = tk.Label(frame, text="World", font="-size 50")
+                # l.pack()
+
+                # l = tk.Label(frame, text="Test text 1\nTest text 2\nTest text 3\nTest text 4\nTest text 5\nTest text 6\nTest text 7\nTest text 8\nTest text 9", font="-size 20")
+                # l.pack()
+
+            elif(int(var.get()) == 3):
+                analysis = Toplevel(main)
+                analysis.transient(root)
+                analysis.grab_set()
+                analysis.lift()
+                analysis.focus_force()
+                analysis.attributes("-topmost", 1)
+                analysis.after(10, lambda: analysis.attributes("-topmost", 0))
                 analysis.title("Analysis - Logistic Regression Summary 1")
-                analysis2 = tk.Toplevel(main)
+                analysis.geometry("830x480")
+
+                analysis2 = Toplevel(main)
+                analysis2.transient(root)
+                analysis2.grab_set()
+                analysis2.lift()
+                analysis2.focus_force()
+                analysis2.attributes("-topmost", 1)
+                analysis2.after(10, lambda: analysis.attributes("-topmost", 0))
                 analysis2.title("Analysis - Logistic Regression Summary 2")
                 analysis2.geometry("830x480")
-                filename = tk.filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
-                if not filename:
-                    return
+                analysis_type = "Logistic Regression"
+
+                filename = askopenfilename(filetypes=[("CSV Files", "*.csv")])
                 df = pd.read_csv(filename)
                 X_train = df.iloc[:, [0]]
                 y_train = df.iloc[:, [1]]
+
                 X_train = sm.add_constant(X_train)
+                print("111")
+                print(X_train.max()[1])
+                print("111")
+
                 column_names = list(df.columns)
+
                 logit_model = sm.Logit(y_train, X_train).fit()
-                lb1 = tk.Label(analysis, text=logit_model.summary(), font="Consolas", justify="left")
+
+                lb1 = Label(analysis,text=logit_model.summary(), font="Consolas", justify="left")
                 lb1.pack()
-                reg = skl.LogisticRegression().fit(X_train, y_train)
-                divider = "\n" + "*"*80 + "\n"
-                reg_title = "                       skLearn Logistic Regression Results                        "
-                lb2 = tk.Label(analysis, text=divider+reg_title, font="Consolas", justify="left")
+
+                reg = skl.linear_model.LogisticRegression().fit(X_train[:], y_train[:])
+
+                divider  = "\n******************************************************************************\n"
+                regTitle = "                       skLearn Logistic Regression Results                        "
+                lb2 = Label(analysis,text=divider+regTitle, font="Consolas", justify="left")
                 lb2.pack()
-                score = f"Score:        {round(float(reg.score(X_train, y_train)), 5)}"
+
+                score = "Score:        " + str(round(float(reg.score(X_train, y_train)), 5))
                 global interceptLogR, coefficientConstLogR, coefficientXLogR, interceptLogRDisplay, coefficientLogRDisplay
-                interceptLogRDisplay = f"\nIntercept:    {reg.intercept_}"
-                coefficientLogRDisplay = f"\nCoefficient:  {reg.coef_}"
+                interceptLogRDisplay = "\nIntercept:    " + str(reg.intercept_)
+                print(interceptLogRDisplay)
+                coefficientLogRDisplay = "\nCoefficient:  " + str(reg.coef_)
+                print(coefficientLogRDisplay)
                 interceptLogR = float(reg.intercept_)
                 coefficientConstLogR = float(reg.coef_[0][0])
                 coefficientXLogR = float(reg.coef_[0][1])
+
                 summary2 = score + interceptLogRDisplay + coefficientLogRDisplay
-                lb3 = tk.Label(analysis, text=summary2, font="Consolas", justify="left")
+                lb3 = Label(analysis,text=summary2, font="Consolas", justify="left")
                 lb3.pack()
-                lb4 = tk.Label(analysis2, text=logit_model.summary2(), font="Consolas", justify="left")
+
+                lb4 = Label(analysis2,text=logit_model.summary2(), font="Consolas", justify="left")
                 lb4.pack()
+                
+                reg_sum = summary2
+
                 X_train = df.iloc[:, [0]]
-                plt.scatter(X_train, y_train, color="m", marker="o", s=30)
+                plt.scatter(X_train, y_train, color = "m", marker = "o", s = 30)
+
                 X_train = sm.add_constant(X_train)
                 X_test = np.arange(0, int(X_train.max()[1]), 0.1)
-                y_test = sp.expit(X_test * reg.coef_[0][1] + reg.intercept_[0])
+                y_test = sp.special.expit(X_test * reg.coef_[0][1] + reg.intercept_[0])
                 plt.plot(X_test, y_test, label="Logistic Regression Model", color="red", linewidth=3)
                 plt.savefig('regplot.png')
-                plt.show()
-            elif var.get() == 4:
+                image_filename = "page4_plot.png"
+                plt.savefig(image_filename)
+                plt.show() 
+                page_5
+            
+            elif(int(var.get()) == 4):
+                analysis = Toplevel(main)
                 analysis.title("Analysis - Problem Tree Analysis")
+                analysis.geometry("830x480")
+                analysis_type = "Problem Tree Analysis"
+
+                # Ensure it's in front
+                analysis.transient(root)
+                analysis.grab_set()
+                analysis.lift()
+                analysis.focus_force()
+                analysis.attributes("-topmost", 1)
+                analysis.after(10, lambda: analysis.attributes("-topmost", 0))
+
                 class ShapeEditorApp:
                     def __init__(self, root):
                         global textValue
-                        textValue = tk.StringVar()
+                        textValue = StringVar()
+                        italic_font = font.Font(family="Arial", size=10, slant="italic")
+
                         self.root = root
-                        self.canvas = tk.Canvas(root, bg="white")
-                        self.canvas.pack(fill=tk.BOTH, expand=True)
+                        self.root.title("Problem Tree Analysis")
+
+                        # Create Canvas widget with scrollbars
+                        self.canvas_frame = tk.Frame(root)
+                        self.canvas_frame.pack(fill=tk.BOTH, expand=True)
+                        
+                        self.scroll_x = tk.Scrollbar(self.canvas_frame, orient=tk.HORIZONTAL)
+                        self.scroll_y = tk.Scrollbar(self.canvas_frame, orient=tk.VERTICAL)
+                        self.canvas = tk.Canvas(self.canvas_frame, bg="white", 
+                                            xscrollcommand=self.scroll_x.set, 
+                                            yscrollcommand=self.scroll_y.set)
+                        self.scroll_x.config(command=self.canvas.xview)
+                        self.scroll_y.config(command=self.canvas.yview)
+                        self.scroll_x.pack(side=tk.BOTTOM, fill=tk.X)
+                        self.scroll_y.pack(side=tk.RIGHT, fill=tk.Y)
+                        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+                        # Initialize variables
                         self.current_shape = None
                         self.start_x = None
                         self.start_y = None
                         self.current_shape_item = None
-                        self.color_button = ttk.Button(root, text="Color", command=self.choose_color)
-                        self.pen_button = ttk.Button(root, text="Pen", command=self.use_pen)
-                        self.rect_button = ttk.Button(root, text="Rectangle", command=self.create_rectangle)
-                        self.circle_button = ttk.Button(root, text="Arrow", command=self.create_arrow)
-                        self.clear_button = ttk.Button(root, text="Clear", command=self.clear_canvas)
-                        self.text_frame = tk.Frame(root, height=100, width=200, relief="sunken", borderwidth=3)
+                        self.pen_active = False
+                        self.eraser_active = False
+                        self.color = "black"
+                        self.undo_stack = []
+                        self.redo_stack = []
+                        self.zoom_level = 1.0
+                        self.max_undo = 50  # Limit to prevent excessive memory use
+
+                        # Create buttons
+                        self.color_button = tk.Button(root, text="Color", command=self.choose_color)
+                        self.pen_button = tk.Button(root, text='Pen', command=self.use_pen)
+                        self.eraser_button = tk.Button(root, text="Eraser", command=self.use_eraser)
+                        self.rect_button = tk.Button(root, text="Rectangle", command=self.create_rectangle)
+                        self.circle_button = tk.Button(root, text="Arrow", command=self.create_arrow)
+                        self.clear_button = tk.Button(root, text="Clear", command=self.clear_canvas)
+                        self.undo_button = tk.Button(root, text="Undo", command=self.undo)
+                        self.redo_button = tk.Button(root, text="Redo", command=self.redo)
+                        self.zoom_in_button = tk.Button(root, text="Zoom In", command=self.zoom_in)
+                        self.zoom_out_button = tk.Button(root, text="Zoom Out", command=self.zoom_out)
+                        self.save_button = tk.Button(root, text="Save", command=self.save_canvas)
+                        self.text_frame = tk.Frame(root, height=100, width=200, relief=tk.SUNKEN, borderwidth=3)
                         self.text_entry = tk.Entry(self.text_frame, textvariable=textValue, bg="white", width=20)
+                        self.text_note = tk.Label(root, text="* Right click on canvas to paste text", font=italic_font, fg="gray")
+                        
+                        # Pack buttons
                         self.pen_button.pack(side=tk.LEFT)
+                        self.eraser_button.pack(side=tk.LEFT)
                         self.clear_button.pack(side=tk.LEFT)
                         self.color_button.pack(side=tk.LEFT)
                         self.rect_button.pack(side=tk.LEFT)
                         self.circle_button.pack(side=tk.LEFT)
-                        self.text_frame.pack(side=tk.LEFT)
+                        self.undo_button.pack(side=tk.LEFT)
+                        self.redo_button.pack(side=tk.LEFT)
+                        self.zoom_in_button.pack(side=tk.LEFT)
+                        self.zoom_out_button.pack(side=tk.LEFT)
+                        self.save_button.pack(side=tk.LEFT)
+                        self.text_frame.pack(side=tk.LEFT)                         
                         self.text_entry.pack(side=tk.LEFT)
+                        self.text_note.pack(side=tk.LEFT)
+
+                        # Bind mouse events
                         self.canvas.bind("<Button-1>", self.start_draw)
                         self.canvas.bind("<B1-Motion>", self.draw_shape)
                         self.canvas.bind("<ButtonRelease-1>", self.stop_draw)
                         self.canvas.bind("<Button-2>", self.add_text)
                         self.canvas.bind("<Button-3>", self.add_text)
+                        self.canvas.bind("<MouseWheel>", self.zoom)
+
+                        # Initial scroll region
+                        self.canvas.config(scrollregion=(0, 0, 1000, 1000))  # Large initial region
+
                     def add_text(self, event):
-                        self.canvas.create_text(event.x, event.y, text=textValue.get())
+                        item = self.canvas.create_text(event.x, event.y, text=textValue.get() or "", fill=self.color)
+                        self.save_state()
+                        self.redo_stack.clear()
+                        print(f"Added text, undo_stack size: {len(self.undo_stack)}")
+
                     def use_pen(self):
-                        self.current_shape = "pen"
+                        self.pen_active = True
+                        self.eraser_active = False
+                        self.current_shape = None
+
+                    def use_eraser(self):
+                        self.pen_active = False
+                        self.eraser_active = True
+                        self.current_shape = None
+
                     def choose_color(self):
-                        global color
-                        color = colorchooser.askcolor(title="Choose color")
+                        color_tuple = colorchooser.askcolor(title="Choose color")
+                        if color_tuple[1]:
+                            self.color = color_tuple[1]
+
                     def create_rectangle(self):
+                        self.pen_active = False
+                        self.eraser_active = False
                         self.current_shape = "rectangle"
+
                     def create_arrow(self):
+                        self.pen_active = False
+                        self.eraser_active = False
                         self.current_shape = "arrow"
+
                     def start_draw(self, event):
                         self.start_x = event.x
                         self.start_y = event.y
+                        if self.pen_active or self.eraser_active:
+                            return
                         if self.current_shape == "rectangle":
                             self.current_shape_item = self.canvas.create_rectangle(
-                                self.start_x, self.start_y, self.start_x, self.start_y, outline=color[1]
+                                self.start_x, self.start_y, self.start_x, self.start_y, outline=self.color
                             )
                         elif self.current_shape == "arrow":
                             self.current_shape_item = self.canvas.create_line(
-                                self.start_x, self.start_y, self.start_x, self.start_y, fill=color[1], arrow="last", width=5
+                                self.start_x, self.start_y, self.start_x, self.start_y, fill=self.color, arrow="last", width=5
                             )
+
                     def draw_shape(self, event):
-                        if self.current_shape_item:
+                        if self.pen_active or self.eraser_active:
+                            item = self.canvas.create_line(self.start_x, self.start_y, event.x, event.y, 
+                                                        fill=self.color if self.pen_active else "white", 
+                                                        width=2 if self.pen_active else 10)
+                            self.save_state_for_stroke(item)  # Save state for each stroke
+                            self.redo_stack.clear()
+                            self.start_x, self.start_y = event.x, event.y
+                        elif self.current_shape_item:
                             x, y = event.x, event.y
                             self.canvas.coords(self.current_shape_item, self.start_x, self.start_y, x, y)
+
                     def stop_draw(self, event):
+                        if self.current_shape_item or self.pen_active or self.eraser_active:
+                            self.save_state()  # Save final state for non-pen/eraser actions
+                            self.redo_stack.clear()
+                            print(f"Stopped draw, undo_stack size: {len(self.undo_stack)}")
                         self.current_shape_item = None
+                        self.pen_active = False
+                        self.eraser_active = False
+
                     def clear_canvas(self):
+                        self.save_state()
                         self.canvas.delete("all")
+                        self.redo_stack.clear()
+                        self.update_scroll_region()
+                        print(f"Cleared canvas, undo_stack size: {len(self.undo_stack)}")
+
+                    def save_state(self):
+                        items = []
+                        for item in self.canvas.find_all():
+                            item_type = self.canvas.type(item)
+                            coords = self.canvas.coords(item)
+                            config = {k: v[-1] for k, v in self.canvas.itemconfig(item).items() if k in ["fill", "outline", "text", "width", "arrow"]}
+                            if item_type == "line":
+                                items.append(("line", coords, {"fill": config.get("fill", "black"), "width": config.get("width", 2), "arrow": config.get("arrow", "none")}))
+                            elif item_type == "rectangle":
+                                items.append(("rectangle", coords, {"outline": config.get("outline", "black")}))
+                            elif item_type == "text":
+                                items.append(("text", coords, {"text": config.get("text", ""), "fill": config.get("fill", "black")}))
+                        if items:
+                            if len(self.undo_stack) >= self.max_undo:
+                                self.undo_stack.pop(0)  # Remove oldest state if limit reached
+                            self.undo_stack.append(items)
+                        self.update_scroll_region()
+
+                    def save_state_for_stroke(self, item):
+                        item_type = self.canvas.type(item)
+                        coords = self.canvas.coords(item)
+                        config = {k: v[-1] for k, v in self.canvas.itemconfig(item).items() if k in ["fill", "width"]}
+                        if item_type == "line" and len(self.undo_stack) < self.max_undo:
+                            self.undo_stack.append([("line", coords, {"fill": config.get("fill", "black"), "width": config.get("width", 2)})])
+                        self.update_scroll_region()
+
+                    def undo(self):
+                        if self.undo_stack:
+                            state = self.undo_stack.pop()
+                            self.redo_stack.append([(self.canvas.type(item), self.canvas.coords(item), {k: v[-1] for k, v in self.canvas.itemconfig(item).items() if k in ["fill", "outline", "text", "width", "arrow"]}) for item in self.canvas.find_all()])
+                            self.canvas.delete("all")
+                            for item_type, coords, config in state:
+                                if item_type == "line":
+                                    self.canvas.create_line(*coords, fill=config["fill"], width=config.get("width", 2), arrow=config.get("arrow", "none"))
+                                elif item_type == "rectangle":
+                                    self.canvas.create_rectangle(*coords, outline=config["outline"])
+                                elif item_type == "text":
+                                    self.canvas.create_text(coords[0], coords[1], text=config["text"], fill=config["fill"])
+                            self.update_scroll_region()
+                            print(f"Undo performed, undo_stack size: {len(self.undo_stack)}, redo_stack size: {len(self.redo_stack)}")
+
+                    def redo(self):
+                        if self.redo_stack:
+                            state = self.redo_stack.pop()
+                            self.undo_stack.append([(self.canvas.type(item), self.canvas.coords(item), {k: v[-1] for k, v in self.canvas.itemconfig(item).items() if k in ["fill", "outline", "text", "width", "arrow"]}) for item in self.canvas.find_all()])
+                            self.canvas.delete("all")
+                            for item_type, coords, config in state:
+                                if item_type == "line":
+                                    self.canvas.create_line(*coords, fill=config["fill"], width=config.get("width", 2), arrow=config.get("arrow", "none"))
+                                elif item_type == "rectangle":
+                                    self.canvas.create_rectangle(*coords, outline=config["outline"])
+                                elif item_type == "text":
+                                    self.canvas.create_text(coords[0], coords[1], text=config["text"], fill=config["fill"])
+                            self.update_scroll_region()
+                            print(f"Redo performed, undo_stack size: {len(self.undo_stack)}, redo_stack size: {len(self.redo_stack)}")
+
+                    def zoom_in(self):
+                        self.zoom_level *= 1.2
+                        self.canvas.scale("all", self.canvas.canvasx(0), self.canvas.canvasy(0), 1.2, 1.2)
+                        self.update_scroll_region()
+
+                    def zoom_out(self):
+                        self.zoom_level /= 1.2
+                        if self.zoom_level > 0.1:
+                            self.canvas.scale("all", self.canvas.canvasx(0), self.canvas.canvasy(0), 1/1.2, 1/1.2)
+                            self.update_scroll_region()
+
+                    def zoom(self, event):
+                        if event.delta > 0:
+                            self.zoom_in()
+                        else:
+                            self.zoom_out()
+
+                    def save_canvas(self):
+                        global tree_file_path
+                        # Get the canvas coordinates on screen
+                        self.canvas.update()  # Make sure the canvas is up-to-date
+                        x = self.canvas.winfo_rootx()
+                        y = self.canvas.winfo_rooty()
+                        x1 = x + self.canvas.winfo_width()
+                        y1 = y + self.canvas.winfo_height()
+                    
+                        # Grab the canvas area from the screen
+                        image = ImageGrab.grab(bbox=(x, y, x1, y1))
+
+                        image_filename = "page4_plot.png"
+                        image.save(image_filename)
+                    
+                        # Ask for file path to save
+                        tree_file_path = tk.filedialog.asksaveasfilename(defaultextension=".png",
+                                                 filetypes=[("PNG files", "*.png"), ("All files", "*.*")])
+                        if tree_file_path:
+                            image.save(tree_file_path)
+                            messagebox.showinfo("Saved", f"Canvas saved as {os.path.basename(tree_file_path)}")
+
+                    def update_scroll_region(self):
+                        region = self.canvas.bbox("all")
+                        if region:
+                            self.canvas.config(scrollregion=region)
+                        else:
+                            self.canvas.config(scrollregion=(0, 0, 1000, 1000))
+
                 app = ShapeEditorApp(analysis)
+
+                page_5()
 
         def back_3():
             global pageNumber
             pageNumber -= 1
-            for widget in mainProject.winfo_children():
-                widget.destroy()
+            print(pageNumber)
+            frame4.destroy() 
+            frame4.forget() 
+            btnBack3.destroy()
+            btnNext3.destroy() 
             page_3()
-
+        
         def next_3():
             global pageNumber
-            if not var.get():
-                status.config(text="Select a statistical method", foreground="red")
-                status.place(relx=0.01, rely=0.9)
-                return
             pageNumber += 1
-            for widget in mainProject.winfo_children():
-                widget.destroy()
+            print(pageNumber)
+            frame4.destroy()
+            frame4.forget()
+            progress_label.destroy()
+            btnBack3.destroy()
+            btnNext3.destroy() 
             analyses()
-            page_5()
 
-        setup_page_common(4, "Statistical Method Selection", frame4, widgets_to_destroy, back_3, next_3)
 
-    global p5rootcause
-    p5rootcause = " "
-    
-    def page_5():
-        global p5rootcause, assessmentTuple
+        btnBack3 = Button(mainProject, text = "Back", width=10, command = lambda: back_3())
+        btnNext3 = Button(mainProject, text = "Next", width=10, command = lambda: next_3())
+        btnBack3.place(x=190, y=170)
+        btnNext3.place(x=380, y=170)
+
+    def page_5(): 
+        global p5rootcause, p5existingpolicies, p5relevantprov, p5accomplishments, p5assessments  
+
+        mainProject.state('zoomed')
+        style.configure('Treeview', rowheight=320)
+
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 5 of 15: Root Cause", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
+
         frame5 = tk.LabelFrame(mainProject)
-        widgets_to_destroy = [frame5]
-        undo_stack = []
 
-        root_cause_label = tk.Label(frame5, text="Root Cause of the Problem", font=("Arial", 12, "bold"))
-        root_cause = tk.Entry(frame5, width=100)
-        assessment_label = tk.Label(frame5, text="Assessment of Existing Policies that Address the Root Cause", font=("Arial", 12, "bold"))
-        assessment_table = ttk.Treeview(frame5, selectmode="browse", height=2)
-        assessment_table["columns"] = ("1", "2", "3", "4")
-        assessment_table['show'] = 'headings'
-        assessment_table.column("1", width=150, anchor='c')
-        assessment_table.column("2", width=650, anchor='c')
-        assessment_table.column("3", width=400, anchor='c')
-        assessment_table.column("4", width=300, anchor='c')
-        assessment_table.heading("1", text="Existing Policy")
-        assessment_table.heading("2", text="Relevant Provision(s)")
-        assessment_table.heading("3", text="Accomplishments")
-        assessment_table.heading("4", text="Assessment")
-        sb_y = ttk.Scrollbar(frame5, orient="vertical", command=assessment_table.yview)
-        sb_x = ttk.Scrollbar(frame5, orient="horizontal", command=assessment_table.xview)
-        assessment_table.configure(yscrollcommand=sb_y.set, xscrollcommand=sb_x.set)
+        status = ttk.Label(mainProject, text="")
+        status.place(x=10, y=700)
+        
+        rootCauseLabel = Label(frame5, text = "Root Cause of the Problem")
+        rootCause = Entry(frame5, width=200)
 
-        exist_label = tk.Label(mainProject, text="Existing Policy")
-        rele_label = tk.Label(mainProject, text="Relevant Provision")
-        accomp_label = tk.Label(mainProject, text="Accomplishment")
-        assess_label = tk.Label(mainProject, text="Assessment")
-        existing_policy = scrolledtext.ScrolledText(mainProject, height=9, width=40)
-        relevant_provision = scrolledtext.ScrolledText(mainProject, height=9, width=40)
-        accomplishment2 = scrolledtext.ScrolledText(mainProject, height=9, width=40)
-        assessment2 = scrolledtext.ScrolledText(mainProject, height=9, width=40)
-        add_button = ttk.Button(mainProject, text="Add", command=lambda: add_data2())
-        edit_button = ttk.Button(mainProject, text="Edit", state="disabled", command=lambda: edit_data2())
-        delete_button = ttk.Button(mainProject, text="Delete", state="disabled", command=lambda: delete_data2())
-        ToolTip(add_button, "Add a new entry to the table")
-        ToolTip(edit_button, "Edit the selected table entry")
-        ToolTip(delete_button, "Delete the selected table entry")
+        rootCause.insert(0, p5rootcause)
 
-        root_cause_label.grid(row=0, column=0, columnspan=2, pady=10)
-        root_cause.grid(row=1, column=0, columnspan=2, padx=10)
-        assessment_label.grid(row=2, column=0, columnspan=2, pady=10)
-        assessment_table.grid(row=3, column=0)
-        sb_y.grid(row=3, column=1, sticky="ns")
-        sb_x.grid(row=4, column=0, sticky="ew")
-        exist_label.place(relx=0.1, rely=0.6)
-        existing_policy.place(relx=0.05, rely=0.65)
-        rele_label.place(relx=0.3, rely=0.6)
-        relevant_provision.place(relx=0.25, rely=0.65)
-        accomp_label.place(relx=0.5, rely=0.6)
-        accomplishment2.place(relx=0.45, rely=0.65)
-        assess_label.place(relx=0.7, rely=0.6)
-        assessment2.place(relx=0.65, rely=0.65)
-        add_button.place(relx=0.4, rely=0.85)
-        edit_button.place(relx=0.5, rely=0.85)
-        delete_button.place(relx=0.6, rely=0.85)
+        assessmentLabel = Label(frame5, text = "Assessment of Existing Policies that Address the Root Cause")
+        assessmentTable=ttk.Treeview(frame5, selectmode="browse", height=1)
+        assessmentTable["columns"]=("1","2","3","4")
+        assessmentTable['show']='headings'
+        assessmentTable.column("1",width=150,anchor='c')
+        assessmentTable.column("2",width=650,anchor='c')
+        assessmentTable.column("3",width=400,anchor='c')
+        assessmentTable.column("4",width=300,anchor='c')
+        assessmentTable.heading("1",text="Existing Policy")
+        assessmentTable.heading("2",text="Relevant Provision(s)")
+        assessmentTable.heading("3",text="Accomplishments")
+        assessmentTable.heading("4",text="Assessment")
+
+        existLabel = Label(mainProject, text = "Existing Policy")
+        releLabel = Label(mainProject, text = "Relevant Provision")
+        accompLabel2 = Label(mainProject, text = "Accomplishment")
+        assessLabel2 = Label(mainProject, text = "Assessment")
+
+        existingPolicy = scrolledtext.ScrolledText(mainProject, height = 9, width=40)
+        relevantProvision = scrolledtext.ScrolledText(mainProject, height = 9, width=40)
+        accomplishment2 = scrolledtext.ScrolledText(mainProject, height = 9, width=40)
+        assessment2 = scrolledtext.ScrolledText(mainProject, height = 9, width=40)
+
+        addButton2 = tk.Button(mainProject, text='Add', width=10, command=lambda: add_data2())  
+        editButton2 = tk.Button(mainProject, text="Edit", width=10, command=lambda: edit_data2())
+
+        if len(p5existingpolicies) == len(p5relevantprov) == len(p5accomplishments) == len(p5assessments):
+            if not assessmentTable.get_children():
+                if len(p5existingpolicies) == len(p5relevantprov) == len(p5accomplishments) == len(p5assessments):
+                    for ep, rp, ac, asmt in zip(p5existingpolicies, p5relevantprov, p5accomplishments, p5assessments):
+                        assessmentTable.insert("", "end", values=(
+                            wrap(ep.strip()),
+                            wrap(rp.strip()),
+                            wrap(ac.strip()),
+                            wrap(asmt.strip())
+                        ))
 
         def show_data2(a):
-            existing_policy.delete("1.0", tk.END)
-            relevant_provision.delete("1.0", tk.END)
-            accomplishment2.delete("1.0", tk.END)
-            assessment2.delete("1.0", tk.END)
-            selected_item = assessment_table.selection()
-            if selected_item:
-                edit_button.config(state="normal")
-                delete_button.config(state="normal")
-                values = assessment_table.item(selected_item[0])['values']
-                existing_policy.insert("1.0", values[0])
-                relevant_provision.insert("1.0", values[1])
-                accomplishment2.insert("1.0", values[2])
-                assessment2.insert("1.0", values[3])
-            else:
-                edit_button.config(state="disabled")
-                delete_button.config(state="disabled")
+            existingPolicy.delete(0,END)
+            relevantProvision.delete(0,END)
+            accomplishment2.delete(0,END)
+            assessment2.delete(0,END)
 
-        def add_data2():
-            texts = [
-                existing_policy.get("1.0", tk.END).strip(),
-                relevant_provision.get("1.0", tk.END).strip(),
-                accomplishment2.get("1.0", tk.END).strip(),
-                assessment2.get("1.0", tk.END).strip()
-            ]
-            if not all(texts):
-                messagebox.showerror("Error", "Please fill out all fields")
-                return
-            item_id = assessment_table.insert("", 'end', values=texts)
-            undo_stack.append(("add", item_id))
-            global assessmentTuple
-            assessmentTuple = texts
-            existing_policy.delete("1.0", tk.END)
-            relevant_provision.delete("1.0", tk.END)
-            accomplishment2.delete("1.0", tk.END)
-            assessment2.delete("1.0", tk.END)
-            existing_policy.focus()
+            selectedItem = assessmentTable.selection()[0]
+            existingPolicy.insert(0, assessmentTable.item(selectedItem)['values'][0])
+            relevantProvision.insert(0, assessmentTable.item(selectedItem)['values'][1])
+            accomplishment2.insert(0, assessmentTable.item(selectedItem)['values'][2])
+            assessment2.insert(0, assessmentTable.item(selectedItem)['values'][3])
+
+        assessmentTable.bind("<<TreeviewSelect>>", show_data2)
 
         def edit_data2():
-            texts = [
-                existing_policy.get("1.0", tk.END).strip(),
-                relevant_provision.get("1.0", tk.END).strip(),
-                accomplishment2.get("1.0", tk.END).strip(),
-                assessment2.get("1.0", tk.END).strip()
-            ]
-            if not all(texts):
-                messagebox.showerror("Error", "Please fill out all fields")
+            existingPolicyText = existingPolicy.get("1.0", tk.END).strip()
+            relevantProvisionText = relevantProvision.get("1.0", tk.END).strip()
+            accomplishment2Text = accomplishment2.get("1.0", tk.END).strip()
+            assessment2Text = assessment2.get("1.0", tk.END).strip()
+
+            if not (existingPolicyText and relevantProvisionText and accomplishment2Text and assessment2Text):
+                messagebox.showerror("Error", "Please fill out all fields before editing.")
                 return
-            selected_item = assessment_table.selection()[0]
-            old_values = assessment_table.item(selected_item)['values']
-            undo_stack.append(("edit", selected_item, old_values))
-            assessment_table.item(selected_item, values=texts)
-            global assessmentTuple
-            assessmentTuple = texts
 
-        def delete_data2():
-            selected_item = assessment_table.selection()
-            if selected_item:
-                item_id = selected_item[0]
-                old_values = assessment_table.item(item_id)['values']
-                undo_stack.append(("delete", item_id, old_values))
-                assessment_table.delete(item_id)
-                existing_policy.delete("1.0", tk.END)
-                relevant_provision.delete("1.0", tk.END)
-                accomplishment2.delete("1.0", tk.END)
-                assessment2.delete("1.0", tk.END)
-                edit_button.config(state="disabled")
-                delete_button.config(state="disabled")
-            else:
-                messagebox.showwarning("Warning", "Please select an item to delete")
-
-        def undo():
-            if not undo_stack:
+            selected = assessmentTable.selection()
+            if not selected:
+                messagebox.showwarning("Warning", "No entry selected for editing.")
                 return
-            action, *data = undo_stack.pop()
-            if action == "add":
-                assessment_table.delete(data[0])
-            elif action == "edit":
-                item_id, old_values = data
-                assessment_table.item(item_id, values=old_values)
-            elif action == "delete":
-                item_id, old_values = data
-                assessment_table.insert("", "end", iid=item_id, values=old_values)
 
-        assessment_table.bind("<<TreeviewSelect>>", show_data2)
-        mainProject.bind("<Control-z>", lambda e: undo())
-        mainProject.bind("<Control-Return>", lambda e: add_data2())
-        existing_policy.bind("<Tab>", lambda e: relevant_provision.focus_set())
-        relevant_provision.bind("<Tab>", lambda e: accomplishment2.focus_set())
-        accomplishment2.bind("<Tab>", lambda e: assessment2.focus_set())
-        assessment2.bind("<Tab>", lambda e: add_button.focus_set())
+            item_id = selected[0]
+            index = assessmentTable.index(item_id)  # Find index in table (same as list index)
+
+            # Update the table row
+            assessmentTable.item(item_id, values=(
+                wrap(existingPolicyText),
+                wrap(relevantProvisionText),
+                wrap(accomplishment2Text),
+                wrap(assessment2Text)
+            ))
+
+            # Update the global lists
+            p5existingpolicies[index] = existingPolicyText
+            p5relevantprov[index] = relevantProvisionText
+            p5accomplishments[index] = accomplishment2Text
+            p5assessments[index] = assessment2Text
+
+            # Clear text fields after editing
+            existingPolicy.delete("1.0", tk.END)
+            relevantProvision.delete("1.0", tk.END)
+            accomplishment2.delete("1.0", tk.END)
+            assessment2.delete("1.0", tk.END)
+            existingPolicy.focus()
+            save()
+
+        def add_data2():
+            existingPolicyText = existingPolicy.get("1.0", tk.END)               # read existing policy
+            relevantProvisionText = relevantProvision.get("1.0", tk.END)         # read relevant provision
+            accomplishment2Text = accomplishment2.get("1.0", tk.END)             # read accomplishment 
+            assessment2Text = assessment2.get("1.0", tk.END)                     # read assessment      
+
+            p5existingpolicies.append(existingPolicyText)
+            p5relevantprov.append(relevantProvisionText)
+            p5accomplishments.append(accomplishment2Text)
+            p5assessments.append(assessment2Text)
+
+            assessmentTable.insert("", 'end', values=(
+                wrap(existingPolicyText),
+                wrap(relevantProvisionText),
+                wrap(accomplishment2Text),
+                wrap(assessment2Text)
+            ))
+
+            existingPolicy.delete('1.0', END)
+            relevantProvision.delete('1.0', END)
+            accomplishment2.delete('1.0', END)
+            assessment2.delete('1.0', END)
+            existingPolicy.focus()
+            save()
+
+        frame5.place(x=10, y=10)
+        rootCauseLabel.grid(row=0, column=1)
+        rootCause.grid(row=1, column=1)
+        assessmentLabel.grid(row=2, column=1)
+        assessmentTable.grid(row=3, column=1)
+        existLabel.place(x=150, y=480)
+        existingPolicy.place(x=40, y=510)
+        releLabel.place(x=520, y=480)
+        relevantProvision.place(x=410, y=510)
+        accompLabel2.place(x=900, y=480)
+        accomplishment2.place(x=780, y=510)
+        assessLabel2.place(x=1280, y=480)
+        assessment2.place(x=1150, y=510)
+        addButton2.place(x=640, y=690)
+        editButton2.place(x=790, y=690)
+
+        
 
         def back_4():
             global pageNumber
             pageNumber -= 1
-            for widget in mainProject.winfo_children():
-                widget.destroy()
+            print(pageNumber)
+            mainProject.state('normal')
+            frame5.destroy() 
+            existLabel.destroy()
+            existingPolicy.destroy()
+            existingPolicy.place_forget()
+            releLabel.destroy()
+            relevantProvision.destroy()
+            relevantProvision.place_forget()
+            accompLabel2.destroy()
+            accomplishment2.destroy()
+            accomplishment2.place_forget()
+            assessLabel2.destroy()
+            assessment2.destroy()
+            assessment2.place_forget()
+            btnBack4.destroy()
+            btnNext4.destroy() 
+            addButton2.destroy()
+            editButton2.destroy()
+            save()
             page_4()
+            
 
         def next_4():
-            global pageNumber, p5rootcause
-            p5rootcause = root_cause.get().strip()
-            if not p5rootcause:
-                status.config(text="Enter root cause", foreground="red")
-                status.place(relx=0.01, rely=0.9)
-                return
-            with open("page5_data.json", "w") as f:
-                json.dump({"root_cause": p5rootcause, "assessments": [assessment_table.item(i)['values'] for i in assessment_table.get_children()]}, f)
+            global pageNumber
             pageNumber += 1
-            for widget in mainProject.winfo_children():
-                widget.destroy()
+            print(pageNumber)
+            global p5rootcause
+            p5rootcause = rootCause.get()
+            if not p5rootcause.strip():
+                status.config(
+                    text="Enter root cause",
+                    foreground="red",
+                )
+                return
+            
+            mainProject.state('normal')
+            frame5.destroy() 
+            existLabel.destroy()
+            existingPolicy.destroy()
+            existingPolicy.place_forget()
+            releLabel.destroy()
+            relevantProvision.destroy()
+            relevantProvision.place_forget()
+            accompLabel2.destroy()
+            accomplishment2.destroy()
+            accomplishment2.place_forget()
+            assessLabel2.destroy()
+            assessment2.destroy()
+            assessment2.place_forget()
+            btnBack4.destroy()
+            btnNext4.destroy() 
+            addButton2.destroy()
+            editButton2.destroy()
+            save()
             page_6()
 
-        setup_page_common(5, "Root Cause and Policy Assessment", frame5, widgets_to_destroy, back_4, next_4)
-        try:
-            with open("page5_data.json", "r") as f:
-                data = json.load(f)
-                p5rootcause = data.get("root_cause", "")
-                root_cause.insert(0, p5rootcause)
-                for item in data.get("assessments", []):
-                    assessment_table.insert("", "end", values=item)
-        except FileNotFoundError:
-            pass
+        btnBack4 = Button(mainProject, text = "Back", width=10, command = lambda: back_4())
+        btnNext4 = Button(mainProject, text = "Next", width=10, command = lambda: next_4())
+        btnBack4.place(x=640, y=750)
+        btnNext4.place(x=790, y=750)
+        status.place(x=10, y=700)
 
-    global p6policyproblem, p6policyissue
-    p6policyproblem = " "
-    p6policyissue = " "
+    def page_6():                                               # write problematic situation and undesirable effects
 
-    def page_6():
         global p6policyproblem, p6policyissue
-        frame6 = tk.LabelFrame(mainProject)
-        widgets_to_destroy = [frame6]
-        status.config(text="")
 
-        policy_prob_label = tk.Label(frame6, text="Policy Problem", font=("Arial", 12, "bold"))
-        policy_prob = scrolledtext.ScrolledText(frame6, height=8, width=50)
-        policy_issue_label = tk.Label(frame6, text="Policy Issue Statement", font=("Arial", 12, "bold"))
-        policy_iss = scrolledtext.ScrolledText(frame6, height=8, width=50)
-        policy_prob_label.grid(row=0, column=0, padx=10, pady=5)
-        policy_prob.grid(row=1, column=0, padx=10)
-        policy_issue_label.grid(row=0, column=1, padx=10, pady=5)
-        policy_iss.grid(row=1, column=1, padx=10)
-        status.place(relx=0.01, rely=0.9)
+        mainProject.state('normal')
+        mainProject.geometry("660x220")
+
+        style.configure('Treeview', rowheight=320)
+
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 6 of 15: Policy Problem and Issue Statement", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
+
+        frame6 = tk.LabelFrame(mainProject)
+
+        status = ttk.Label(mainProject, text="")
+        status.place(x=10, y=700)
+
+        policyProbLabel = Label(frame6, text = "Policy Problem")
+        policyProb = scrolledtext.ScrolledText(frame6, height = 8, width=30)
+        
+        policyIssueLabel = Label(frame6, text = "Policy Issue Statement")
+        policyIss = scrolledtext.ScrolledText(frame6, height = 8, width=30)
+        
+        frame6.place(x=40, y=10)
+        status.place(x=10, y=170)
+        policyProbLabel.grid(row=1, column=0, sticky = W, padx=7)
+        policyProb.grid(row=2, column=0, sticky = W, padx=7)
+        policyIssueLabel.grid(row=1, column=1, sticky = W, padx=7)
+        policyIss.grid(row=2, column=1, sticky = W, padx=7)
+
+        policyProb.insert("1.0", p6policyproblem)
+        policyIss.insert("1.0", p6policyissue)
 
         def back_5():
             global pageNumber
             pageNumber -= 1
             for widget in mainProject.winfo_children():
                 widget.destroy()
+            save()
             page_5()
 
         def next_5():
-            global pageNumber, p6policyproblem, p6policyissue
-            p6policyproblem = policy_prob.get("1.0", tk.END).strip()
-            p6policyissue = policy_iss.get("1.0", tk.END).strip()
-            if not p6policyproblem:
-                status.config(text="Enter policy problem", foreground="red")
+            global pageNumber, p6policyissue, p6policyproblem
+            p6policyproblem = policyProb.get("1.0", tk.END)
+            if not p6policyproblem.strip():
+                status.config(
+                text="Enter policy\nproblem",
+                foreground="red",
+            )
                 return
-            if not p6policyissue:
-                status.config(text="Enter policy issue statement", foreground="red")
+                    
+            p6policyissue = policyIss.get("1.0", tk.END)
+            if not p6policyissue.strip():
+                status.config(
+                text="Enter policy\nissue statement",
+                foreground="red",
+            )
                 return
-            with open("page6_data.json", "w") as f:
-                json.dump({"policy_problem": p6policyproblem, "policy_issue": p6policyissue}, f)
             pageNumber += 1
-            for widget in mainProject.winfo_children():
-                widget.destroy()
+            print(pageNumber)
+            frame6.destroy() 
+            btnBack5.destroy()
+            btnNext5.destroy() 
+            save()
             page_7()
 
-        setup_page_common(6, "Policy Problem and Issue", frame6, widgets_to_destroy, back_5, next_5)
-        try:
-            with open("page6_data.json", "r") as f:
-                data = json.load(f)
-                policy_prob.insert("1.0", data.get("policy_problem", ""))
-                policy_iss.insert("1.0", data.get("policy_issue", ""))
-        except FileNotFoundError:
-            pass
+        btnBack5 = Button(mainProject, text = "Back", width=10, command = lambda: back_5())
+        btnNext5 = Button(mainProject, text = "Next", width=10, command = lambda: next_5())
+        btnBack5.place(x=140, y=170)
+        btnNext5.place(x=400, y=170)
 
-    p7policyGoalsandObjectives = []
-    p7indicators = []
 
     def page_7():
         global p7policyGoalsandObjectives, p7indicators
-        frame7 = tk.LabelFrame(mainProject)
-        widgets_to_destroy = [frame7]
-        undo_stack = []
 
-        goals_obj_label = tk.Label(frame7, text="Goals and Objectives of the Proposal", font=("Arial", 12, "bold"))
+        mainProject.geometry("900x600")
+        style.configure('Treeview', rowheight=40)
+
+        # Main container
+        frame7 = tk.LabelFrame(mainProject, text="Goals and Objectives of the Proposal", font=("Arial", 12, "bold"))
+        frame7.pack(padx=20, pady=20, fill="both", expand=True)
+
+        status = ttk.Label(mainProject, text="")
+        status.place(relx=0.02, rely=0.92)
+
+        # Treeview
         goals_and_obj_table = ttk.Treeview(frame7, selectmode="browse", height=5)
         goals_and_obj_table["columns"] = ("1", "2")
         goals_and_obj_table['show'] = 'headings'
@@ -1310,10 +1900,19 @@ def createNewProject():
         goals_and_obj_table.column("2", width=500, anchor='c')
         goals_and_obj_table.heading("1", text="Policy Goals and Objectives")
         goals_and_obj_table.heading("2", text="Indicators")
+
         sb_y = ttk.Scrollbar(frame7, orient="vertical", command=goals_and_obj_table.yview)
         sb_x = ttk.Scrollbar(frame7, orient="horizontal", command=goals_and_obj_table.xview)
         goals_and_obj_table.configure(yscrollcommand=sb_y.set, xscrollcommand=sb_x.set)
 
+        goals_and_obj_table.grid(row=1, column=0, sticky="nsew")
+        sb_y.grid(row=1, column=1, sticky="ns")
+        sb_x.grid(row=2, column=0, sticky="ew")
+
+        frame7.grid_rowconfigure(1, weight=1)
+        frame7.grid_columnconfigure(0, weight=1)
+
+        # Input section
         pgo_label = tk.Label(mainProject, text="Policy Goals and Objectives")
         indi_label = tk.Label(mainProject, text="Indicators")
         pgo = tk.Entry(mainProject, width=40)
@@ -1325,17 +1924,20 @@ def createNewProject():
         ToolTip(edit_button, "Edit the selected table entry")
         ToolTip(delete_button, "Delete the selected table entry")
 
-        goals_obj_label.grid(row=0, column=0, columnspan=2, pady=10)
-        goals_and_obj_table.grid(row=1, column=0)
-        sb_y.grid(row=1, column=1, sticky="ns")
-        sb_x.grid(row=2, column=0, sticky="ew")
-        pgo_label.place(relx=0.1, rely=0.6)
-        pgo.place(relx=0.05, rely=0.65)
-        indi_label.place(relx=0.5, rely=0.6)
-        indi.place(relx=0.45, rely=0.65)
-        add_button.place(relx=0.4, rely=0.85)
-        edit_button.place(relx=0.5, rely=0.85)
-        delete_button.place(relx=0.6, rely=0.85)
+        pgo_label.place(relx=0.1, rely=0.55)
+        pgo.place(relx=0.05, rely=0.6)
+        indi_label.place(relx=0.55, rely=0.55)
+        indi.place(relx=0.45, rely=0.6)
+        add_button.place(relx=0.35, rely=0.75, anchor="s")
+        edit_button.place(relx=0.5, rely=0.75, anchor="s")
+        delete_button.place(relx=0.65, rely=0.75, anchor="s")
+
+        # Populate table
+        if len(p7policyGoalsandObjectives) == len(p7indicators):
+            for goal, indicator in zip(p7policyGoalsandObjectives, p7indicators):
+                goals_and_obj_table.insert("", "end", values=(goal.strip(), indicator.strip()))
+
+        undo_stack = []
 
         def show_data3(a):
             pgo.delete(0, tk.END)
@@ -1424,6 +2026,7 @@ def createNewProject():
 
         def back_6():
             global pageNumber
+            save()
             pageNumber -= 1
             for widget in mainProject.winfo_children():
                 widget.destroy()
@@ -1431,34 +2034,41 @@ def createNewProject():
 
         def next_6():
             global pageNumber
-            with open("page7_data.json", "w") as f:
-                json.dump({"goals": p7policyGoalsandObjectives, "indicators": p7indicators}, f)
+            save()
             pageNumber += 1
             for widget in mainProject.winfo_children():
                 widget.destroy()
             page_8()
 
-        setup_page_common(7, "Goals and Objectives", frame7, widgets_to_destroy, back_6, next_6)
-        try:
-            with open("page7_data.json", "r") as f:
-                data = json.load(f)
-                for g, i in zip(data.get("goals", []), data.get("indicators", [])):
-                    goals_and_obj_table.insert("", "end", values=(g, i))
-                    p7policyGoalsandObjectives.append(g)
-                    p7indicators.append(i)
-        except FileNotFoundError:
-            pass
+        btnBack6 = Button(mainProject, text="Back", width=10, command=back_6)
+        btnNext6 = Button(mainProject, text="Next", width=10, command=next_6)
+        btnBack6.place(relx=0.35, rely=0.85, anchor="s")
+        btnNext6.place(relx=0.65, rely=0.85, anchor="s")
 
-    p8stakeholders = []
-    p8actors = []
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 7 of 15: Goals and Objectives of the Proposal", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
+
 
     def page_8():
+
         global p8stakeholders, p8actors
-        frame8 = tk.LabelFrame(mainProject)
-        widgets_to_destroy = [frame8]
+        mainProject.state('normal') 
+        mainProject.geometry("800x700")
+        frame8 = tk.LabelFrame(mainProject, text="Stakeholders and Actors", font=("Arial", 12, "bold"))
         undo_stack = []
 
-        sta_and_act_label = tk.Label(frame8, text="Stakeholders and Actors", font=("Arial", 12, "bold"))
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 8 of 15: Stakeholders and Actors", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
+
+
+        style.configure("TButton", font=("Arial", 10))
+
+        # Place frame
+        frame8.place(x=40, y=10)
+
+        # Table
         sta_and_act_table = ttk.Treeview(frame8, selectmode="browse", height=10)
         sta_and_act_table["columns"] = ("1", "2")
         sta_and_act_table['show'] = 'headings'
@@ -1467,32 +2077,40 @@ def createNewProject():
         sta_and_act_table.heading("1", text="Stakeholders")
         sta_and_act_table.heading("2", text="Actors")
         sb_y = ttk.Scrollbar(frame8, orient="vertical", command=sta_and_act_table.yview)
-        sb_x = ttk.Scrollbar(frame8, orient="horizontal", command=sta_and_act_table.xview)
-        sta_and_act_table.configure(yscrollcommand=sb_y.set, xscrollcommand=sb_x.set)
+        sta_and_act_table.configure(yscrollcommand=sb_y.set)
+        sta_and_act_table.grid(row=0, column=0, sticky="nsew")
+        sb_y.grid(row=0, column=1, sticky="ns")
 
-        stakeholders_label = tk.Label(mainProject, text="Stakeholders")
-        actors_label = tk.Label(mainProject, text="Actors")
-        stakeholders = tk.Entry(mainProject, width=40)
-        actors = tk.Entry(mainProject, width=40)
+        # Load existing data into table
+        if len(p8stakeholders) == len(p8actors):
+            for s, a in zip(p8stakeholders, p8actors):
+                sta_and_act_table.insert("", "end", values=(s.strip(), a.strip()))
+
+        # Input Fields
+        stakeholders_label = tk.Label(mainProject, text="Stakeholder:")
+        stakeholders_label.place(x=60, y=500)
+        stakeholders = tk.Entry(mainProject, width=35)
+        stakeholders.place(x=170, y=500)
+
+        actors_label = tk.Label(mainProject, text="Actor:")
+        actors_label.place(x=480, y=500)
+        actors = tk.Entry(mainProject, width=35)
+        actors.place(x=540, y=500)
+
+        # Buttons
         add_button = ttk.Button(mainProject, text="Add", command=lambda: add_data4())
         edit_button = ttk.Button(mainProject, text="Edit", state="disabled", command=lambda: edit_data4())
         delete_button = ttk.Button(mainProject, text="Delete", state="disabled", command=lambda: delete_data4())
-        ToolTip(add_button, "Add a new entry to the table")
-        ToolTip(edit_button, "Edit the selected table entry")
-        ToolTip(delete_button, "Delete the selected table entry")
+        btnBack8 = ttk.Button(mainProject, text="Back", command=lambda: back_7())
+        btnNext8 = ttk.Button(mainProject, text="Next", command=lambda: next_7())
 
-        sta_and_act_label.grid(row=0, column=0, columnspan=2, pady=10)
-        sta_and_act_table.grid(row=1, column=0)
-        sb_y.grid(row=1, column=1, sticky="ns")
-        sb_x.grid(row=2, column=0, sticky="ew")
-        stakeholders_label.place(relx=0.1, rely=0.6)
-        stakeholders.place(relx=0.05, rely=0.65)
-        actors_label.place(relx=0.5, rely=0.6)
-        actors.place(relx=0.45, rely=0.65)
-        add_button.place(relx=0.4, rely=0.85)
-        edit_button.place(relx=0.5, rely=0.85)
-        delete_button.place(relx=0.6, rely=0.85)
+        add_button.place(x=250, y=550)
+        edit_button.place(x=370, y=550)
+        delete_button.place(x=490, y=550)
+        btnBack8.place(x=250, y=600)
+        btnNext8.place(x=490, y=600)
 
+        # Table selection
         def show_data4(a):
             stakeholders.delete(0, tk.END)
             actors.delete(0, tk.END)
@@ -1507,6 +2125,9 @@ def createNewProject():
                 edit_button.config(state="disabled")
                 delete_button.config(state="disabled")
 
+        sta_and_act_table.bind("<<TreeviewSelect>>", show_data4)
+
+        # Data logic
         def add_data4():
             stakeholders_text = stakeholders.get().strip()
             actors_text = actors.get().strip()
@@ -1572,44 +2193,36 @@ def createNewProject():
                 p8stakeholders.insert(index, old_values[0])
                 p8actors.insert(index, old_values[1])
 
-        sta_and_act_table.bind("<<TreeviewSelect>>", show_data4)
-        mainProject.bind("<Control-z>", lambda e: undo())
-        mainProject.bind("<Control-Return>", lambda e: add_data4())
-        stakeholders.bind("<Tab>", lambda e: actors.focus_set())
-        actors.bind("<Tab>", lambda e: add_button.focus_set())
-
+        # Navigation
         def back_7():
             global pageNumber
             pageNumber -= 1
             for widget in mainProject.winfo_children():
                 widget.destroy()
+            save()
             page_7()
 
         def next_7():
             global pageNumber
-            with open("page8_data.json", "w") as f:
-                json.dump({"stakeholders": p8stakeholders, "actors": p8actors}, f)
             pageNumber += 1
             for widget in mainProject.winfo_children():
                 widget.destroy()
+            save()
             page_9()
 
-        setup_page_common(8, "Stakeholders and Actors", frame8, widgets_to_destroy, back_7, next_7)
-        try:
-            with open("page8_data.json", "r") as f:
-                data = json.load(f)
-                for s, a in zip(data.get("stakeholders", []), data.get("actors", [])):
-                    sta_and_act_table.insert("", "end", values=(s, a))
-                    p8stakeholders.append(s)
-                    p8actors.append(a)
-        except FileNotFoundError:
-            pass
+        mainProject.bind("<Control-z>", lambda e: undo())
+        mainProject.bind("<Control-Return>", lambda e: add_data4())
+        stakeholders.bind("<Tab>", lambda e: actors.focus_set())
+        actors.bind("<Tab>", lambda e: add_button.focus_set())
 
-    global p9alternatives
-    p9alternatives = []
-    
-    def page_9():           
+    def page_9():   
+        global p9alternatives, p9altnum
+        mainProject.state('normal') 
         mainProject.geometry("870x545")
+
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 9 of 15: Assessment of the Policy Alternatives", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw") 
 
         style.configure('Treeview', rowheight=15)
 
@@ -1661,25 +2274,58 @@ def createNewProject():
         assessAlterTable.bind("<<TreeviewSelect>>", show_data5)
 
         def edit_data5():
-            policyAlternativeNoText = policyAlternativeNo.get()           # read stakeholders
-            policyAlternativesText = policyAlternatives.get()             # read actors
+            selected_item = assessAlterTable.selection()
+            if not selected_item:
+                messagebox.showwarning("Warning", "Please select an entry to edit.")
+                return
 
-            selected_item = assessAlterTable.selection()[0]
-            assessAlterTable.item(selected_item, text="blub", values=(policyAlternativeNoText, policyAlternativesText))
-            
-            p9alternatives.pop(assessAlterTable.index(selected_item))
-            p9alternatives.insert(assessAlterTable.index(selected_item), policyAlternativesText)
+            policyAlternativeNoText = policyAlternativeNo.get().strip()
+            policyAlternativesText = policyAlternatives.get().strip()
+
+            if not (policyAlternativeNoText and policyAlternativesText):
+                messagebox.showerror("Error", "Please fill out both fields.")
+                return
+
+            item_id = selected_item[0]
+            index = assessAlterTable.index(item_id)
+
+            # Update Treeview row
+            assessAlterTable.item(item_id, values=(policyAlternativeNoText, policyAlternativesText))
+
+            # Update in-memory lists
+            p9altnum[index] = policyAlternativeNoText
+            p9alternatives[index] = policyAlternativesText
+
+            # Clear fields
+            policyAlternativeNo.delete(0, END)
+            policyAlternatives.delete(0, END)
+            policyAlternativeNo.focus()
+
+            save()
+
 
         def add_data5():
-            policyAlternativeNoText = policyAlternativeNo.get()           # read stakeholders
-            policyAlternativesText = policyAlternatives.get()             # read actors
+            policyAlternativeNoText = policyAlternativeNo.get().strip()
+            policyAlternativesText = policyAlternatives.get().strip()
 
+            if not (policyAlternativeNoText and policyAlternativesText):
+                messagebox.showerror("Error", "Please fill out both fields.")
+                return
+
+            # Append to lists
+            p9altnum.append(policyAlternativeNoText)
             p9alternatives.append(policyAlternativesText)
 
-            assessAlterTable.insert("",'end', values=(policyAlternativeNoText, policyAlternativesText))
-            policyAlternativeNo.delete('1.0',END)  # reset the text entry box
-            policyAlternatives.delete('1.0',END)  # reset the text entry box
-            policyAlternatives.focus()
+            # Add to table
+            assessAlterTable.insert("", 'end', values=(policyAlternativeNoText, policyAlternativesText))
+
+            # Clear input fields
+            policyAlternativeNo.delete(0, END)
+            policyAlternatives.delete(0, END)
+            policyAlternativeNo.focus()
+
+            save()
+
 
         frame9.place(x=10, y=10)
 
@@ -1697,7 +2343,7 @@ def createNewProject():
 
         assessAlterTable.grid(row=1, rowspan=7, column=0, columnspan=2)
 
-        polAltNoLabel.place(x=139, y=300)
+        polAltNoLabel.place(x=135, y=300)
         policyAlternativeNo.place(x=135, y=330)
         polAltLabel.place(x=520, y=300)
         policyAlternatives.place(x=420, y=330)
@@ -1729,6 +2375,10 @@ def createNewProject():
         R8_2.grid(row=4, column=4)
         R9_2.grid(row=8, column=4)
 
+        if len(p9altnum) == len(p9alternatives):
+            for num, alt in zip(p9altnum, p9alternatives):
+                assessAlterTable.insert("", "end", values=(num.strip(), alt.strip()))
+
         def back_8():
             global pageNumber
             pageNumber -= 1
@@ -1743,6 +2393,7 @@ def createNewProject():
             computeButton.destroy()   
             btnBack8.destroy()
             btnNext8.destroy()
+            save()
             page_8()
 
         def next_8():
@@ -1756,6 +2407,7 @@ def createNewProject():
             computeButton.destroy()   
             btnBack8.destroy()
             btnNext8.destroy()
+            save()
             page_10()
 
         def compute():
@@ -2376,8 +3028,6 @@ def createNewProject():
                         global assessmentTuple
                         assessmentTuple = [yearText, benefitText, costText]
 
-                        # effortList.append(efforttuple)
-
                         yearlytangibleCBAwithoutTable.insert("",'end', values=(yearText, benefitText, costText))
                         yearText.delete('1.0',END)               # reset the text entry box
                         benefitText.delete('1.0',END)                   # reset the text entry box
@@ -2494,8 +3144,6 @@ def createNewProject():
 
                         global assessmentTuple
                         assessmentTuple = [playerText, issueposText, powerText, prioText]
-
-                        # effortList.append(efforttuple)
 
                         princeTable.insert("",'end', values=(playerText, issueposText, powerText, prioText, pc))
                         player.delete(0,END)
@@ -2627,13 +3275,21 @@ def createNewProject():
         btnBack8.place(x=265, y=440)      
 
     def page_10():
+
+        global p10spillovers, p10externalities, p10constraints, p10mitimeasures
+        mainProject.state('zoomed') 
         frame10 = tk.LabelFrame(mainProject)
         widgets_to_destroy = [frame10]
         undo_stack = []
 
-        # UI Setup
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 10 of 15: Assessments of the Policy Alternatives: Spillovers, Externalities, and Constraints", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
+
+        frame10.place(relx=0.01, rely=0.02, relwidth=0.98, relheight=0.55)
+
         assessPALabel = tk.Label(frame10, text="Assessments of the Policy Alternatives: Spillovers, Externalities, and Constraints", font=("Arial", 12, "bold"))
-        assessPATable = ttk.Treeview(frame10, selectmode="browse", height=3)
+        assessPATable = ttk.Treeview(frame10, selectmode="browse")
         assessPATable["columns"] = ("1", "2", "3", "4", "5")
         assessPATable['show'] = 'headings'
         assessPATable.column("1", width=300, anchor='c')
@@ -2650,6 +3306,13 @@ def createNewProject():
         sb_x = ttk.Scrollbar(frame10, orient="horizontal", command=assessPATable.xview)
         assessPATable.configure(yscrollcommand=sb_y.set, xscrollcommand=sb_x.set)
 
+        assessPALabel.grid(row=0, column=0, columnspan=2, pady=10)
+        assessPATable.grid(row=1, column=0, sticky="nsew")
+        sb_y.grid(row=1, column=1, sticky="ns")
+        sb_x.grid(row=2, column=0, sticky="ew")
+        frame10.grid_columnconfigure(0, weight=1)
+        frame10.grid_rowconfigure(1, weight=1)
+
         alternaLabel = tk.Label(mainProject, text="Alternative")
         spillovLabel = tk.Label(mainProject, text="Spillovers")
         externaLabel = tk.Label(mainProject, text="Externalities")
@@ -2663,32 +3326,45 @@ def createNewProject():
         addButton10 = ttk.Button(mainProject, text="Add", command=lambda: add_data10())
         editButton10 = ttk.Button(mainProject, text="Edit", state="disabled", command=lambda: edit_data10())
         deleteButton10 = ttk.Button(mainProject, text="Delete", state="disabled", command=lambda: delete_data10())
+
         ToolTip(addButton10, "Add a new entry to the table")
         ToolTip(editButton10, "Edit the selected table entry")
         ToolTip(deleteButton10, "Delete the selected table entry")
 
-        # Layout
-        assessPALabel.grid(row=0, column=0, columnspan=2, pady=10)
-        assessPATable.grid(row=1, column=0)
-        sb_y.grid(row=1, column=1, sticky="ns")
-        sb_x.grid(row=2, column=0, sticky="ew")
-        alternaLabel.place(relx=0.05, rely=0.5)
-        alternative.place(relx=0.05, rely=0.55)
-        spillovLabel.place(relx=0.25, rely=0.5)
-        spillover.place(relx=0.25, rely=0.55)
-        externaLabel.place(relx=0.45, rely=0.5)
-        externality.place(relx=0.45, rely=0.55)
-        constraLabel.place(relx=0.65, rely=0.5)
-        constraint.place(relx=0.65, rely=0.55)
-        mitmeasLabel.place(relx=0.85, rely=0.5)
-        mitimeasure.place(relx=0.85, rely=0.55)
-        addButton10.place(relx=0.4, rely=0.85)
-        editButton10.place(relx=0.5, rely=0.85)
-        deleteButton10.place(relx=0.6, rely=0.85)
+        alternaLabel.place(relx=0.38, rely=0.60)
+        alternative.place(relx=0.45, rely=0.60)
 
-        # Populate table with p9alternatives
+        spillovLabel.place(relx=0.05, rely=0.65)
+        spillover.place(relx=0.05, rely=0.70)
+
+        externaLabel.place(relx=0.30, rely=0.65)
+        externality.place(relx=0.30, rely=0.70)
+
+        constraLabel.place(relx=0.55, rely=0.65)
+        constraint.place(relx=0.55, rely=0.70)
+
+        mitmeasLabel.place(relx=0.80, rely=0.65)
+        mitimeasure.place(relx=0.80, rely=0.70)
+
+        addButton10.place(relx=0.40, rely=0.82, anchor='s')
+        editButton10.place(relx=0.50, rely=0.82, anchor='s')
+        deleteButton10.place(relx=0.60, rely=0.82, anchor='s')
+
+        # Clear existing rows to prevent duplication
+        for row in assessPATable.get_children():
+            assessPATable.delete(row)
+
+        # Always insert one row per alternative
         for i, alt in enumerate(p9alternatives):
-            assessPATable.insert("", 'end', values=(f"Alt {i+1}: {alt}", "", "", "", ""))
+            spill = p10spillovers[i] if i < len(p10spillovers) else ""
+            ext = p10externalities[i] if i < len(p10externalities) else ""
+            cons = p10constraints[i] if i < len(p10constraints) else ""
+            miti = p10mitimeasures[i] if i < len(p10mitimeasures) else ""
+
+            assessPATable.insert(
+                "", "end",
+                values=(f"Alt {i+1}: {alt}", spill, ext, cons, miti)
+            )
 
         def show_data10(a):
             alternative.delete(0, tk.END)
@@ -2790,125 +3466,181 @@ def createNewProject():
             pageNumber -= 1
             for widget in mainProject.winfo_children():
                 widget.destroy()
+
+            save()
             page_9()
 
         def next_9():
-            global pageNumber
-            with open("page10_data.json", "w") as f:
-                json.dump({"assessments": [assessPATable.item(i)['values'] for i in assessPATable.get_children()]}, f)
+            global pageNumber, p10spillovers, p10externalities, p10constraints, p10mitimeasures
+
+            # Reset the lists
+            p10spillovers = []
+            p10externalities = []
+            p10constraints = []
+            p10mitimeasures = []
+
+            # Extract values from all rows
+            for row_id in assessPATable.get_children():
+                values = assessPATable.item(row_id)['values']
+                if len(values) >= 5:
+                    p10spillovers.append(values[1])
+                    p10externalities.append(values[2])
+                    p10constraints.append(values[3])
+                    p10mitimeasures.append(values[4])
+
+            save()
             pageNumber += 1
             for widget in mainProject.winfo_children():
                 widget.destroy()
             page_11()
 
-        setup_page_common(10, "Assessments of Policy Alternatives", frame10, widgets_to_destroy, back_9, next_9)
-        try:
-            with open("page10_data.json", "r") as f:
-                data = json.load(f)
-                for item in data.get("assessments", []):
-                    assessPATable.insert("", "end", values=item)
-        except FileNotFoundError:
-            pass
-
-    p11BPAdescription = " "
-    p11BPAreasonSelect = " "
+        btnBack9 = Button(mainProject, text="Back", width=10, command=lambda: back_9())
+        btnNext9 = Button(mainProject, text="Next", width=10, command=lambda: next_9())
+        btnBack9.place(relx=0.4, rely=0.90, anchor="s")
+        btnNext9.place(relx=0.6, rely=0.90, anchor="s")
 
     def page_11():
+
         global p11BPAdescription, p11BPAreasonSelect
-        frame11 = tk.LabelFrame(mainProject)
-        widgets_to_destroy = [frame11]
+        mainProject.state('normal') 
+        mainProject.geometry("750x380")
 
-        p11Label = tk.Label(mainProject, text="Description of the Best/Optimal Policy Alternative", font=("Arial", 12, "bold"))
-        descrLabel = tk.Label(frame11, text="Description")
-        descr = scrolledtext.ScrolledText(frame11, height=8, width=30)
-        reaSelLabel = tk.Label(frame11, text="Reasons for Selection")
-        reaSel = scrolledtext.ScrolledText(frame11, height=8, width=30)
-        status.place(relx=0.01, rely=0.9)
+         ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 11 of 15: Best/Optimal Policy Alternative", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
 
-        p11Label.grid(row=0, column=0, columnspan=2, pady=10)
-        descrLabel.grid(row=1, column=0, sticky="w", padx=7)
-        descr.grid(row=2, column=0, sticky="w", padx=7)
-        reaSelLabel.grid(row=1, column=1, sticky="w", padx=7)
-        reaSel.grid(row=2, column=1, sticky="w", padx=7)
+        
+        frame11 = tk.LabelFrame(mainProject, text="Best/Optimal Policy Alternative", font=("Arial", 12, "bold"))
+        frame11.place(relx=0.01, rely=0.01, relwidth=0.97, relheight=0.75)
+
+        # Status Label
+        status = ttk.Label(mainProject, text="", font=("Arial", 10))
+        status.place(relx=0.01, rely=0.88)
+
+        # Widgets inside frame11
+        descrLabel = tk.Label(frame11, text="Description", font=("Arial", 11))
+        descr = scrolledtext.ScrolledText(frame11, height=8, width=40)
+        descr.insert("1.0", p11BPAdescription)
+
+        reaSelLabel = tk.Label(frame11, text="Reasons for Selection", font=("Arial", 11))
+        reaSel = scrolledtext.ScrolledText(frame11, height=8, width=40)
+        reaSel.insert("1.0", p11BPAreasonSelect)
+
+        # Grid layout
+        descrLabel.grid(row=0, column=0, sticky="w", padx=10, pady=(10, 2))
+        descr.grid(row=1, column=0, padx=10)
+
+        reaSelLabel.grid(row=0, column=1, sticky="w", padx=10, pady=(10, 2))
+        reaSel.grid(row=1, column=1, padx=10)
+
 
         def back_10():
             global pageNumber
             pageNumber -= 1
             for widget in mainProject.winfo_children():
                 widget.destroy()
+            save()
             page_10()
 
         def next_10():
             global pageNumber, p11BPAdescription, p11BPAreasonSelect
             p11BPAdescription = descr.get("1.0", tk.END).strip()
             p11BPAreasonSelect = reaSel.get("1.0", tk.END).strip()
+
             if not p11BPAdescription:
                 status.config(text="Enter description", foreground="red")
                 return
             if not p11BPAreasonSelect:
                 status.config(text="Enter reason for selection", foreground="red")
                 return
-            with open("page11_data.json", "w") as f:
-                json.dump({"description": p11BPAdescription, "reason": p11BPAreasonSelect}, f)
-            save()
+
             pageNumber += 1
             for widget in mainProject.winfo_children():
                 widget.destroy()
+            save()
             page_12()
 
-        setup_page_common(11, "Best Policy Alternative Description", frame11, widgets_to_destroy, back_10, next_10)
-        try:
-            with open("page11_data.json", "r") as f:
-                data = json.load(f)
-                descr.insert("1.0", data.get("description", ""))
-                reaSel.insert("1.0", data.get("reason", ""))
-        except FileNotFoundError:
-            pass
-
-    p12BPAspillover = " "
-    p12BPAexternality = " "
-    p12BPAconstraint = " "
-    p12BPAmitigatingmeasure = " "
+        # Navigation Buttons
+        btnBack10 = tk.Button(mainProject, text="Back", width=12, command=back_10)
+        btnNext10 = tk.Button(mainProject, text="Next", width=12, command=next_10)
+        btnBack10.place(relx=0.35, rely=0.85, anchor="s")
+        btnNext10.place(relx=0.65, rely=0.85, anchor="s")
 
     def page_12():
+
         global p12BPAspillover, p12BPAexternality, p12BPAconstraint, p12BPAmitigatingmeasure
-        frame12 = tk.LabelFrame(mainProject)
-        widgets_to_destroy = [frame12]
 
-        p12Label = tk.Label(mainProject, text="Description of the Best/Optimal Policy Alternative", font=("Arial", 12, "bold"))
+        mainProject.geometry("750x420")  # Increased height to make all content visible
+
+         ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 12 of 15: Details of the Best/Optimal Policy Alternative", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
+
+        frame12 = tk.LabelFrame(mainProject, text="Details of the Best/Optimal Policy Alternative", font=("Arial", 11))
+        frame12.place(relx=0.01, rely=0.02, relwidth=0.96, relheight=0.75)  # Increased height
+
+        status = ttk.Label(mainProject, text="")
+        status.place(relx=0.01, rely=0.92)
+
+        # Labels and inputs
         spilloverLabel = tk.Label(frame12, text="Spillover")
-        spillover = scrolledtext.ScrolledText(frame12, height=8, width=30)
+        spillover = scrolledtext.ScrolledText(frame12, height=7, width=40)
+
         externalityLabel = tk.Label(frame12, text="Externalities")
-        externality = scrolledtext.ScrolledText(frame12, height=8, width=30)
+        externality = scrolledtext.ScrolledText(frame12, height=7, width=40)
+
         constraintLabel = tk.Label(frame12, text="Constraints")
-        constraint = scrolledtext.ScrolledText(frame12, height=8, width=30)
+        constraint = scrolledtext.ScrolledText(frame12, height=7, width=40)
+
         mitiMeasureLabel = tk.Label(frame12, text="Mitigating Measures")
-        mitiMeasure = scrolledtext.ScrolledText(frame12, height=8, width=30)
-        status.place(relx=0.01, rely=0.9)
+        mitiMeasure = scrolledtext.ScrolledText(frame12, height=7, width=40)
 
-        p12Label.grid(row=0, column=0, columnspan=2, pady=10)
-        spilloverLabel.grid(row=1, column=0, sticky="w", padx=7)
-        spillover.grid(row=2, column=0, sticky="w", padx=7)
-        externalityLabel.grid(row=1, column=1, sticky="w", padx=7)
-        externality.grid(row=2, column=1, sticky="w", padx=7)
-        constraintLabel.grid(row=3, column=0, sticky="w", padx=7)
-        constraint.grid(row=4, column=0, sticky="w", padx=7)
-        mitiMeasureLabel.grid(row=3, column=1, sticky="w", padx=7)
-        mitiMeasure.grid(row=4, column=1, sticky="w", padx=7)
+        # Layout inside frame12
+        spilloverLabel.grid(row=0, column=0, sticky="w", padx=10, pady=(10, 2))
+        spillover.grid(row=1, column=0, padx=10)
 
+        externalityLabel.grid(row=0, column=1, sticky="w", padx=10, pady=(10, 2))
+        externality.grid(row=1, column=1, padx=10)
+
+        constraintLabel.grid(row=2, column=0, sticky="w", padx=10, pady=(10, 2))
+        constraint.grid(row=3, column=0, padx=10)
+
+        mitiMeasureLabel.grid(row=2, column=1, sticky="w", padx=10, pady=(10, 2))
+        mitiMeasure.grid(row=3, column=1, padx=10)
+
+
+        # Pre-fill from global if available
+        spillover.insert("1.0", p12BPAspillover.strip())
+        externality.insert("1.0", p12BPAexternality.strip())
+        constraint.insert("1.0", p12BPAconstraint.strip())
+        mitiMeasure.insert("1.0", p12BPAmitigatingmeasure.strip())
+
+        # Navigation buttons
         def back_11():
-            global pageNumber
-            pageNumber -= 1
-            for widget in mainProject.winfo_children():
-                widget.destroy()
-            page_11()
-
-        def next_11():
             global pageNumber, p12BPAspillover, p12BPAexternality, p12BPAconstraint, p12BPAmitigatingmeasure
+
+            # Retrieve values
             p12BPAspillover = spillover.get("1.0", tk.END).strip()
             p12BPAexternality = externality.get("1.0", tk.END).strip()
             p12BPAconstraint = constraint.get("1.0", tk.END).strip()
             p12BPAmitigatingmeasure = mitiMeasure.get("1.0", tk.END).strip()
+
+            pageNumber -= 1
+            for widget in mainProject.winfo_children():
+                widget.destroy()
+            save()
+            page_11()
+
+        def next_11():
+            global pageNumber, p12BPAspillover, p12BPAexternality, p12BPAconstraint, p12BPAmitigatingmeasure
+
+            # Retrieve values
+            p12BPAspillover = spillover.get("1.0", tk.END).strip()
+            p12BPAexternality = externality.get("1.0", tk.END).strip()
+            p12BPAconstraint = constraint.get("1.0", tk.END).strip()
+            p12BPAmitigatingmeasure = mitiMeasure.get("1.0", tk.END).strip()
+
+            # Validation
             if not p12BPAspillover:
                 status.config(text="Enter spillover", foreground="red")
                 return
@@ -2921,68 +3653,79 @@ def createNewProject():
             if not p12BPAmitigatingmeasure:
                 status.config(text="Enter mitigating measure", foreground="red")
                 return
-            with open("page12_data.json", "w") as f:
-                json.dump({
-                    "spillover": p12BPAspillover,
-                    "externality": p12BPAexternality,
-                    "constraint": p12BPAconstraint,
-                    "mitigating_measure": p12BPAmitigatingmeasure
-                }, f)
+
             save()
             pageNumber += 1
             for widget in mainProject.winfo_children():
                 widget.destroy()
             page_13()
 
-        setup_page_common(12, "Best Policy Alternative Details", frame12, widgets_to_destroy, back_11, next_11)
-        try:
-            with open("page12_data.json", "r") as f:
-                data = json.load(f)
-                spillover.insert("1.0", data.get("spillover", ""))
-                externality.insert("1.0", data.get("externality", ""))
-                constraint.insert("1.0", data.get("constraint", ""))
-                mitiMeasure.insert("1.0", data.get("mitigating_measure", ""))
-        except FileNotFoundError:
-            pass
-
-    p13BPAwhat = " "
-    p13BPAwho = " "
-    p13BPAhow = " "
+        btnBack11 = tk.Button(mainProject, text="Back", width=10, command=back_11)
+        btnNext11 = tk.Button(mainProject, text="Next", width=10, command=next_11)
+        btnBack11.place(relx=0.4, rely=0.85, anchor="s")
+        btnNext11.place(relx=0.6, rely=0.85, anchor="s")
 
     def page_13():
+
         global p13BPAwhat, p13BPAwho, p13BPAhow
-        frame13 = tk.LabelFrame(mainProject)
-        widgets_to_destroy = [frame13]
 
+        mainProject.geometry("750x420")  # Increased height to fit all inputs
+
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 13 of 15: Implementation Requirements", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
+
+        frame13 = tk.LabelFrame(mainProject, text="Implementation Requirements", font=("Arial", 11))
+        frame13.place(relx=0.01, rely=0.02, relwidth=0.96, relheight=0.75)
+
+        status = ttk.Label(mainProject, text="")
+        status.place(relx=0.01, rely=0.92)
+
+        # Title
         p13Label = tk.Label(mainProject, text="Requirements for the Implementation of the Best/Optimal Policy Alternative", font=("Arial", 12, "bold"))
+        p13Label.place(relx=0.02, rely=0.01)
+
+        # Labels and ScrolledText widgets
         p13whatLabel = tk.Label(frame13, text="What type of legislation is needed? Why?")
-        p13what = scrolledtext.ScrolledText(frame13, height=8, width=30)
+        p13what = scrolledtext.ScrolledText(frame13, height=7, width=40)
+
         p13whoLabel = tk.Label(frame13, text="Who will implement? Why?")
-        p13who = scrolledtext.ScrolledText(frame13, height=8, width=30)
+        p13who = scrolledtext.ScrolledText(frame13, height=7, width=40)
+
         p13howLabel = tk.Label(frame13, text="How much to implement and where to source funds?")
-        p13how = scrolledtext.ScrolledText(frame13, height=8, width=30)
-        status.place(relx=0.01, rely=0.9)
+        p13how = scrolledtext.ScrolledText(frame13, height=7, width=85)  # Spans two columns
 
-        p13Label.grid(row=0, column=0, columnspan=2, pady=10)
-        p13whatLabel.grid(row=1, column=0, sticky="w", padx=7)
-        p13what.grid(row=2, column=0, sticky="w", padx=7)
-        p13whoLabel.grid(row=1, column=1, sticky="w", padx=7)
-        p13who.grid(row=2, column=1, sticky="w", padx=7)
-        p13howLabel.grid(row=3, column=0, sticky="w", padx=7)
-        p13how.grid(row=4, column=0, sticky="w", padx=7)
+        # Layout inside frame13
+        p13whatLabel.grid(row=0, column=0, sticky="w", padx=10, pady=(10, 2))
+        p13what.grid(row=1, column=0, padx=10, pady=(0, 10))
 
+        p13whoLabel.grid(row=0, column=1, sticky="w", padx=10, pady=(10, 2))
+        p13who.grid(row=1, column=1, padx=10, pady=(0, 10))
+
+        p13howLabel.grid(row=2, column=0, columnspan=2, sticky="w", padx=10, pady=(5, 2))
+        p13how.grid(row=3, column=0, columnspan=2, padx=10)
+
+        # Pre-fill values
+        p13what.insert("1.0", p13BPAwhat.strip())
+        p13who.insert("1.0", p13BPAwho.strip())
+        p13how.insert("1.0", p13BPAhow.strip())
+
+        # Navigation Buttons
         def back_12():
             global pageNumber
             pageNumber -= 1
             for widget in mainProject.winfo_children():
                 widget.destroy()
+            save()
             page_12()
 
         def next_12():
             global pageNumber, p13BPAwhat, p13BPAwho, p13BPAhow
+
             p13BPAwhat = p13what.get("1.0", tk.END).strip()
             p13BPAwho = p13who.get("1.0", tk.END).strip()
             p13BPAhow = p13how.get("1.0", tk.END).strip()
+
             if not p13BPAwhat:
                 status.config(text="Enter the type of legislation needed", foreground="red")
                 return
@@ -2992,41 +3735,42 @@ def createNewProject():
             if not p13BPAhow:
                 status.config(text="Enter how much to implement", foreground="red")
                 return
-            with open("page13_data.json", "w") as f:
-                json.dump({
-                    "legislation": p13BPAwhat,
-                    "implementers": p13BPAwho,
-                    "funding": p13BPAhow
-                }, f)
+
             save()
             pageNumber += 1
             for widget in mainProject.winfo_children():
                 widget.destroy()
             page_14()
 
-        setup_page_common(13, "Implementation Requirements", frame13, widgets_to_destroy, back_12, next_12)
-        try:
-            with open("page13_data.json", "r") as f:
-                data = json.load(f)
-                p13what.insert("1.0", data.get("legislation", ""))
-                p13who.insert("1.0", data.get("implementers", ""))
-                p13how.insert("1.0", data.get("funding", ""))
-        except FileNotFoundError:
-            pass
+        btnBack13 = tk.Button(mainProject, text="Back", width=10, command=back_12)
+        btnNext13 = tk.Button(mainProject, text="Next", width=10, command=next_12)
+        btnBack13.place(relx=0.4, rely=0.85, anchor="s")
+        btnNext13.place(relx=0.6, rely=0.85, anchor="s")
+
 
     def page_14():
+
+        global p14criticalActions, p14responsible, p14timeline, p14budget, p14budgetsource
         frame14 = tk.LabelFrame(mainProject)
+        mainProject.state('zoomed')
+
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 14 of 15: Policy Implementation Plan", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
+
         widgets_to_destroy = [frame14]
         undo_stack = []
 
+        frame14.place(x=10, y=10, relwidth=0.98, relheight=0.60)
+
         implementationPlanLabel = tk.Label(frame14, text="Policy Implementation Plan", font=("Arial", 12, "bold"))
-        implementationPlanTable = ttk.Treeview(frame14, selectmode="browse", height=3)
+        implementationPlanTable = ttk.Treeview(frame14, selectmode="browse", height=8)
         implementationPlanTable["columns"] = ("1", "2", "3", "4", "5")
         implementationPlanTable['show'] = 'headings'
-        implementationPlanTable.column("1", width=300, anchor='c')
-        implementationPlanTable.column("2", width=250, anchor='c')
-        implementationPlanTable.column("3", width=180, anchor='c')
-        implementationPlanTable.column("4", width=140, anchor='c')
+        implementationPlanTable.column("1", width=250, anchor='c')
+        implementationPlanTable.column("2", width=220, anchor='c')
+        implementationPlanTable.column("3", width=150, anchor='c')
+        implementationPlanTable.column("4", width=100, anchor='c')
         implementationPlanTable.column("5", width=180, anchor='c')
         implementationPlanTable.heading("1", text="Critical Actions")
         implementationPlanTable.heading("2", text="Responsible/Accountable Units")
@@ -3037,41 +3781,59 @@ def createNewProject():
         sb_x = ttk.Scrollbar(frame14, orient="horizontal", command=implementationPlanTable.xview)
         implementationPlanTable.configure(yscrollcommand=sb_y.set, xscrollcommand=sb_x.set)
 
+        # UI
         critALabel = tk.Label(mainProject, text="Critical Action")
-        raUnitLabel = tk.Label(mainProject, text="Responsible/\nAccountable Unit")
+        raUnitLabel = tk.Label(mainProject, text="Responsible/\nAccountable Unit", justify="left")
         timeframeLabel = tk.Label(mainProject, text="Timeframe")
         budgetLabel = tk.Label(mainProject, text="Budget")
         budgSoLabel = tk.Label(mainProject, text="Budget Source")
         criticalAction = scrolledtext.ScrolledText(mainProject, height=4, width=30)
-        respaccoUnit = scrolledtext.ScrolledText(mainProject, height=4, width=25)
-        timeframe = scrolledtext.ScrolledText(mainProject, height=4, width=18)
-        budget = scrolledtext.ScrolledText(mainProject, height=4, width=14)
-        budgetSource = scrolledtext.ScrolledText(mainProject, height=4, width=17)
+        respaccoUnit = scrolledtext.ScrolledText(mainProject, height=4, width=30)
+        timeframe = scrolledtext.ScrolledText(mainProject, height=4, width=30)
+        budget = scrolledtext.ScrolledText(mainProject, height=4, width=30)
+        budgetSource = scrolledtext.ScrolledText(mainProject, height=4, width=30)
         addButton14 = ttk.Button(mainProject, text="Add", command=lambda: add_data14())
         editButton14 = ttk.Button(mainProject, text="Edit", state="disabled", command=lambda: edit_data14())
         deleteButton14 = ttk.Button(mainProject, text="Delete", state="disabled", command=lambda: delete_data14())
-        ToolTip(addButton14, "Add a new entry to the table")
-        ToolTip(editButton14, "Edit the selected table entry")
-        ToolTip(deleteButton14, "Delete the selected table entry")
 
-        implementationPlanLabel.grid(row=0, column=0, columnspan=2, pady=10)
-        implementationPlanTable.grid(row=1, column=0)
-        sb_y.grid(row=1, column=1, sticky="ns")
-        sb_x.grid(row=2, column=0, sticky="ew")
-        critALabel.place(relx=0.05, rely=0.5)
-        criticalAction.place(relx=0.05, rely=0.55)
-        raUnitLabel.place(relx=0.25, rely=0.5)
-        respaccoUnit.place(relx=0.25, rely=0.55)
-        timeframeLabel.place(relx=0.45, rely=0.5)
-        timeframe.place(relx=0.45, rely=0.55)
-        budgetLabel.place(relx=0.65, rely=0.5)
-        budget.place(relx=0.65, rely=0.55)
-        budgSoLabel.place(relx=0.85, rely=0.5)
-        budgetSource.place(relx=0.85, rely=0.55)
-        addButton14.place(relx=0.4, rely=0.85)
-        editButton14.place(relx=0.5, rely=0.85)
-        deleteButton14.place(relx=0.6, rely=0.85)
+        # Place Treeview to fully occupy frame14 (except for the title)
+        implementationPlanLabel.place(relx=0.01, rely=0.01)
+        
+        # Full-width and height minus a bit of margin for padding
+        implementationPlanTable.place(relx=0.01, rely=0.10, relwidth=0.96, relheight=0.80)
+        
+        # Scrollbars aligned to right and bottom of the Treeview
+        sb_y.place(relx=0.97, rely=0.10, relheight=0.80)
+        sb_x.place(relx=0.01, rely=0.90, relwidth=0.96)
 
+        
+        # Define common positions for 5 columns (evenly spaced)
+        positions = [0.02, 0.22, 0.42, 0.62, 0.82]
+
+        # Labels
+        critALabel.place(relx=positions[0], rely=0.65)
+        raUnitLabel.place(relx=positions[1], rely=0.65)
+        timeframeLabel.place(relx=positions[2], rely=0.65)
+        budgetLabel.place(relx=positions[3], rely=0.65)
+        budgSoLabel.place(relx=positions[4], rely=0.65)
+
+        # Inputs (under each label)
+        criticalAction.place(relx=positions[0], rely=0.70)
+        respaccoUnit.place(relx=positions[1], rely=0.70)
+        timeframe.place(relx=positions[2], rely=0.70)
+        budget.place(relx=positions[3], rely=0.70)
+        budgetSource.place(relx=positions[4], rely=0.70)
+
+        addButton14.place(relx=0.4, rely=0.85, anchor="s")
+        editButton14.place(relx=0.5, rely=0.85, anchor="s")
+        deleteButton14.place(relx=0.6, rely=0.85, anchor="s")
+
+        # Load data if available
+        if len(p14criticalActions) == len(p14responsible) == len(p14timeline) == len(p14budget) == len(p14budgetsource):
+            for ca, ra, tl, bdg, src in zip(p14criticalActions, p14responsible, p14timeline, p14budget, p14budgetsource):
+                implementationPlanTable.insert("", "end", values=(ca, ra, tl, bdg, src))
+
+        # Table logic
         def show_data14(a):
             criticalAction.delete("1.0", tk.END)
             respaccoUnit.delete("1.0", tk.END)
@@ -3093,13 +3855,11 @@ def createNewProject():
                 deleteButton14.config(state="disabled")
 
         def add_data14():
-            texts = [
-                criticalAction.get("1.0", tk.END).strip(),
-                respaccoUnit.get("1.0", tk.END).strip(),
-                timeframe.get("1.0", tk.END).strip(),
-                budget.get("1.0", tk.END).strip(),
-                budgetSource.get("1.0", tk.END).strip()
-            ]
+            texts = [criticalAction.get("1.0", tk.END).strip(),
+                     respaccoUnit.get("1.0", tk.END).strip(),
+                     timeframe.get("1.0", tk.END).strip(),
+                     budget.get("1.0", tk.END).strip(),
+                     budgetSource.get("1.0", tk.END).strip()]
             if not all(texts):
                 messagebox.showerror("Error", "Please fill out all fields")
                 return
@@ -3113,13 +3873,11 @@ def createNewProject():
             criticalAction.focus()
 
         def edit_data14():
-            texts = [
-                criticalAction.get("1.0", tk.END).strip(),
-                respaccoUnit.get("1.0", tk.END).strip(),
-                timeframe.get("1.0", tk.END).strip(),
-                budget.get("1.0", tk.END).strip(),
-                budgetSource.get("1.0", tk.END).strip()
-            ]
+            texts = [criticalAction.get("1.0", tk.END).strip(),
+                     respaccoUnit.get("1.0", tk.END).strip(),
+                     timeframe.get("1.0", tk.END).strip(),
+                     budget.get("1.0", tk.END).strip(),
+                     budgetSource.get("1.0", tk.END).strip()]
             if not all(texts):
                 messagebox.showerror("Error", "Please fill out all fields")
                 return
@@ -3142,8 +3900,6 @@ def createNewProject():
                 budgetSource.delete("1.0", tk.END)
                 editButton14.config(state="disabled")
                 deleteButton14.config(state="disabled")
-            else:
-                messagebox.showwarning("Warning", "Please select an item to delete")
 
         def undo():
             if not undo_stack:
@@ -3161,12 +3917,8 @@ def createNewProject():
         implementationPlanTable.bind("<<TreeviewSelect>>", show_data14)
         mainProject.bind("<Control-z>", lambda e: undo())
         mainProject.bind("<Control-Return>", lambda e: add_data14())
-        criticalAction.bind("<Tab>", lambda e: respaccoUnit.focus_set())
-        respaccoUnit.bind("<Tab>", lambda e: timeframe.focus_set())
-        timeframe.bind("<Tab>", lambda e: budget.focus_set())
-        budget.bind("<Tab>", lambda e: budgetSource.focus_set())
-        budgetSource.bind("<Tab>", lambda e: addButton14.focus_set())
 
+        # Navigation
         def back_13():
             global pageNumber
             pageNumber -= 1
@@ -3176,231 +3928,193 @@ def createNewProject():
 
         def next_13():
             global pageNumber
-            with open("page14_data.json", "w") as f:
-                json.dump({"plan": [implementationPlanTable.item(i)['values'] for i in implementationPlanTable.get_children()]}, f)
+            # Save data to global lists
+            p14criticalActions.clear()
+            p14responsible.clear()
+            p14timeline.clear()
+            p14budget.clear()
+            p14budgetsource.clear()
+
+            for item in implementationPlanTable.get_children():
+                values = implementationPlanTable.item(item)['values']
+                if len(values) == 5:
+                    p14criticalActions.append(values[0])
+                    p14responsible.append(values[1])
+                    p14timeline.append(values[2])
+                    p14budget.append(values[3])
+                    p14budgetsource.append(values[4])
+
+            save()
             pageNumber += 1
             for widget in mainProject.winfo_children():
                 widget.destroy()
             page_15()
 
-        setup_page_common(14, "Policy Implementation Plan", frame14, widgets_to_destroy, back_13, next_13)
-        try:
-            with open("page14_data.json", "r") as f:
-                data = json.load(f)
-                for item in data.get("plan", []):
-                    implementationPlanTable.insert("", "end", values=item)
-        except FileNotFoundError:
-            pass
+        btnBack14 = Button(mainProject, text="Back", width=10, command=back_13)
+        btnNext14 = Button(mainProject, text="Next", width=10, command=next_13)
+        btnBack14.place(relx=0.4, rely=0.90, anchor="s")
+        btnNext14.place(relx=0.6, rely=0.90, anchor="s")
+
+
+        #setup_page_common(14, "Policy Implementation Plan", frame14, widgets_to_destroy, back_13, next_13)
+        ##try:
+        ##    with open("page14_data.json", "r") as f:
+        ##        data = json.load(f)
+        ##        for item in data.get("plan", []):
+        ##            implementationPlanTable.insert("", "end", values=item)
+        ##except FileNotFoundError:
+        ##    pass
 
     def page_15():
+        global p7policyGoalsandObjectives, p7indicators
+        global p15dataSources, p15frequency, p15responsible, p15output, p15report
+
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 15 of 15: Policy Assessment: Monitoring and Evaluation Plan", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
+
         frame15 = tk.LabelFrame(mainProject)
         widgets_to_destroy = [frame15]
         undo_stack = []
 
+        frame15.place(x=10, y=10, relwidth=0.98, relheight=0.6)
+
         policyAssessmentLabel = tk.Label(frame15, text="Policy Assessment: Monitoring and Evaluation Plan", font=("Arial", 12, "bold"))
-        policyAssessmentTable = ttk.Treeview(frame15, selectmode="browse", height=3)
+
+        policyAssessmentTable = ttk.Treeview(frame15, selectmode="browse")
         policyAssessmentTable["columns"] = ("1", "2", "3", "4", "5", "6", "7")
         policyAssessmentTable['show'] = 'headings'
-        policyAssessmentTable.column("1", width=214, anchor='c')
-        policyAssessmentTable.column("2", width=214, anchor='c')
-        policyAssessmentTable.column("3", width=214, anchor='c')
-        policyAssessmentTable.column("4", width=214, anchor='c')
-        policyAssessmentTable.column("5", width=214, anchor='c')
-        policyAssessmentTable.column("6", width=214, anchor='c')
-        policyAssessmentTable.column("7", width=214, anchor='c')
-        policyAssessmentTable.heading("1", text="Goals and Objectives")
-        policyAssessmentTable.heading("2", text="SMART Indicators")
-        policyAssessmentTable.heading("3", text="Sources of Data")
-        policyAssessmentTable.heading("4", text="Data Collection Frequencies")
-        policyAssessmentTable.heading("5", text="Unit-In-Charge of Data\nCollection and Analysis")
-        policyAssessmentTable.heading("6", text="Outputs of M&E")
-        policyAssessmentTable.heading("7", text="M&E Report Users")
+
+        for i, col in enumerate(["Goals and Objectives", "SMART Indicators", "Sources of Data", "Data Collection Frequencies",
+                                 "Unit-In-Charge", "M&E Outputs", "M&E Report Users"], 1):
+            policyAssessmentTable.heading(str(i), text=col)
+            policyAssessmentTable.column(str(i), anchor='center', width=180)
+
         sb_y = ttk.Scrollbar(frame15, orient="vertical", command=policyAssessmentTable.yview)
         sb_x = ttk.Scrollbar(frame15, orient="horizontal", command=policyAssessmentTable.xview)
         policyAssessmentTable.configure(yscrollcommand=sb_y.set, xscrollcommand=sb_x.set)
 
-        goalAndObjectiveLabel = tk.Label(mainProject, text="Goal and Objective")
-        smartIndicatorLabel = tk.Label(mainProject, text="SMART Indicator")
-        sourceofDataLabel = tk.Label(mainProject, text="Source of Data")
-        dcfLabel = tk.Label(mainProject, text="Data Collection Frequency")
-        uicLabel = tk.Label(mainProject, text="Unit-In-Charge of Data\nCollection and Analysis")
-        MEoutputLabel = tk.Label(mainProject, text="Output of M&E")
-        MEuserLabel = tk.Label(mainProject, text="M&E Report User")
-        goalAndObjective = scrolledtext.ScrolledText(mainProject, height=4, width=22)
-        smartIndicator = scrolledtext.ScrolledText(mainProject, height=4, width=22)
-        sourceofData = scrolledtext.ScrolledText(mainProject, height=4, width=22)
-        dcf = scrolledtext.ScrolledText(mainProject, height=4, width=22)
-        uic = scrolledtext.ScrolledText(mainProject, height=4, width=22)
-        MEoutput = scrolledtext.ScrolledText(mainProject, height=4, width=22)
-        MEuser = scrolledtext.ScrolledText(mainProject, height=4, width=22)
-        addButton15 = ttk.Button(mainProject, text="Add", command=lambda: add_data15())
-        editButton15 = ttk.Button(mainProject, text="Edit", state="disabled", command=lambda: edit_data15())
-        deleteButton15 = ttk.Button(mainProject, text="Delete", state="disabled", command=lambda: delete_data15())
-        ToolTip(addButton15, "Add a new entry to the table")
-        ToolTip(editButton15, "Edit the selected table entry")
-        ToolTip(deleteButton15, "Delete the selected table entry")
+        # Labels + Input Fields
+        labels = [
+            "Goal and Objective", "SMART Indicator", "Source of Data", "Data Collection Frequency",
+            "Unit-In-Charge", "M&E Outputs", "M&E Report Users"
+        ]
+        fields = []
+        positions = [0.02, 0.1633, 0.3067, 0.45, 0.5933, 0.7367, 0.88]
+        for i, label in enumerate(labels):
+            tk.Label(mainProject, text=label).place(relx=positions[i], rely=0.63)
+            entry = scrolledtext.ScrolledText(mainProject, height=4, width=20)
+            entry.place(relx=positions[i], rely=0.68)
+            fields.append(entry)
 
-        policyAssessmentLabel.grid(row=0, column=0, columnspan=2, pady=10)
-        policyAssessmentTable.grid(row=1, column=0)
-        sb_y.grid(row=1, column=1, sticky="ns")
-        sb_x.grid(row=2, column=0, sticky="ew")
-        goalAndObjectiveLabel.place(relx=0.05, rely=0.5)
-        goalAndObjective.place(relx=0.05, rely=0.55)
-        smartIndicatorLabel.place(relx=0.20, rely=0.5)
-        smartIndicator.place(relx=0.20, rely=0.55)
-        sourceofDataLabel.place(relx=0.35, rely=0.5)
-        sourceofData.place(relx=0.35, rely=0.55)
-        dcfLabel.place(relx=0.50, rely=0.5)
-        dcf.place(relx=0.50, rely=0.55)
-        uicLabel.place(relx=0.65, rely=0.5)
-        uic.place(relx=0.65, rely=0.55)
-        MEoutputLabel.place(relx=0.80, rely=0.5)
-        MEoutput.place(relx=0.80, rely=0.55)
-        MEuserLabel.place(relx=0.95, rely=0.5)
-        MEuser.place(relx=0.95, rely=0.55)
-        addButton15.place(relx=0.4, rely=0.85)
-        editButton15.place(relx=0.5, rely=0.85)
-        deleteButton15.place(relx=0.6, rely=0.85)
-
-        for i, (goal, indicator) in enumerate(zip(p7policyGoalsandObjectives, p7indicators)):
-            policyAssessmentTable.insert("", 'end', values=(goal, indicator, "", "", "", "", ""))
-
-        def show_data15(a):
-            goalAndObjective.delete("1.0", tk.END)
-            smartIndicator.delete("1.0", tk.END)
-            sourceofData.delete("1.0", tk.END)
-            dcf.delete("1.0", tk.END)
-            uic.delete("1.0", tk.END)
-            MEoutput.delete("1.0", tk.END)
-            MEuser.delete("1.0", tk.END)
-            selected_item = policyAssessmentTable.selection()
-            if selected_item:
-                editButton15.config(state="normal")
-                deleteButton15.config(state="normal")
-                values = policyAssessmentTable.item(selected_item[0])['values']
-                goalAndObjective.insert("1.0", values[0])
-                smartIndicator.insert("1.0", values[1])
-                sourceofData.insert("1.0", values[2])
-                dcf.insert("1.0", values[3])
-                uic.insert("1.0", values[4])
-                MEoutput.insert("1.0", values[5])
-                MEuser.insert("1.0", values[6])
-            else:
-                editButton15.config(state="disabled")
-                deleteButton15.config(state="disabled")
+        def clear_fields():
+            for f in fields:
+                f.delete("1.0", tk.END)
+            fields[0].focus()
 
         def add_data15():
-            texts = [
-                goalAndObjective.get("1.0", tk.END).strip(),
-                smartIndicator.get("1.0", tk.END).strip(),
-                sourceofData.get("1.0", tk.END).strip(),
-                dcf.get("1.0", tk.END).strip(),
-                uic.get("1.0", tk.END).strip(),
-                MEoutput.get("1.0", tk.END).strip(),
-                MEuser.get("1.0", tk.END).strip()
-            ]
-            if not all(texts):
-                messagebox.showerror("Error", "Please fill out all fields")
+            values = [f.get("1.0", tk.END).strip() for f in fields]
+            if not all(values[:2]):
+                messagebox.showerror("Missing Fields", "Goals and SMART indicators are required.")
                 return
-            item_id = policyAssessmentTable.insert("", 'end', values=texts)
-            undo_stack.append(("add", item_id))
-            goalAndObjective.delete("1.0", tk.END)
-            smartIndicator.delete("1.0", tk.END)
-            sourceofData.delete("1.0", tk.END)
-            dcf.delete("1.0", tk.END)
-            uic.delete("1.0", tk.END)
-            MEoutput.delete("1.0", tk.END)
-            MEuser.delete("1.0", tk.END)
-            goalAndObjective.focus()
+            policyAssessmentTable.insert("", "end", values=values)
+            p7policyGoalsandObjectives.append(values[0])
+            p7indicators.append(values[1])
+            p15dataSources.append(values[2])
+            p15frequency.append(values[3])
+            p15responsible.append(values[4])
+            p15output.append(values[5])
+            p15report.append(values[6])
+            clear_fields()
+            save()
 
         def edit_data15():
-            texts = [
-                goalAndObjective.get("1.0", tk.END).strip(),
-                smartIndicator.get("1.0", tk.END).strip(),
-                sourceofData.get("1.0", tk.END).strip(),
-                dcf.get("1.0", tk.END).strip(),
-                uic.get("1.0", tk.END).strip(),
-                MEoutput.get("1.0", tk.END).strip(),
-                MEuser.get("1.0", tk.END).strip()
-            ]
-            if not all(texts):
-                messagebox.showerror("Error", "Please fill out all fields")
+            selected = policyAssessmentTable.selection()
+            if not selected:
                 return
-            selected_item = policyAssessmentTable.selection()[0]
-            old_values = policyAssessmentTable.item(selected_item)['values']
-            undo_stack.append(("edit", selected_item, old_values))
-            policyAssessmentTable.item(selected_item, values=texts)
+            values = [f.get("1.0", tk.END).strip() for f in fields]
+            policyAssessmentTable.item(selected[0], values=values)
+            index = policyAssessmentTable.index(selected[0])
+            p7policyGoalsandObjectives[index] = values[0]
+            p7indicators[index] = values[1]
+            p15dataSources[index] = values[2]
+            p15frequency[index] = values[3]
+            p15responsible[index] = values[4]
+            p15output[index] = values[5]
+            p15report[index] = values[6]
+            clear_fields()
+            save()
+
+        def show_data15(event):
+            selected = policyAssessmentTable.selection()
+            if selected:
+                values = policyAssessmentTable.item(selected[0])["values"]
+                for f, v in zip(fields, values):
+                    f.delete("1.0", tk.END)
+                    f.insert("1.0", v)
 
         def delete_data15():
-            selected_item = policyAssessmentTable.selection()
-            if selected_item:
-                item_id = selected_item[0]
-                old_values = policyAssessmentTable.item(item_id)['values']
-                undo_stack.append(("delete", item_id, old_values))
-                policyAssessmentTable.delete(item_id)
-                goalAndObjective.delete("1.0", tk.END)
-                smartIndicator.delete("1.0", tk.END)
-                sourceofData.delete("1.0", tk.END)
-                dcf.delete("1.0", tk.END)
-                uic.delete("1.0", tk.END)
-                MEoutput.delete("1.0", tk.END)
-                MEuser.delete("1.0", tk.END)
-                editButton15.config(state="disabled")
-                deleteButton15.config(state="disabled")
-            else:
-                messagebox.showwarning("Warning", "Please select an item to delete")
-
-        def undo():
-            if not undo_stack:
+            selected = policyAssessmentTable.selection()
+            if not selected:
                 return
-            action, *data = undo_stack.pop()
-            if action == "add":
-                policyAssessmentTable.delete(data[0])
-            elif action == "edit":
-                item_id, old_values = data
-                policyAssessmentTable.item(item_id, values=old_values)
-            elif action == "delete":
-                item_id, old_values = data
-                policyAssessmentTable.insert("", "end", iid=item_id, values=old_values)
+            index = policyAssessmentTable.index(selected[0])
+            policyAssessmentTable.delete(selected[0])
+            del p7policyGoalsandObjectives[index]
+            del p7indicators[index]
+            del p15dataSources[index]
+            del p15frequency[index]
+            del p15responsible[index]
+            del p15output[index]
+            del p15report[index]
+            clear_fields()
+            save()
+
+        add_btn = ttk.Button(mainProject, text="Add", command=add_data15)
+        edit_btn = ttk.Button(mainProject, text="Edit", command=edit_data15)
+        delete_btn = ttk.Button(mainProject, text="Delete", command=delete_data15)
+        add_btn.place(relx=0.4, rely=0.85, anchor="s")
+        edit_btn.place(relx=0.5, rely=0.85, anchor="s")
+        delete_btn.place(relx=0.6, rely=0.85, anchor="s")
+
+        policyAssessmentLabel.place(relx=0.01, rely=0.01)
+
+        # Table maximized inside the frame
+        policyAssessmentTable.place(relx=0.01, rely=0.10, relwidth=0.96, relheight=0.80)
+
+        # Scrollbars aligned to the table's right and bottom
+        sb_y.place(relx=0.97, rely=0.10, relheight=0.80)
+        sb_x.place(relx=0.01, rely=0.90, relwidth=0.96)
+
+        for values in zip(p7policyGoalsandObjectives, p7indicators, p15dataSources, p15frequency, p15responsible, p15output, p15report):
+            policyAssessmentTable.insert("", "end", values=values)
 
         policyAssessmentTable.bind("<<TreeviewSelect>>", show_data15)
-        mainProject.bind("<Control-z>", lambda e: undo())
-        mainProject.bind("<Control-Return>", lambda e: add_data15())
-        goalAndObjective.bind("<Tab>", lambda e: smartIndicator.focus_set())
-        smartIndicator.bind("<Tab>", lambda e: sourceofData.focus_set())
-        sourceofData.bind("<Tab>", lambda e: dcf.focus_set())
-        dcf.bind("<Tab>", lambda e: uic.focus_set())
-        uic.bind("<Tab>", lambda e: MEoutput.focus_set())
-        MEoutput.bind("<Tab>", lambda e: MEuser.focus_set())
-        MEuser.bind("<Tab>", lambda e: addButton15.focus_set())
 
         def back_14():
             global pageNumber
             pageNumber -= 1
-            for widget in mainProject.winfo_children():
-                widget.destroy()
+            for w in mainProject.winfo_children():
+                w.destroy()
+            save()
             page_14()
 
         def next_14():
             global pageNumber
-            with open("page15_data.json", "w") as f:
-                json.dump({"assessment": [policyAssessmentTable.item(i)['values'] for i in policyAssessmentTable.get_children()]}, f)
-            save()
             pageNumber += 1
-            for widget in mainProject.winfo_children():
-                widget.destroy()
-            messagebox.showinfo("Completion", "Policy analysis completed! You can start a new project or open an existing one from the File menu.")
-            new_project()  # Reset to page_1 or home page
+            for w in mainProject.winfo_children():
+                w.destroy()
+            save()
+            messagebox.showinfo("Done", "You have completed the policy planning process.")
+            mainProject.destroy()
+            save()
+            save_pdf()
+            new_project()
 
-        setup_page_common(15, "Monitoring and Evaluation Plan", frame15, widgets_to_destroy, back_14, next_14)
-        try:
-            with open("page15_data.json", "r") as f:
-                data = json.load(f)
-                for item in data.get("assessment", []):
-                    policyAssessmentTable.insert("", "end", values=item)
-        except FileNotFoundError:
-            for i, (goal, indicator) in enumerate(zip(p7policyGoalsandObjectives, p7indicators)):
-                policyAssessmentTable.insert("", 'end', values=(goal, indicator, "", "", "", "", ""))
+        btnBack14 = ttk.Button(mainProject, text="Back", command=back_14)
+        btnNext14 = ttk.Button(mainProject, text="Finish", command=next_14)
+        btnBack14.place(relx=0.4, rely=0.90, anchor="s")
+        btnNext14.place(relx=0.6, rely=0.90, anchor="s")
+
 
     # projectTitle.config(bg="white")
     # fontSize.config(bg="white")
@@ -3428,49 +4142,394 @@ def createNewProject():
     # fileobject.close()
 
 def save():
-    global pageNumber
-    
-    pdf = FPDF()   
+    global pageNumber, save_json_file_path, p1projecttitle
 
-    pdf.add_page()
-    
-    pdf.set_font(family="Arial", style='B', size=int(p1fontsize))
-    
-    pdf.cell(0, 8, txt = p1projecttitle, ln = 2, border = 0, align = 'C', fill = FALSE)
-    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
-    pdf.cell(0, 8, txt = p1analysts, ln = 2, border = 0, align = 'C', fill = FALSE)
-    pdf.cell(0, 8, txt = p1policyanalysis, ln = 2, border = 0, align = 'C', fill = FALSE)
-    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
-    pdf.cell(0, 8, txt = "\nProblematic Situation: ", ln = 2, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='', size=int(p1fontsize))
-    pdf.multi_cell(0, 10, txt = p2problematicsituation, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
-    pdf.cell(0, 8, txt = "\nUndesirable Effects: ", ln = 2, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='', size=int(p1fontsize))
-    pdf.multi_cell(0, 10, txt = p2undesirableeffects, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
-    pdf.cell(0, 8, txt = "\nRoot Cause: ", ln = 2, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='', size=int(p1fontsize))
-    pdf.multi_cell(0, 10, txt = p5rootcause, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
-    pdf.cell(0, 8, txt = "\nPolicy Problem: ", ln = 2, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='', size=int(p1fontsize))
-    pdf.multi_cell(0, 10, txt = p6policyproblem, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
-    pdf.cell(0, 8, txt = "\nPolicy Issue Statement: ", ln = 2, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='', size=int(p1fontsize))
-    pdf.multi_cell(0, 10, txt = p6policyissue, border = 0, align = 'J', fill = FALSE)
-  
-    pdf.add_page()
-    if int(pageNumber) == 5:
-        pdf.multi_cell(0, 10, txt ="Regression Analysis\n", border = 0, align = 'C', fill = FALSE)
-        pdf.multi_cell(0, 10, txt = p4summaryPDF, border = 0, align = 'C', fill = FALSE)
-        pdf.image('regplot.png', x=20, y=100, w=160)
+    if save_json_file_path is None:
+        save_json_file_path = asksaveasfilename(
+            defaultextension=".json",
+            filetypes=[("JSON FILES", "*.json")],
+            initialfile=p1projecttitle + ".json",
+            title="Save Project As"
+        )
+    if not save_json_file_path:
+        return
 
-    # save the pdf with name .pdf
-    
-    pdf.output(p1projecttitle+'.pdf', 'F')
+    # Dump data into JSON
+    data = {
+        "save_pdf_file_path": save_pdf_file_path,
+        "save_json_file_path": save_json_file_path,
+        "p1projecttitle": p1projecttitle,
+        "p1analysts": p1analysts,
+        "p1fontstyle": p1fontstyle,
+        "p1policyanalysis": p1policyanalysis,
+        "p1fontsize": p1fontsize,
+        "p2problematicsituation": p2problematicsituation,
+        "p2undesirableeffects": p2undesirableeffects,
+        "p3efforts": p3efforts,
+        "p3accomplishments": p3accomplishments,
+        "p3assessments": p3assessments,
+        "p5rootcause": p5rootcause,
+        "p5existingpolicies": p5existingpolicies,
+        "p5relevantprov": p5relevantprov,
+        "p5accomplishments": p5accomplishments,
+        "p5assessments": p5assessments,
+        "p6policyproblem": p6policyproblem,
+        "p6policyissue": p6policyissue,
+        "p7policyGoalsandObjectives": p7policyGoalsandObjectives,
+        "p7indicators": p7indicators,
+        "p8stakeholders": p8stakeholders,
+        "p8actors": p8actors,
+        "p9altnum": p9altnum,
+        "p9alternatives": p9alternatives,
+        "p10spillovers": p10spillovers,
+        "p10externalities": p10externalities,
+        "p10constraints": p10constraints,
+        "p10mitimeasures": p10mitimeasures,
+        "p11BPAdescription": p11BPAdescription,
+        "p11BPAreasonSelect": p11BPAreasonSelect,
+        "p12BPAspillover": p12BPAspillover,
+        "p12BPAexternality": p12BPAexternality,
+        "p12BPAconstraint": p12BPAconstraint,
+        "p12BPAmitigatingmeasure": p12BPAmitigatingmeasure,
+        "p13BPAwhat": p13BPAwhat,
+        "p13BPAwho": p13BPAwho,
+        "p13BPAhow": p13BPAhow,
+        "p14criticalActions": p14criticalActions,
+        "p14responsible": p14responsible,
+        "p14timeline": p14timeline,
+        "p14budget": p14budget,
+        "p14budgetsource": p14budgetsource,
+        "p15dataSources": p15dataSources,
+        "p15frequency": p15frequency,
+        "p15responsible": p15responsible,
+        "p15output": p15output,
+        "p15report": p15report
+    }
 
+    with open(save_json_file_path, 'w') as json_file:
+        json.dump(data, json_file, indent=4)
+
+
+    
+def save_pdf():
+    # Generate the PDF
+
+    global save_pdf_file_path, p1projecttitle, p1fontstyle, p1fontsize, p1policyanalysis, p1analysts, p2problematicsituation, p2undesirableeffects, p3efforts, p3accomplishments, p3assessments, p5accomplishments, p5assessments, p5existingpolicies, p5relevantprov, p6policyproblem, p6policyissue, p7policyGoalsandObjectives, p7indicators, p8stakeholders, p8actors, p9altnum, p9alternatives, p10spillovers, p10externalities, p10constraints, p10mitimeasures, p11BPAdescription, p11BPAreasonSelect, p12BPAspillover, p12BPAexternality, p12BPAconstraint, p12BPAmitigatingmeasure, p13BPAwhat, p13BPAwho, p13BPAhow, p14budget, p14budgetsource, p14criticalActions, p14responsible, p14timeline, p15dataSources, p15frequency, p15responsible, p15output, p15report
+
+
+    if save_pdf_file_path is None:
+        save_pdf_file_path = asksaveasfilename(
+            defaultextension=".pdf",
+            filetypes=[("PDF files", "*.pdf")],
+            initialfile=p1projecttitle + ".pdf",
+            title="Save PDF As"
+        )
+
+    if not save_pdf_file_path:
+        return
+
+    # Define page dimensions (A4 by default, landscape)
+    PAGE_WIDTH, PAGE_HEIGHT = A4
+    PAGE_WIDTH, PAGE_HEIGHT = PAGE_HEIGHT, PAGE_WIDTH  # Landscape orientation
+
+    # Assume these variables are defined as in the original code
+    # p1fontstyle, p1fontsize, p1projecttitle, p1policyanalysis, p1analysts, save_pdf_file_path, etc.
+
+    try:
+        pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf'))
+        pdfmetrics.registerFont(TTFont('Arial-Bold', 'arialbd.ttf'))
+        pdfmetrics.registerFont(TTFont('Arial-Italic', 'ariali.ttf'))
+        pdfmetrics.registerFont(TTFont('Arial-BoldItalic', 'arialbi.ttf'))
+        pdfmetrics.registerFontFamily('Arial',
+                                      normal='Arial',
+                                      bold='Arial-Bold',
+                                      italic='Arial-Italic',
+                                      boldItalic='Arial-BoldItalic')
+    except Exception as e:
+        print(f"Error registering Arial font: {e}. Please ensure 'arial.ttf', 'arialbd.ttf', 'ariali.ttf', and 'arialbi.ttf' are accessible.")
+        # Fallback to Helvetica if Arial registration fails
+        p1fontstyle = 'Helvetica'
+
+    # Create PDF
+    pdf = SimpleDocTemplate(
+        save_pdf_file_path,
+        pagesize=(PAGE_WIDTH, PAGE_HEIGHT),
+        leftMargin=10*mm,
+        rightMargin=10*mm,
+        topMargin=15*mm,
+        bottomMargin=15*mm
+    )
+
+    # Define styles
+    title_style = ParagraphStyle(
+        name='Title',
+        fontName=p1fontstyle if p1fontstyle in ['Arial', 'Helvetica', 'Times'] else 'Helvetica',
+        fontSize=int(p1fontsize) + 2,
+        leading=int(p1fontsize) + 4,
+        alignment=TA_LEFT
+    )
+    bold_style = ParagraphStyle(
+        name='Bold',
+        fontName=p1fontstyle if p1fontstyle in ['Arial', 'Helvetica', 'Times'] else 'Helvetica',
+        fontSize=int(p1fontsize),
+        leading=int(p1fontsize) + 2,
+        alignment=TA_LEFT
+    )
+    normal_style = ParagraphStyle(
+        name='Normal',
+        fontName=p1fontstyle if p1fontstyle in ['Arial', 'Helvetica', 'Times'] else 'Helvetica',
+        fontSize=int(p1fontsize),
+        leading=int(p1fontsize) + 2,
+        alignment=TA_LEFT,
+        leftIndent=10
+    )
+    table_header_style = ParagraphStyle(
+        name='TableHeader',
+        fontName=p1fontstyle if p1fontstyle in ['Arial', 'Helvetica', 'Times'] else 'Helvetica',
+        fontSize=int(p1fontsize),
+        leading=int(p1fontsize) + 2,
+        alignment=TA_CENTER
+    )
+    table_cell_style = ParagraphStyle(
+        name='TableCell',
+        fontName=p1fontstyle if p1fontstyle in ['Arial', 'Helvetica', 'Times'] else 'Helvetica',
+        fontSize=int(p1fontsize) - 1,
+        leading=int(p1fontsize) + 1,
+        alignment=TA_LEFT
+    )
+
+    # Elements to build the PDF
+    elements = []
+
+    # Helper function to create tables
+    def create_table(page_title, column_data, col_widths=None):
+        elements.append(Paragraph(page_title, title_style))
+        elements.append(Spacer(1, 5*mm))
+
+        # Prepare table data
+        columns = list(column_data.keys())
+        max_rows = max(len(column_data[col]) for col in columns)
+        table_data = [[Paragraph(col, table_header_style) for col in columns]]
+
+        # Add rows
+        for i in range(max_rows):
+            row = [
+                Paragraph(str(column_data[col][i]) if i < len(column_data[col]) else "", table_cell_style)
+                for col in columns
+            ]
+            table_data.append(row)
+
+        # Calculate column widths if not provided
+        if col_widths is None:
+            col_widths = [(PAGE_WIDTH - 20*mm) / len(columns)] * len(columns)
+
+        # Create table
+        table = Table(table_data, colWidths=col_widths)
+        table.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        elements.append(table)
+        elements.append(Spacer(1, 5*mm))
+
+    # Helper function to add section
+    def add_section(page_title, content_dict):
+        elements.append(Paragraph(page_title, title_style))
+        elements.append(Spacer(1, 4*mm))
+
+        for label, value in content_dict.items():
+            if not value:
+                continue
+            elements.append(Paragraph(label, bold_style))
+            if isinstance(value, list):
+                for item in value:
+                    elements.append(Paragraph(f"    {item}", normal_style))
+            else:
+                elements.append(Paragraph(f"    {value}", normal_style))
+            elements.append(Spacer(1, 2*mm))
+
+    # Page 1: Cover page
+    estimated_content_height = (int(p1fontsize) + 4) * 3 # Roughly 3 lines with their leading
+
+    # Calculate vertical spacing to push content to the center
+    # PAGE_HEIGHT is used for vertical positioning
+    vertical_spacer_height = (PAGE_WIDTH - estimated_content_height) / 4
+
+    elements.append(Spacer(1, vertical_spacer_height))
+
+    # All paragraph styles for the cover page should have TA_CENTER alignment
+    cover_title_style = ParagraphStyle('CoverTitle', parent=title_style, alignment=TA_CENTER)
+    cover_subtitle_style = ParagraphStyle('CoverSubtitle', parent=title_style, alignment=TA_CENTER)
+    cover_normal_style = ParagraphStyle('CoverNormal', parent=normal_style, alignment=TA_CENTER)
+
+    elements.append(Paragraph("Policy Analysis", cover_title_style))
+    elements.append(Paragraph(p1policyanalysis, cover_subtitle_style))
+    elements.append(Paragraph(p1analysts, cover_normal_style))
+
+
+    elements.append(PageBreak())
+
+    # Page 2
+    add_section("Problematic Situation and Its Undesirable Effects", {
+        "Problematic Situation": p2problematicsituation,
+        "Undesirable Effects": p2undesirableeffects
+    })
+    elements.append(PageBreak())
+
+    # Page 3
+    create_table("Current Efforts", {
+        "Current Efforts": p3efforts,
+        "Accomplishments": p3accomplishments,
+        "Assessments": p3assessments
+    })
+    elements.append(PageBreak())
+
+    global analysis_type, p4summaryPDF, reg_sum
+    # Page 4
+    elements.append(Paragraph("Statistical Analysis", title_style))
+    elements.append(Paragraph(f"Selected Statistical Method: {analysis_type}", bold_style))
+    elements.append(Spacer(1, 0.2 * inch))
+
+    if reg_sum.strip():
+        elements.append(Preformatted(reg_sum, normal_style))
+        elements.append(Spacer(1, 12))
+
+    # Path to your saved image file
+    image_path = "page4_plot.png"
+
+    try:
+        # Create an Image object
+        # You might need to adjust width and height or use 'scale'
+        # For example, to fit it within certain dimensions while maintaining aspect ratio:
+        # img = Image(image_path, width=4*inch, height=3*inch, kind='proportional')
+        # Or specify a fixed width/height and let ReportLab scale proportionally
+        img = RLImage(image_path)
+        if analysis_type == "Problem Tree Analysis":
+            img.drawWidth = 4 * inch
+        else:
+            img.drawWidth = 5.5*inch # Set desired width
+
+        elements.append(img)
+        elements.append(Spacer(1, 0.2 * inch)) # Add some space after the image
+
+    except Exception as e:
+        print(f"Error inserting image: {e}")
+        # Optionally, add a placeholder text if image insertion fails
+        elements.append(Paragraph("Image could not be loaded.", normal_style))
+    
+    elements.append(PageBreak())
+
+
+    # Page 5
+    elements.append(Paragraph("Root Cause and Existing Policies", title_style))
+    elements.append(Spacer(1, 5*mm))
+    elements.append(Paragraph("Root Cause", bold_style))
+    elements.append(Paragraph(f"    {p5rootcause}", normal_style))
+    elements.append(Spacer(1, 5*mm))
+    # Table
+    col_labels = ["Existing Policies", "Relevant Provisions", "Ac-com-plish-ments", "Assessments"]
+    col_data = [p5existingpolicies, p5relevantprov, p5accomplishments, p5assessments]
+    create_table("", {label: data for label, data in zip(col_labels, col_data)})
+    elements.append(PageBreak())
+
+    # Page 6
+    add_section("Policy Problem and Issue Statement", {
+        "Policy Problem": p6policyproblem,
+        "Policy Issue Statement": p6policyissue
+    })
+    elements.append(PageBreak())
+
+    # Page 7
+    create_table("Goals and Objectives of the Proposal", {
+        "Policy Goals and Objectives": p7policyGoalsandObjectives,
+        "Indicators": p7indicators
+    })
+    elements.append(PageBreak())
+
+    # Page 8
+    create_table("Stakeholders and Actors", {
+        "Stakeholders": p8stakeholders,
+        "Actors": p8actors
+    })
+    elements.append(PageBreak())
+
+    # Page 9
+    create_table("Policy Alternatives", {
+        "Alternative Number": p9altnum,
+        "Alternatives": p9alternatives
+    })
+    elements.append(PageBreak())
+
+    # Page 10
+    elements.append(Paragraph("Assessment of Policy Alternatives", title_style))
+    elements.append(Spacer(1, 5*mm))
+    headers = ["Alternative", "Spillover", "Externalities", "Constraints", "Mitigating Measures"]
+    columns = [p9alternatives, p10spillovers, p10externalities, p10constraints, p10mitimeasures]
+    col_widths = [(PAGE_WIDTH - 20*mm) * w for w in [0.20, 0.20, 0.20, 0.20, 0.20]]
+    create_table("", {header: col for header, col in zip(headers, columns)}, col_widths=col_widths)
+    elements.append(PageBreak())
+
+    # Page 11
+    add_section("Best/Optimal Policy Alternative", {
+        "Description": p11BPAdescription,
+        "Reasons for Selection": p11BPAreasonSelect
+    })
+    elements.append(PageBreak())
+
+    # Page 12
+    add_section("Details of the Best/Optimal Policy Alternative", {
+        "Spillover": p12BPAspillover,
+        "Externality": p12BPAexternality,
+        "Constraint": p12BPAconstraint,
+        "Mitigating Measures": p12BPAmitigatingmeasure
+    })
+    elements.append(PageBreak())
+
+    # Page 13
+    add_section("Implementation Requirements", {
+        "What type of legislation is needed? Why?": p13BPAwhat,
+        "Who will implement? Why?": p13BPAwho,
+        "Implementation Cost and Source": p13BPAhow
+    })
+    elements.append(PageBreak())
+
+    # Page 14
+    create_table("Policy Implementation Plan", {
+        "Critical Actions": p14criticalActions,
+        "Responsible/Accountable Units": p14responsible,
+        "Timeframes": p14timeline,
+        "Budgets": p14budget,
+        "Budget Sources": p14budgetsource
+    })
+    elements.append(PageBreak())
+
+    # Page 15
+    elements.append(Paragraph("Monitoring and Evaluation Plan", title_style))
+    elements.append(Spacer(1, 4*mm))
+    headers = [
+        "Goals and Objectives", "SMART Indicator", "Data Source", "Frequency",
+        "Units-In-Charge", "M&E Output", "M&E Report Users"
+    ]
+    columns = [
+        p7policyGoalsandObjectives, p7indicators, p15dataSources,
+        p15frequency, p15responsible, p15output, p15report
+    ]
+    col_widths = [(PAGE_WIDTH - 20*mm) / len(headers)] * len(headers)
+    create_table("", {header: col for header, col in zip(headers, columns)}, col_widths=col_widths)
+
+    # Build PDF
+    pdf.build(elements)
+
+def print_file():
+    pdffilename = save_pdf_file_path
+    print(pdffilename)
+    os.startfile(pdffilename, 'print')
+    
 def print_file():
 
     pdffilename = p1projecttitle+".pdf"
@@ -3490,10 +4549,12 @@ menubar = Menu(root)
 
 file1 = Menu(menubar, tearoff = 0) 
 menubar.add_cascade(label ='File', menu = file1) 
-file1.add_command(label ='Create New', command = lambda: createNewProject())
+file1.add_command(label ='Create New', command = lambda: new_project())
+file1.add_command(label ='Open Project', command = lambda: open_project())
 file1.add_command(label ='Save', command = lambda: save()) 
 file1.add_command(label ='Print', command = lambda: print_file()) 
 file1.add_separator() 
+file1.add_command(label ='Help', command = lambda: help_page()) 
 file1.add_command(label ='Exit', command = lambda: quit())
 
 root.config(menu=menubar)

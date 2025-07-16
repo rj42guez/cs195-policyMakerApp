@@ -10,7 +10,7 @@ import textwrap
 import json
 
 import PIL
-from PIL import Image, ImageTk, ImageDraw
+from PIL import Image, ImageTk, ImageGrab
 
 import fpdf
 from fpdf import FPDF
@@ -33,9 +33,10 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 
 global size, var, pageNumber
 size = 10
-global save_pdf_file_path, save_json_file_path
+global save_pdf_file_path, save_json_file_path, tree_file_path
 save_pdf_file_path = None
 save_json_file_path = None
+tree_file_path = None
 
 root = Tk()
 root.title("Policy Analytics 1.0")
@@ -194,6 +195,7 @@ p15frequency = []
 p15responsible = []
 p15output = []
 p15report = []
+
 
 
 # Menu setup
@@ -387,6 +389,9 @@ def help_page():
     - Save data automatically when navigating with 'Next'.
 
     Page Descriptions:
+    - Page 1: Set-up document (Project Title, Analysts, Font Style, Font Size, Levels of Analysis).
+    - Page 2: Describe the Problematic Situation and Its Undesirable Effects.
+    - Page 3: List Current Efforts, Accomplishments, and Assessments.
     - Page 4: Select statistical methods (Linear/Multiple/Logistic Regression, Problem Tree Analysis).
     - Page 5: Enter root cause and assess existing policies.
     - Page 6: Define policy problem and issue statement.
@@ -547,7 +552,11 @@ def createNewProject():
         pageNumber += 1
         print(pageNumber)
         mainProject.title("Create New Project")
-        mainProject.geometry("660x210")
+        mainProject.geometry("660x225")
+
+        # Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 1 of 15: Set-up document", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
 
         frame1 = tk.LabelFrame(mainProject)
 
@@ -684,8 +693,12 @@ def createNewProject():
         status = Label(mainProject, text="")
         status.place(x=10, y=170)
 
-        mainProject.geometry("660x210")
+        mainProject.geometry("660x220")
+
+        ### Progress indicator
         frame2 = tk.LabelFrame(mainProject)
+        progress_label = tk.Label(mainProject, text="Page 2 of 15: Problematic Situation and Its Undesirable Effects.", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
 
         status.config(text="")
 
@@ -750,11 +763,14 @@ def createNewProject():
     
  
     def page_3():
+
+
         global p3efforts, p3accomplishments, p3assessments
         mainProject.geometry("1250x700")
         style = ttk.Style()
         style.configure('Treeview', rowheight=160)
         style.configure("TButton", foreground="black", font=("Arial", 10))  # Set button text to black
+
 
         # Undo stack
         undo_stack = []
@@ -790,9 +806,7 @@ def createNewProject():
         zoom_in_button.place(x=10, y=10)
         zoom_out_button.place(x=100, y=10)
 
-        # Progress indicator
-        progress_label = tk.Label(mainProject, text="Page 3 of 15: Current Efforts", font=("Arial", 12, "bold"))
-        progress_label.place(x=10, y=50)
+
 
         # Treeview with scrollbars
         currEffLabel = tk.Label(frame3, text="Current Efforts/Measures of the Government to Solve the Situational Problem")
@@ -951,6 +965,11 @@ def createNewProject():
         accomplishment.bind("<Tab>", lambda event: assessment.focus_set())
         assessment.bind("<Tab>", lambda event: addButton.focus_set())
 
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 3 of 15: Current Efforts", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
+
+
         def back_2():
             global pageNumber
             pageNumber -= 1
@@ -967,8 +986,10 @@ def createNewProject():
             page_4()
 
     def page_4():
-        mainProject.geometry("660x210")
-
+        mainProject.geometry("660x250")
+        # Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 4 of 15: Select Statistical Methods", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
         frame4 = tk.LabelFrame(mainProject)
 
         global var
@@ -1044,6 +1065,7 @@ def createNewProject():
                 plt.xlabel(column_names[0])
                 plt.ylabel(column_names[1])
                 plt.show()
+                page_5()
 
             elif(int(var.get()) == 2):
                 analysis = Toplevel(main)
@@ -1123,6 +1145,7 @@ def createNewProject():
 
                 plt.savefig('regplot.png')
                 plt.show()
+                page_5()
 
                 # l = tk.Label(frame, text="Hello", font="-size 50")
                 # l.pack()
@@ -1208,7 +1231,6 @@ def createNewProject():
                 analysis.after(10, lambda: analysis.attributes("-topmost", 0))
 
                 class ShapeEditorApp:
-
                     def __init__(self, root):
                         global textValue
                         textValue = StringVar()
@@ -1217,39 +1239,65 @@ def createNewProject():
                         self.root = root
                         self.root.title("Problem Tree Analysis")
 
-                        # Create Canvas widget
-                        self.canvas = tk.Canvas(analysis, bg="white")
-                        self.canvas.pack(fill=tk.BOTH, expand=True)
+                        # Create Canvas widget with scrollbars
+                        self.canvas_frame = tk.Frame(root)
+                        self.canvas_frame.pack(fill=tk.BOTH, expand=True)
+                        
+                        self.scroll_x = tk.Scrollbar(self.canvas_frame, orient=tk.HORIZONTAL)
+                        self.scroll_y = tk.Scrollbar(self.canvas_frame, orient=tk.VERTICAL)
+                        self.canvas = tk.Canvas(self.canvas_frame, bg="white", 
+                                            xscrollcommand=self.scroll_x.set, 
+                                            yscrollcommand=self.scroll_y.set)
+                        self.scroll_x.config(command=self.canvas.xview)
+                        self.scroll_y.config(command=self.canvas.yview)
+                        self.scroll_x.pack(side=tk.BOTTOM, fill=tk.X)
+                        self.scroll_y.pack(side=tk.RIGHT, fill=tk.Y)
+                        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-                        # Initialize shape variables
+                        # Initialize variables
                         self.current_shape = None
                         self.start_x = None
                         self.start_y = None
                         self.current_shape_item = None
-                        
                         self.pen_active = False
                         self.eraser_active = False
+                        self.color = "black"
+                        self.undo_stack = []
+                        self.redo_stack = []
+                        self.zoom_level = 1.0
+                        self.max_undo = 50  # Limit to prevent excessive memory use
 
                         # Create buttons
                         self.color_button = tk.Button(root, text="Color", command=self.choose_color)
-                        self.pen_button = Button(root, text='Pen', command=self.use_pen)
+                        self.pen_button = tk.Button(root, text='Pen', command=self.use_pen)
                         self.eraser_button = tk.Button(root, text="Eraser", command=self.use_eraser)
                         self.rect_button = tk.Button(root, text="Rectangle", command=self.create_rectangle)
                         self.circle_button = tk.Button(root, text="Arrow", command=self.create_arrow)
                         self.clear_button = tk.Button(root, text="Clear", command=self.clear_canvas)
-                        self.text_frame = Frame(root, height=100, width=200, relief=SUNKEN, borderwidth=3)
-                        self.text_entry = Entry(self.text_frame, textvariable=textValue, bg="white" , width=20)
+                        self.undo_button = tk.Button(root, text="Undo", command=self.undo)
+                        self.redo_button = tk.Button(root, text="Redo", command=self.redo)
+                        self.zoom_in_button = tk.Button(root, text="Zoom In", command=self.zoom_in)
+                        self.zoom_out_button = tk.Button(root, text="Zoom Out", command=self.zoom_out)
+                        self.save_button = tk.Button(root, text="Save", command=self.save_canvas)
+                        self.text_frame = tk.Frame(root, height=100, width=200, relief=tk.SUNKEN, borderwidth=3)
+                        self.text_entry = tk.Entry(self.text_frame, textvariable=textValue, bg="white", width=20)
                         self.text_note = tk.Label(root, text="* Right click on canvas to paste text", font=italic_font, fg="gray")
+                        
+                        # Pack buttons
                         self.pen_button.pack(side=tk.LEFT)
                         self.eraser_button.pack(side=tk.LEFT)
                         self.clear_button.pack(side=tk.LEFT)
                         self.color_button.pack(side=tk.LEFT)
                         self.rect_button.pack(side=tk.LEFT)
                         self.circle_button.pack(side=tk.LEFT)
+                        self.undo_button.pack(side=tk.LEFT)
+                        self.redo_button.pack(side=tk.LEFT)
+                        self.zoom_in_button.pack(side=tk.LEFT)
+                        self.zoom_out_button.pack(side=tk.LEFT)
+                        self.save_button.pack(side=tk.LEFT)
                         self.text_frame.pack(side=tk.LEFT)                         
                         self.text_entry.pack(side=tk.LEFT)
                         self.text_note.pack(side=tk.LEFT)
-                        
 
                         # Bind mouse events
                         self.canvas.bind("<Button-1>", self.start_draw)
@@ -1257,10 +1305,17 @@ def createNewProject():
                         self.canvas.bind("<ButtonRelease-1>", self.stop_draw)
                         self.canvas.bind("<Button-2>", self.add_text)
                         self.canvas.bind("<Button-3>", self.add_text)
+                        self.canvas.bind("<MouseWheel>", self.zoom)
+
+                        # Initial scroll region
+                        self.canvas.config(scrollregion=(0, 0, 1000, 1000))  # Large initial region
 
                     def add_text(self, event):
-                        self.canvas.create_text(event.x, event.y, text=textValue.get())
-                    
+                        item = self.canvas.create_text(event.x, event.y, text=textValue.get() or "", fill=self.color)
+                        self.save_state()
+                        self.redo_stack.clear()
+                        print(f"Added text, undo_stack size: {len(self.undo_stack)}")
+
                     def use_pen(self):
                         self.pen_active = True
                         self.eraser_active = False
@@ -1272,8 +1327,9 @@ def createNewProject():
                         self.current_shape = None
 
                     def choose_color(self):
-                        global color 
-                        color = colorchooser.askcolor(title="Choose color")
+                        color_tuple = colorchooser.askcolor(title="Choose color")
+                        if color_tuple[1]:
+                            self.color = color_tuple[1]
 
                     def create_rectangle(self):
                         self.pen_active = False
@@ -1288,38 +1344,147 @@ def createNewProject():
                     def start_draw(self, event):
                         self.start_x = event.x
                         self.start_y = event.y
-                        if self.pen_active:
-                            # Just store the starting point; nothing to draw yet
+                        if self.pen_active or self.eraser_active:
                             return
                         if self.current_shape == "rectangle":
                             self.current_shape_item = self.canvas.create_rectangle(
-                                self.start_x, self.start_y, self.start_x, self.start_y, outline=color[1]
+                                self.start_x, self.start_y, self.start_x, self.start_y, outline=self.color
                             )
                         elif self.current_shape == "arrow":
                             self.current_shape_item = self.canvas.create_line(
-                                self.start_x, self.start_y, self.start_x, self.start_y, fill=color[1], arrow="last", width=5
+                                self.start_x, self.start_y, self.start_x, self.start_y, fill=self.color, arrow="last", width=5
                             )
 
                     def draw_shape(self, event):
-                        if self.pen_active:
-                            self.canvas.create_line(self.start_x, self.start_y, event.x, event.y, fill=color[1])
-                            self.start_x, self.start_y = event.x, event.y
-                        elif self.eraser_active:
-                            self.canvas.create_line(self.start_x, self.start_y, event.x, event.y, fill="white", width=10)
+                        if self.pen_active or self.eraser_active:
+                            item = self.canvas.create_line(self.start_x, self.start_y, event.x, event.y, 
+                                                        fill=self.color if self.pen_active else "white", 
+                                                        width=2 if self.pen_active else 10)
+                            self.save_state_for_stroke(item)  # Save state for each stroke
+                            self.redo_stack.clear()
                             self.start_x, self.start_y = event.x, event.y
                         elif self.current_shape_item:
                             x, y = event.x, event.y
                             self.canvas.coords(self.current_shape_item, self.start_x, self.start_y, x, y)
 
                     def stop_draw(self, event):
+                        if self.current_shape_item or self.pen_active or self.eraser_active:
+                            self.save_state()  # Save final state for non-pen/eraser actions
+                            self.redo_stack.clear()
+                            print(f"Stopped draw, undo_stack size: {len(self.undo_stack)}")
                         self.current_shape_item = None
+                        self.pen_active = False
+                        self.eraser_active = False
 
                     def clear_canvas(self):
+                        self.save_state()
                         self.canvas.delete("all")
+                        self.redo_stack.clear()
+                        self.update_scroll_region()
+                        print(f"Cleared canvas, undo_stack size: {len(self.undo_stack)}")
+
+                    def save_state(self):
+                        items = []
+                        for item in self.canvas.find_all():
+                            item_type = self.canvas.type(item)
+                            coords = self.canvas.coords(item)
+                            config = {k: v[-1] for k, v in self.canvas.itemconfig(item).items() if k in ["fill", "outline", "text", "width", "arrow"]}
+                            if item_type == "line":
+                                items.append(("line", coords, {"fill": config.get("fill", "black"), "width": config.get("width", 2), "arrow": config.get("arrow", "none")}))
+                            elif item_type == "rectangle":
+                                items.append(("rectangle", coords, {"outline": config.get("outline", "black")}))
+                            elif item_type == "text":
+                                items.append(("text", coords, {"text": config.get("text", ""), "fill": config.get("fill", "black")}))
+                        if items:
+                            if len(self.undo_stack) >= self.max_undo:
+                                self.undo_stack.pop(0)  # Remove oldest state if limit reached
+                            self.undo_stack.append(items)
+                        self.update_scroll_region()
+
+                    def save_state_for_stroke(self, item):
+                        item_type = self.canvas.type(item)
+                        coords = self.canvas.coords(item)
+                        config = {k: v[-1] for k, v in self.canvas.itemconfig(item).items() if k in ["fill", "width"]}
+                        if item_type == "line" and len(self.undo_stack) < self.max_undo:
+                            self.undo_stack.append([("line", coords, {"fill": config.get("fill", "black"), "width": config.get("width", 2)})])
+                        self.update_scroll_region()
+
+                    def undo(self):
+                        if self.undo_stack:
+                            state = self.undo_stack.pop()
+                            self.redo_stack.append([(self.canvas.type(item), self.canvas.coords(item), {k: v[-1] for k, v in self.canvas.itemconfig(item).items() if k in ["fill", "outline", "text", "width", "arrow"]}) for item in self.canvas.find_all()])
+                            self.canvas.delete("all")
+                            for item_type, coords, config in state:
+                                if item_type == "line":
+                                    self.canvas.create_line(*coords, fill=config["fill"], width=config.get("width", 2), arrow=config.get("arrow", "none"))
+                                elif item_type == "rectangle":
+                                    self.canvas.create_rectangle(*coords, outline=config["outline"])
+                                elif item_type == "text":
+                                    self.canvas.create_text(coords[0], coords[1], text=config["text"], fill=config["fill"])
+                            self.update_scroll_region()
+                            print(f"Undo performed, undo_stack size: {len(self.undo_stack)}, redo_stack size: {len(self.redo_stack)}")
+
+                    def redo(self):
+                        if self.redo_stack:
+                            state = self.redo_stack.pop()
+                            self.undo_stack.append([(self.canvas.type(item), self.canvas.coords(item), {k: v[-1] for k, v in self.canvas.itemconfig(item).items() if k in ["fill", "outline", "text", "width", "arrow"]}) for item in self.canvas.find_all()])
+                            self.canvas.delete("all")
+                            for item_type, coords, config in state:
+                                if item_type == "line":
+                                    self.canvas.create_line(*coords, fill=config["fill"], width=config.get("width", 2), arrow=config.get("arrow", "none"))
+                                elif item_type == "rectangle":
+                                    self.canvas.create_rectangle(*coords, outline=config["outline"])
+                                elif item_type == "text":
+                                    self.canvas.create_text(coords[0], coords[1], text=config["text"], fill=config["fill"])
+                            self.update_scroll_region()
+                            print(f"Redo performed, undo_stack size: {len(self.undo_stack)}, redo_stack size: {len(self.redo_stack)}")
+
+                    def zoom_in(self):
+                        self.zoom_level *= 1.2
+                        self.canvas.scale("all", self.canvas.canvasx(0), self.canvas.canvasy(0), 1.2, 1.2)
+                        self.update_scroll_region()
+
+                    def zoom_out(self):
+                        self.zoom_level /= 1.2
+                        if self.zoom_level > 0.1:
+                            self.canvas.scale("all", self.canvas.canvasx(0), self.canvas.canvasy(0), 1/1.2, 1/1.2)
+                            self.update_scroll_region()
+
+                    def zoom(self, event):
+                        if event.delta > 0:
+                            self.zoom_in()
+                        else:
+                            self.zoom_out()
+
+                    def save_canvas(self):
+                        global tree_file_path
+                        # Get the canvas coordinates on screen
+                        self.canvas.update()  # Make sure the canvas is up-to-date
+                        x = self.canvas.winfo_rootx()
+                        y = self.canvas.winfo_rooty()
+                        x1 = x + self.canvas.winfo_width()
+                        y1 = y + self.canvas.winfo_height()
+                    
+                        # Grab the canvas area from the screen
+                        image = ImageGrab.grab(bbox=(x, y, x1, y1))
+                    
+                        # Ask for file path to save
+                        tree_file_pathfile_path = tk.filedialog.asksaveasfilename(defaultextension=".png",
+                                                 filetypes=[("PNG files", "*.png"), ("All files", "*.*")])
+                        if tree_file_pathfile_path:
+                            image.save(tree_file_pathfile_path)
+                            messagebox.showinfo("Saved", f"Canvas saved as {os.path.basename(tree_file_pathfile_path)}")
+
+                    def update_scroll_region(self):
+                        region = self.canvas.bbox("all")
+                        if region:
+                            self.canvas.config(scrollregion=region)
+                        else:
+                            self.canvas.config(scrollregion=(0, 0, 1000, 1000))
 
                 app = ShapeEditorApp(analysis)
-        
-        
+                page_5()
+
         def back_3():
             global pageNumber
             pageNumber -= 1
@@ -1336,10 +1501,10 @@ def createNewProject():
             print(pageNumber)
             frame4.destroy()
             frame4.forget()
+            progress_label.destroy()
             btnBack3.destroy()
             btnNext3.destroy() 
             analyses()
-            page_5()
 
 
         btnBack3 = Button(mainProject, text = "Back", width=10, command = lambda: back_3())
@@ -1352,6 +1517,10 @@ def createNewProject():
 
         mainProject.state('zoomed')
         style.configure('Treeview', rowheight=320)
+
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 5 of 15: Root Cause", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
 
         frame5 = tk.LabelFrame(mainProject)
 
@@ -1563,14 +1732,18 @@ def createNewProject():
         btnNext4.place(x=790, y=750)
         status.place(x=10, y=700)
 
-
-
     def page_6():                                               # write problematic situation and undesirable effects
+
         global p6policyproblem, p6policyissue
 
         mainProject.state('normal')
+        mainProject.geometry("660x220")
 
         style.configure('Treeview', rowheight=320)
+
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 6 of 15: Policy Problem and Issue Statement", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
 
         frame6 = tk.LabelFrame(mainProject)
 
@@ -1632,9 +1805,6 @@ def createNewProject():
         btnNext5.place(x=400, y=170)
 
 
-        #setup_page_common(6, "Policy Problem and Issue", frame6, widgets_to_destroy, back_5, next_5)
-
-
     def page_7():
         global p7policyGoalsandObjectives, p7indicators
 
@@ -1684,9 +1854,9 @@ def createNewProject():
         pgo.place(relx=0.05, rely=0.6)
         indi_label.place(relx=0.55, rely=0.55)
         indi.place(relx=0.45, rely=0.6)
-        add_button.place(relx=0.35, rely=0.8, anchor="center")
-        edit_button.place(relx=0.5, rely=0.8, anchor="center")
-        delete_button.place(relx=0.65, rely=0.8, anchor="center")
+        add_button.place(relx=0.35, rely=0.75, anchor="s")
+        edit_button.place(relx=0.5, rely=0.75, anchor="s")
+        delete_button.place(relx=0.65, rely=0.75, anchor="s")
 
         # Populate table
         if len(p7policyGoalsandObjectives) == len(p7indicators):
@@ -1798,16 +1968,26 @@ def createNewProject():
 
         btnBack6 = Button(mainProject, text="Back", width=10, command=back_6)
         btnNext6 = Button(mainProject, text="Next", width=10, command=next_6)
-        btnBack6.place(relx=0.35, rely=0.95, anchor="center")
-        btnNext6.place(relx=0.65, rely=0.95, anchor="center")
+        btnBack6.place(relx=0.35, rely=0.85, anchor="s")
+        btnNext6.place(relx=0.65, rely=0.85, anchor="s")
+
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 7 of 15: Goals and Objectives of the Proposal", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
 
 
     def page_8():
+
         global p8stakeholders, p8actors
         mainProject.state('normal') 
-        mainProject.geometry("800x800")
+        mainProject.geometry("800x700")
         frame8 = tk.LabelFrame(mainProject, text="Stakeholders and Actors", font=("Arial", 12, "bold"))
         undo_stack = []
+
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 8 of 15: Stakeholders and Actors", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
+
 
         style.configure("TButton", font=("Arial", 10))
 
@@ -1853,8 +2033,8 @@ def createNewProject():
         add_button.place(x=250, y=550)
         edit_button.place(x=370, y=550)
         delete_button.place(x=490, y=550)
-        btnBack8.place(x=250, y=700)
-        btnNext8.place(x=490, y=700)
+        btnBack8.place(x=250, y=600)
+        btnNext8.place(x=490, y=600)
 
         # Table selection
         def show_data4(a):
@@ -1961,11 +2141,14 @@ def createNewProject():
         stakeholders.bind("<Tab>", lambda e: actors.focus_set())
         actors.bind("<Tab>", lambda e: add_button.focus_set())
 
-
-    def page_9():           
+    def page_9():   
         global p9alternatives, p9altnum
         mainProject.state('normal') 
         mainProject.geometry("870x545")
+
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 9 of 15: Assessment of the Policy Alternatives", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw") 
 
         style.configure('Treeview', rowheight=15)
 
@@ -2086,7 +2269,7 @@ def createNewProject():
 
         assessAlterTable.grid(row=1, rowspan=7, column=0, columnspan=2)
 
-        polAltNoLabel.place(x=1, y=300)
+        polAltNoLabel.place(x=135, y=300)
         policyAlternativeNo.place(x=135, y=330)
         polAltLabel.place(x=520, y=300)
         policyAlternatives.place(x=420, y=330)
@@ -3018,11 +3201,16 @@ def createNewProject():
         btnBack8.place(x=265, y=440)      
 
     def page_10():
+
         global p10spillovers, p10externalities, p10constraints, p10mitimeasures
         mainProject.state('zoomed') 
         frame10 = tk.LabelFrame(mainProject)
         widgets_to_destroy = [frame10]
         undo_stack = []
+
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 10 of 15: Assessments of the Policy Alternatives: Spillovers, Externalities, and Constraints", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
 
         frame10.place(relx=0.01, rely=0.02, relwidth=0.98, relheight=0.55)
 
@@ -3197,30 +3385,44 @@ def createNewProject():
 
         def next_9():
             global pageNumber, p10spillovers, p10externalities, p10constraints, p10mitimeasures
-            if assessPATable.get_children():
-                first_row = assessPATable.item(assessPATable.get_children()[0])['values']
-                p10spillovers = first_row[1]
-                p10externalities = first_row[2]
-                p10constraints = first_row[3]
-                p10mitimeasures = first_row[4]
+
+            # Reset the lists
+            p10spillovers = []
+            p10externalities = []
+            p10constraints = []
+            p10mitimeasures = []
+
+            # Extract values from all rows
+            for row_id in assessPATable.get_children():
+                values = assessPATable.item(row_id)['values']
+                if len(values) >= 5:
+                    p10spillovers.append(values[1])
+                    p10externalities.append(values[2])
+                    p10constraints.append(values[3])
+                    p10mitimeasures.append(values[4])
+
             save()
             pageNumber += 1
             for widget in mainProject.winfo_children():
                 widget.destroy()
-            save()
             page_11()
-            
 
         btnBack9 = Button(mainProject, text="Back", width=10, command=lambda: back_9())
         btnNext9 = Button(mainProject, text="Next", width=10, command=lambda: next_9())
         btnBack9.place(relx=0.4, rely=0.90, anchor="s")
         btnNext9.place(relx=0.6, rely=0.90, anchor="s")
 
-
     def page_11():
+
         global p11BPAdescription, p11BPAreasonSelect
         mainProject.state('normal') 
         mainProject.geometry("750x380")
+
+         ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 11 of 15: Best/Optimal Policy Alternative", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
+
+        
         frame11 = tk.LabelFrame(mainProject, text="Best/Optimal Policy Alternative", font=("Arial", 12, "bold"))
         frame11.place(relx=0.01, rely=0.01, relwidth=0.97, relheight=0.75)
 
@@ -3274,14 +3476,18 @@ def createNewProject():
         # Navigation Buttons
         btnBack10 = tk.Button(mainProject, text="Back", width=12, command=back_10)
         btnNext10 = tk.Button(mainProject, text="Next", width=12, command=next_10)
-        btnBack10.place(relx=0.35, rely=0.95, anchor="s")
-        btnNext10.place(relx=0.65, rely=0.95, anchor="s")
-
+        btnBack10.place(relx=0.35, rely=0.85, anchor="s")
+        btnNext10.place(relx=0.65, rely=0.85, anchor="s")
 
     def page_12():
+
         global p12BPAspillover, p12BPAexternality, p12BPAconstraint, p12BPAmitigatingmeasure
 
         mainProject.geometry("750x420")  # Increased height to make all content visible
+
+         ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 12 of 15: Details of the Best/Optimal Policy Alternative", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
 
         frame12 = tk.LabelFrame(mainProject, text="Details of the Best/Optimal Policy Alternative", font=("Arial", 11))
         frame12.place(relx=0.01, rely=0.02, relwidth=0.96, relheight=0.75)  # Increased height
@@ -3369,13 +3575,19 @@ def createNewProject():
 
         btnBack11 = tk.Button(mainProject, text="Back", width=10, command=back_11)
         btnNext11 = tk.Button(mainProject, text="Next", width=10, command=next_11)
-        btnBack11.place(relx=0.4, rely=0.96, anchor="s")
-        btnNext11.place(relx=0.6, rely=0.96, anchor="s")
+        btnBack11.place(relx=0.4, rely=0.85, anchor="s")
+        btnNext11.place(relx=0.6, rely=0.85, anchor="s")
 
     def page_13():
+
         global p13BPAwhat, p13BPAwho, p13BPAhow
 
         mainProject.geometry("750x420")  # Increased height to fit all inputs
+
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 13 of 15: Implementation Requirements", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
+
         frame13 = tk.LabelFrame(mainProject, text="Implementation Requirements", font=("Arial", 11))
         frame13.place(relx=0.01, rely=0.02, relwidth=0.96, relheight=0.75)
 
@@ -3445,14 +3657,20 @@ def createNewProject():
 
         btnBack13 = tk.Button(mainProject, text="Back", width=10, command=back_12)
         btnNext13 = tk.Button(mainProject, text="Next", width=10, command=next_12)
-        btnBack13.place(relx=0.4, rely=0.96, anchor="s")
-        btnNext13.place(relx=0.6, rely=0.96, anchor="s")
+        btnBack13.place(relx=0.4, rely=0.85, anchor="s")
+        btnNext13.place(relx=0.6, rely=0.85, anchor="s")
 
 
     def page_14():
+
         global p14criticalActions, p14responsible, p14timeline, p14budget, p14budgetsource
         frame14 = tk.LabelFrame(mainProject)
         mainProject.state('zoomed')
+
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 14 of 15: Policy Implementation Plan", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
+
         widgets_to_destroy = [frame14]
         undo_stack = []
 
@@ -3664,6 +3882,10 @@ def createNewProject():
         global p7policyGoalsandObjectives, p7indicators
         global p15dataSources, p15frequency, p15responsible, p15output, p15report
 
+        ### Progress indicator
+        progress_label = tk.Label(mainProject, text="Page 15 of 15: Policy Assessment: Monitoring and Evaluation Plan", font=("Arial", 10), fg="gray")
+        progress_label.place(relx=0.02, rely=0.90, anchor="nw")
+
         frame15 = tk.LabelFrame(mainProject)
         widgets_to_destroy = [frame15]
         undo_stack = []
@@ -3797,6 +4019,7 @@ def createNewProject():
             save()
             messagebox.showinfo("Done", "You have completed the policy planning process.")
             mainProject.destroy()
+            save()
             new_project()
 
         btnBack14 = ttk.Button(mainProject, text="Back", command=back_14)
@@ -3832,7 +4055,8 @@ def createNewProject():
 
 def save():
     global pageNumber, save_pdf_file_path, save_json_file_path, p1projecttitle
-    
+
+    # Ask for save locations
     if save_pdf_file_path is None:
         save_pdf_file_path = asksaveasfilename(
             defaultextension=".pdf",
@@ -3841,8 +4065,8 @@ def save():
             title="Save PDF As"
         )
     if not save_pdf_file_path:
-        return  # User canceled save
-    
+        return
+
     if save_json_file_path is None:
         save_json_file_path = asksaveasfilename(
             defaultextension=".json",
@@ -3851,21 +4075,9 @@ def save():
             title="Save Project As"
         )
     if not save_json_file_path:
-        return  # User canceled save
-    
-    # Create the project json
-    global p1analysts, p1fontstyle, p1policyanalysis, p1fontsize
-    global p2problematicsituation, p2undesirableeffects
-    global p3efforts, p3accomplishments, p3assessments
-    global p5rootcause, p5existingpolicies, p5relevantprov, p5accomplishments, p5assessments
-    global p6policyproblem, p6policyissue
-    global p7policyGoalsandObjectives, p7indicators
-    global p8stakeholders, p8actors
-    global p9altnum, p9alternatives
-    global p10spillovers, p10externalities, p10constraints, p10mitimeasures
-    global p11BPAdescription, p11BPAreasonSelect
-    global p12BPAspillover, p12BPAexternality, p12BPAconstraint, p12BPAmitigatingmeasure
+        return
 
+    # Dump data into JSON
     data = {
         "save_pdf_file_path": save_pdf_file_path,
         "save_json_file_path": save_json_file_path,
@@ -3920,47 +4132,342 @@ def save():
     with open(save_json_file_path, 'w') as json_file:
         json.dump(data, json_file, indent=4)
 
-    pdf = FPDF()   
+    # Generate the PDF
+    pdf = FPDF(orientation='L')
+    pdf.set_auto_page_break(auto=True, margin=15)
 
-    pdf.add_page()
-    
-    pdf.set_font(family="Arial", style='B', size=int(p1fontsize))
-    
-    pdf.cell(0, 8, txt = p1projecttitle, ln = 2, border = 0, align = 'C', fill = FALSE)
-    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
-    pdf.cell(0, 8, txt = p1analysts, ln = 2, border = 0, align = 'C', fill = FALSE)
-    pdf.cell(0, 8, txt = p1policyanalysis, ln = 2, border = 0, align = 'C', fill = FALSE)
-    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
-    pdf.cell(0, 8, txt = "\nProblematic Situation: ", ln = 2, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='', size=int(p1fontsize))
-    pdf.multi_cell(0, 10, txt = p2problematicsituation, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
-    pdf.cell(0, 8, txt = "\nUndesirable Effects: ", ln = 2, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='', size=int(p1fontsize))
-    pdf.multi_cell(0, 10, txt = p2undesirableeffects, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
-    pdf.cell(0, 8, txt = "\nRoot Cause: ", ln = 2, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='', size=int(p1fontsize))
-    pdf.multi_cell(0, 10, txt = p5rootcause, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
-    pdf.cell(0, 8, txt = "\nPolicy Problem: ", ln = 2, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='', size=int(p1fontsize))
-    pdf.multi_cell(0, 10, txt = p6policyproblem, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='I', size=int(p1fontsize))
-    pdf.cell(0, 8, txt = "\nPolicy Issue Statement: ", ln = 2, border = 0, align = 'J', fill = FALSE)
-    pdf.set_font(family="Arial", style='', size=int(p1fontsize))
-    pdf.multi_cell(0, 10, txt = p6policyissue, border = 0, align = 'J', fill = FALSE)
-  
-    pdf.add_page()
-    if int(pageNumber) == 5:
-        pdf.multi_cell(0, 10, txt ="Regression Analysis\n", border = 0, align = 'C', fill = FALSE)
-        pdf.multi_cell(0, 10, txt = p4summaryPDF, border = 0, align = 'C', fill = FALSE)
-        pdf.image('regplot.png', x=20, y=100, w=160)
+    def add_section(page_title, content_dict):
+        pdf.add_page()
 
-    # save the pdf with name .pdf
+        # Title of the page in bold, bigger font
+        title_font_size = int(p1fontsize) + 2  # slightly larger
+        pdf.set_font(p1fontstyle, 'B', title_font_size)
+        pdf.cell(0, 12, txt=page_title, ln=1, align='L')
+        pdf.ln(4)
+
+        # Content entries: bold variable name, then indented normal text
+        pdf.set_font(p1fontstyle, '', int(p1fontsize))
+        for label, value in content_dict.items():
+            if not value:
+                continue  # Skip empty entries
+
+            # Label in bold
+            pdf.set_font(p1fontstyle, 'B', int(p1fontsize))
+            pdf.cell(0, 10, txt=label, ln=1)
+
+            # Value in regular font, with indentation
+            pdf.set_font(p1fontstyle, '', int(p1fontsize))
+            if isinstance(value, list):
+                for item in value:
+                    pdf.multi_cell(0, 10, txt="    " + str(item), border=0)
+            else:
+                pdf.multi_cell(0, 10, txt="    " + str(value), border=0)
+
+            pdf.ln(2)  # Add small space between entries
+
+    def add_table(page_title, column_data: dict):
+        pdf.add_page()
+
+        # Title
+        pdf.set_font(p1fontstyle, 'B', int(p1fontsize) + 2)
+        pdf.cell(0, 10, txt=page_title, ln=1, align='L')
+        pdf.ln(5)
+
+        columns = list(column_data.keys())
+        max_rows = max(len(column_data[col]) for col in columns)
+        col_width = (pdf.w - 20) / len(columns)  # Leave margins
+        line_height = 6
+
+        # === HEADER ===
+        pdf.set_font(p1fontstyle, 'B', int(p1fontsize))
+        x_start = pdf.get_x()
+        y_start = pdf.get_y()
+
+        # Step 1: compute line-wrapped heights
+        header_lines = []
+        max_header_height = 0
+        for col in columns:
+            lines = pdf.multi_cell(col_width, line_height, col, split_only=True)
+            header_lines.append(lines)
+            max_header_height = max(max_header_height, len(lines) * line_height)
+
+        # Step 2: draw headers with consistent row height
+        for i, col in enumerate(columns):
+            x = x_start + i * col_width
+            pdf.set_xy(x, y_start)
+            pdf.multi_cell(col_width, line_height, col, border=1, align='C')
+
+        pdf.set_y(y_start + max_header_height)
+
+        # === DATA ROWS ===
+        pdf.set_font(p1fontstyle, '', int(p1fontsize))
+        for row_index in range(max_rows):
+            x_start = pdf.get_x()
+            y_start = pdf.get_y()
+
+            # Step 1: Compute row height based on wrapped content
+            row_heights = []
+            for col in columns:
+                text = str(column_data[col][row_index]) if row_index < len(column_data[col]) else ""
+                lines = pdf.multi_cell(col_width, line_height, text, split_only=True)
+                row_heights.append(len(lines) * line_height)
+            row_height = max(row_heights)
+
+            # Step 2: Draw cells
+            for i, col in enumerate(columns):
+                x = x_start + i * col_width
+                pdf.set_xy(x, y_start)
+                text = str(column_data[col][row_index]) if row_index < len(column_data[col]) else ""
+                pdf.multi_cell(col_width, row_height, text, border=1, align='L')
+
+            pdf.set_y(y_start + row_height)
+
+
+
+
+
+    # Page 1
+    pdf.add_page()
+    pdf.set_font(p1fontstyle, 'B', int(p1fontsize))
+
+    # Calculate page dimensions
+    page_height = pdf.h
+
+    # Estimate total height of the content (3 lines of text, each 10 units high)
+    content_height = 3 * 10  # assuming each line is 10 points tall
+
+    # Compute vertical center position
+    start_y = (page_height - content_height) / 2
+
+    # Move cursor to vertical center
+    pdf.set_y(start_y)
+
+    # Center text horizontally by using cell() with align='C'
+    pdf.cell(0, 10, txt="Policy Analysis", ln=1, align="C")
+    pdf.cell(0, 10, txt=p1policyanalysis, ln=1, align="C")
+    pdf.set_font(p1fontstyle, '', int(p1fontsize))
+    pdf.cell(0, 10, txt=p1analysts, ln=1, align="C")
+
+    # Page 2
+    add_section("Problematic Situation and Its Undesirable Effects", {
+    "Problematic Situation": p2problematicsituation,
+    "Undesirable Effects": p2undesirableeffects
+    })
+
+    # Page 3
+    add_table("Current Efforts", {"Current Efforts": p3efforts, 
+                                 "Accomplishments": p3accomplishments,
+                                 "Assessments": p3assessments})
+
+    # Page 5
+    pdf.add_page()
+
+    # Page title
+    pdf.set_font(p1fontstyle, 'B', int(p1fontsize) + 2)
+    pdf.cell(0, 10, txt="Root Cause and Existing Policies", ln=1, align='L')
+    pdf.ln(5)
+
+    # Root cause
+    pdf.set_font(p1fontstyle, 'B', int(p1fontsize))
+    pdf.cell(0, 10, txt="Root Cause", ln=1, align='L')
+    pdf.set_font(p1fontstyle, '', int(p1fontsize))
+    pdf.multi_cell(0, 10, txt=f"    {p5rootcause}")
+    pdf.ln(5)
+
+    # Table data
+    col_labels = ["Existing Policies", "Relevant Provisions", "Accomplishments", "Assessments"]
+    col_data = [p5existingpolicies, p5relevantprov, p5accomplishments, p5assessments]
+    max_rows = max(len(col) for col in col_data)
+    col_width = pdf.w / len(col_labels) - 10
+
+    # Header row
+    pdf.set_font(p1fontstyle, 'B', int(p1fontsize))
+    for label in col_labels:
+        pdf.cell(col_width, 20, txt=label, border=1, align='C')
+    pdf.ln()
+
+    # Table rows
+    pdf.set_font(p1fontstyle, '', int(p1fontsize))
+    for i in range(max_rows):
+        for col in col_data:
+            text = col[i] if i < len(col) else ""
+            pdf.cell(col_width, 20, txt=text, border=1, align='C')
+        pdf.ln()
+
+    # Page 6
+    add_section("Policy Problem and Issue Statement", {"Policy Problem": p6policyproblem, "Policy Issue Statement": p6policyissue})
+
+    # Page 7
+    add_table("Goals and Objectives of the Proposal", {
+        "Policy Goals and Objectives": p7policyGoalsandObjectives, "Indicators": p7indicators})
+    
+    # Page 8
+    add_table("Stakeholders and Actors", {
+        "Stakeholders": p8stakeholders, "Actors": p8actors})
+
+    # Page 9
+    add_table("Policy Alternatives", {
+        "Alternative Number": p9altnum, "Alternatives": p9alternatives})
+
+    # Page 10
+    pdf.add_page()
+    pdf.set_font(p1fontstyle, 'B', int(p1fontsize) + 2)
+    pdf.cell(0, 10, "Assessment of Policy Alternatives", ln=1, align="L")
+    pdf.ln(5)
+
+    # Table headers and data
+    headers = ["Alternative", "Spillover", "Externalities", "Constraints", "Mitigating Measures"]
+    columns = [p9alternatives, p10spillovers, p10externalities, p10constraints, p10mitimeasures]
+    max_rows = min(len(col) for col in columns)
+
+    # Max page width minus margins (190 for default A4)
+    page_width = pdf.w - 20
+    col_widths = [page_width * w for w in [0.20, 0.20, 0.20, 0.20, 0.20]]  # Equal width for 5 columns
+    line_height = 5
+
+    # Draw header
+    pdf.set_font(p1fontstyle, 'B', int(p1fontsize))
+    x_start = pdf.get_x()
+    y_start = pdf.get_y()
+
+    header_lines = []
+    max_header_height = 0
+    for i, header in enumerate(headers):
+        lines = pdf.multi_cell(col_widths[i], line_height, header, border=0, align='C', split_only=True)
+        header_lines.append(lines)
+        max_header_height = max(max_header_height, len(lines) * line_height)
+
+    # Render headers with fixed height
+    for i, header in enumerate(headers):
+        x = pdf.get_x()
+        y = pdf.get_y()
+        pdf.multi_cell(col_widths[i], line_height, header, border=1, align='C')
+        pdf.set_xy(x + col_widths[i], y)
+    pdf.ln(max_header_height)
+
+    # Draw content rows
+    pdf.set_font(p1fontstyle, '', int(p1fontsize))
+    for i in range(max_rows):
+        row = [col[i] for col in columns]
+
+        # Step 1: Determine max row height by simulating line count
+        row_heights = []
+        for j, text in enumerate(row):
+            lines = pdf.multi_cell(col_widths[j], line_height, text, border=0, align='L', split_only=True)
+            row_heights.append(len(lines) * line_height)
+        max_row_height = max(row_heights)
+
+        # Step 2: Draw each cell in the row using the same height
+        x_row_start = pdf.get_x()
+        y_row_start = pdf.get_y()
+        for j, text in enumerate(row):
+            x = pdf.get_x()
+            y = pdf.get_y()
+            pdf.multi_cell(col_widths[j], max_row_height, text, border=1, align='L')
+            pdf.set_xy(x + col_widths[j], y)
+        pdf.set_y(y_row_start + max_row_height)
+
+
+    # Page 11
+    add_section("Best/Optimal Policy Alternative", {
+        "Description": p11BPAdescription, "Reasons for Selection": p11BPAreasonSelect})
+
+    # Page 12
+    add_section("Details of the Best/Optimal Policy Alternative", {
+        "Spillover": p12BPAspillover, "Externality": p12BPAexternality,
+        "Constraint": p12BPAconstraint, "Mitigating Measures": p12BPAmitigatingmeasure})
+
+    # Page 13
+    add_section("Implementation Requirements", {
+        "What type of legislation is needed? Why?": p13BPAwhat, "Who will implement? Why?": p13BPAwho, "Implementation Cost and Source": p13BPAhow})
+
+    # Page 14
+    add_table("Policy Implementation Plan", {
+        "Critical Actions": p14criticalActions, "Responsible/Accountable Units": p14responsible,
+        "Timeframes": p14timeline, "Budgets": p14budget, "Budget Sources": p14budgetsource})
+
+    # Page 15
+    pdf.add_page()
+
+    # Page title
+    pdf.set_font(p1fontstyle, 'B', int(p1fontsize) + 2)
+    pdf.cell(0, 10, "Monitoring and Evaluation Plan", ln=1)
+    pdf.ln(4)
+
+    # Column headers and widths
+    headers = [
+        "Goals and Objectives", "SMART Indicator", "Data Source", "Frequency",
+        "Units-In-Charge", "M&E Output", "M&E Report Users"
+    ]
+    page_width = pdf.w - 20  # account for margins
+    col_widths = [page_width / len(headers)] * len(headers)
+    line_height = 5
+
+    # Header wrapping
+    pdf.set_font(p1fontstyle, 'B', int(p1fontsize) - 1)
+    x_start = pdf.get_x()
+    y_start = pdf.get_y()
+
+    # Measure header height
+    max_header_height = 0
+    header_lines = []
+    for i, header in enumerate(headers):
+        lines = pdf.multi_cell(col_widths[i], line_height, header, border=0, align='C', split_only=True)
+        header_lines.append(lines)
+        max_header_height = max(max_header_height, len(lines) * line_height)
+
+    # Draw headers
+    pdf.set_xy(x_start, y_start)
+    for i, header in enumerate(headers):
+        x = pdf.get_x()
+        y = pdf.get_y()
+        pdf.multi_cell(col_widths[i], max_header_height, header, border=1, align='C')
+        pdf.set_xy(x + col_widths[i], y)
+    pdf.ln(max_header_height)
+
+    # Data rows
+    pdf.set_font(p1fontstyle, '', int(p1fontsize) - 1)
+    length = min(
+        len(p7policyGoalsandObjectives), len(p7indicators),
+        len(p15dataSources), len(p15frequency),
+        len(p15responsible), len(p15output), len(p15report)
+    )
+
+    for i in range(length):
+        row = [
+            p7policyGoalsandObjectives[i],
+            p7indicators[i],
+            p15dataSources[i],
+            p15frequency[i],
+            p15responsible[i],
+            p15output[i],
+            p15report[i]
+        ]
+
+        # Measure max height for row
+        row_lines = []
+        for j, cell in enumerate(row):
+            lines = pdf.multi_cell(col_widths[j], line_height, cell, border=0, align='L', split_only=True)
+            row_lines.append(lines)
+        max_row_height = max(len(lines) * line_height for lines in row_lines)
+
+        # Draw each cell
+        x_row_start = pdf.get_x()
+        y_row_start = pdf.get_y()
+        for j, cell in enumerate(row):
+            x = pdf.get_x()
+            y = pdf.get_y()
+            pdf.multi_cell(col_widths[j], max_row_height, cell, border=1, align='L')
+            pdf.set_xy(x + col_widths[j], y)
+        pdf.set_y(y_row_start + max_row_height)
+
+
+
     
     pdf.output(save_pdf_file_path, 'F')
-
+    
+    
+    
 def print_file():
 
     pdffilename = p1projecttitle+".pdf"
