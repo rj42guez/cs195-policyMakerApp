@@ -15,20 +15,6 @@ from PIL import Image, ImageTk, ImageGrab
 import fpdf
 from fpdf import FPDF
 
-from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Preformatted
-from reportlab.platypus import Image as RLImage
-from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib import colors
-from reportlab.lib.units import mm
-from reportlab.lib.enums import TA_LEFT, TA_CENTER
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.units import inch
-
-import os
-
-
 import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt 
@@ -47,16 +33,10 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 
 global size, var, pageNumber
 size = 10
-global save_pdf_file_path, save_json_file_path, tree_file_path, image_filename
+global save_pdf_file_path, save_json_file_path, tree_file_path
 save_pdf_file_path = None
 save_json_file_path = None
 tree_file_path = None
-
-global analysis_type
-analysis_type = ""
-
-global reg_sum
-reg_sum = ""
 
 root = Tk()
 root.title("Policy Analytics 1.0")
@@ -84,7 +64,7 @@ introLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font
 aboutLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1000, justify="center", text = "Policy Analytics 1.0 is a tool for learning policy analysis. This software can be used in training programs and classroom learning. It provides a step-by-step procedure that allows users to input and process basic essential data for problem structuring, forecasting and assessment of policy alternatives, recommending or prescribing the best/optimal policy alternative, designing an implementation plan, and building a monitoring and evaluation plan. Its outputs can be used in writing a complete policy issue paper. It is based on the “Elements of the Policy Issue Paper” in Annex 1 of Public Policy Analysis: An Integrated Approach by William N. Dunn (2018) with modifications based on the teaching and training experiences of its creator, Dr. Ebinezer R. Florano, Professor of Public Policy at the University of the Philippines, National College of Public Administration and Governance and Convenor of the UPCIDS Data Science for Public Policy Program (DSPPP).")
 arrLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="center", text = "All rights reserved@2024 – UPCIDS-DSPPP")
 creatorLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="left", text = "Creator: Dr. Ebinezer R. Florano")
-programmerLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="left", text = "Programmers: Bianca Amurao, Emmerson Isip, Gabriel Ramos, Mohammad Hamdi Tuan, and Raphael Justin Portuguez")
+programmerLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="left", text = "Programmers: Emmerson Isip, Gabriel Ramos, and Raphael Justin Portuguez")
 reveiwerLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="left", text = "Reviewers: Colin Rosales, Danne Nicole Pinpin, and Jean Phoebe Yao")
 adminLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="left", text = "Administrative Assistance: Lilian J. Marfil, Pedro J. Madarang, and Zhelly Ann Linsangan")
 
@@ -436,15 +416,12 @@ def help_page():
 def wrap(string, length=40):
     return '\n'.join(textwrap.wrap(string, length))
 
-
-
 def createNewProject():
     global pageNumber
     pageNumber = 0
 
     global filename, fileobject
-    global p4summaryPDF
-    p4summaryPDF = " "
+
 
     mainProject = Toplevel(root)
     mainProject.transient(root)           # Attach to root
@@ -478,6 +455,9 @@ def createNewProject():
     interceptMR2, coefficientMR2 = 0, 0
     interceptLogR, coefficientConstLogR, coefficientXLogR = 0, 0, 0
     discount = 0.05  # Default discount rate
+
+    global p4summaryPDF
+    p4summaryPDF = " "
     
     # Tooltip class
     class ToolTip:
@@ -1012,7 +992,7 @@ def createNewProject():
         progress_label.place(relx=0.02, rely=0.90, anchor="nw")
         frame4 = tk.LabelFrame(mainProject)
 
-        global var, analysis_type
+        global var
         var = IntVar()
             
         StatisticalMethod = Label(frame4, text = "Statistical Method")
@@ -1032,20 +1012,11 @@ def createNewProject():
         R3.grid(row=4, column=0)
         R4.grid(row=2, column=1)
 
-        def analyses():
-            global reg_sum
-            global analysis_type                    
+        def analyses():                    
             if (int(var.get()) == 1):
                 analysis = Toplevel(main)
-                analysis.transient(root)
-                analysis.grab_set()
-                analysis.lift()
-                analysis.focus_force()
-                analysis.attributes("-topmost", 1)
-                analysis.after(10, lambda: analysis.attributes("-topmost", 0))
                 analysis.title("Analysis - Linear Regression")
                 analysis.geometry("1000x680")
-                analysis_type = "Linear Regression"
 
                 filename = askopenfilename(filetypes=[("CSV Files", "*.csv")])
 
@@ -1084,8 +1055,6 @@ def createNewProject():
 
                 global p4summaryPDF
                 p4summaryPDF = divider + regTitle + summary
-
-                reg_sum = regTitle + summary
                 
                 plt.scatter(X_train, y_train, color = "m", marker = "o", s = 30)
 
@@ -1095,33 +1064,17 @@ def createNewProject():
                 # putting labels
                 plt.xlabel(column_names[0])
                 plt.ylabel(column_names[1])
-                image_filename = "page4_plot.png"
-                plt.savefig(image_filename)
                 plt.show()
                 page_5()
 
             elif(int(var.get()) == 2):
                 analysis = Toplevel(main)
-                analysis.transient(root)
-                analysis.grab_set()
-                analysis.lift()
-                analysis.focus_force()
-                analysis.attributes("-topmost", 1)
-                analysis.after(10, lambda: analysis.attributes("-topmost", 0))
                 analysis.title("Analysis - Multiple Regression Summary 1")
                 analysis.geometry("1200x680")
-                analysis_type = "Multiple Regression"
 
                 analysis2 = Toplevel(main)
                 analysis2.title("Analysis - Multiple Regression Summary 2")
                 analysis2.geometry("1200x680")
-                analysis2 = Toplevel(main)
-                analysis2.transient(root)
-                analysis2.grab_set()
-                analysis2.lift()
-                analysis2.focus_force()
-                analysis2.attributes("-topmost", 1)
-                analysis2.after(10, lambda: analysis.attributes("-topmost", 0))
 
                 filename = askopenfilename(filetypes=[("CSV Files", "*.csv")])
                 df = pd.read_csv(filename)
@@ -1180,7 +1133,6 @@ def createNewProject():
                 lb5 = Label(analysis2, text=summary4, font="Consolas", justify="left")
                 lb5.pack()
 
-                reg_sum = regTitleA + summary3 + "    \n    \n" + regTitleB + summary4
 
                 fig = plt.figure()
                 ax = fig.add_subplot(111, projection='3d')
@@ -1192,12 +1144,8 @@ def createNewProject():
                 ax.set_zlabel(column_headers[2])
 
                 plt.savefig('regplot.png')
-                image_filename = "page4_plot.png"
-                plt.savefig(image_filename)
                 plt.show()
-
                 page_5()
-                
 
                 # l = tk.Label(frame, text="Hello", font="-size 50")
                 # l.pack()
@@ -1210,25 +1158,12 @@ def createNewProject():
 
             elif(int(var.get()) == 3):
                 analysis = Toplevel(main)
-                analysis.transient(root)
-                analysis.grab_set()
-                analysis.lift()
-                analysis.focus_force()
-                analysis.attributes("-topmost", 1)
-                analysis.after(10, lambda: analysis.attributes("-topmost", 0))
                 analysis.title("Analysis - Logistic Regression Summary 1")
                 analysis.geometry("830x480")
 
                 analysis2 = Toplevel(main)
-                analysis2.transient(root)
-                analysis2.grab_set()
-                analysis2.lift()
-                analysis2.focus_force()
-                analysis2.attributes("-topmost", 1)
-                analysis2.after(10, lambda: analysis.attributes("-topmost", 0))
                 analysis2.title("Analysis - Logistic Regression Summary 2")
                 analysis2.geometry("830x480")
-                analysis_type = "Logistic Regression"
 
                 filename = askopenfilename(filetypes=[("CSV Files", "*.csv")])
                 df = pd.read_csv(filename)
@@ -1271,8 +1206,6 @@ def createNewProject():
                 lb4 = Label(analysis2,text=logit_model.summary2(), font="Consolas", justify="left")
                 lb4.pack()
                 
-                reg_sum = summary2
-
                 X_train = df.iloc[:, [0]]
                 plt.scatter(X_train, y_train, color = "m", marker = "o", s = 30)
 
@@ -1281,8 +1214,6 @@ def createNewProject():
                 y_test = sp.special.expit(X_test * reg.coef_[0][1] + reg.intercept_[0])
                 plt.plot(X_test, y_test, label="Logistic Regression Model", color="red", linewidth=3)
                 plt.savefig('regplot.png')
-                image_filename = "page4_plot.png"
-                plt.savefig(image_filename)
                 plt.show() 
                 page_5
             
@@ -1290,7 +1221,6 @@ def createNewProject():
                 analysis = Toplevel(main)
                 analysis.title("Analysis - Problem Tree Analysis")
                 analysis.geometry("830x480")
-                analysis_type = "Problem Tree Analysis"
 
                 # Ensure it's in front
                 analysis.transient(root)
@@ -1537,16 +1467,13 @@ def createNewProject():
                     
                         # Grab the canvas area from the screen
                         image = ImageGrab.grab(bbox=(x, y, x1, y1))
-
-                        image_filename = "page4_plot.png"
-                        image.save(image_filename)
                     
                         # Ask for file path to save
-                        tree_file_path = tk.filedialog.asksaveasfilename(defaultextension=".png",
+                        tree_file_pathfile_path = tk.filedialog.asksaveasfilename(defaultextension=".png",
                                                  filetypes=[("PNG files", "*.png"), ("All files", "*.*")])
-                        if tree_file_path:
-                            image.save(tree_file_path)
-                            messagebox.showinfo("Saved", f"Canvas saved as {os.path.basename(tree_file_path)}")
+                        if tree_file_pathfile_path:
+                            image.save(tree_file_pathfile_path)
+                            messagebox.showinfo("Saved", f"Canvas saved as {os.path.basename(tree_file_pathfile_path)}")
 
                     def update_scroll_region(self):
                         region = self.canvas.bbox("all")
@@ -1556,7 +1483,6 @@ def createNewProject():
                             self.canvas.config(scrollregion=(0, 0, 1000, 1000))
 
                 app = ShapeEditorApp(analysis)
-
                 page_5()
 
         def back_3():
@@ -3350,21 +3276,8 @@ def createNewProject():
         editButton10.place(relx=0.50, rely=0.82, anchor='s')
         deleteButton10.place(relx=0.60, rely=0.82, anchor='s')
 
-        # Clear existing rows to prevent duplication
-        for row in assessPATable.get_children():
-            assessPATable.delete(row)
-
-        # Always insert one row per alternative
         for i, alt in enumerate(p9alternatives):
-            spill = p10spillovers[i] if i < len(p10spillovers) else ""
-            ext = p10externalities[i] if i < len(p10externalities) else ""
-            cons = p10constraints[i] if i < len(p10constraints) else ""
-            miti = p10mitimeasures[i] if i < len(p10mitimeasures) else ""
-
-            assessPATable.insert(
-                "", "end",
-                values=(f"Alt {i+1}: {alt}", spill, ext, cons, miti)
-            )
+            assessPATable.insert("", 'end', values=(f"Alt {i+1}: {alt}", p10spillovers, p10externalities, p10constraints, p10mitimeasures))
 
         def show_data10(a):
             alternative.delete(0, tk.END)
@@ -4107,7 +4020,6 @@ def createNewProject():
             messagebox.showinfo("Done", "You have completed the policy planning process.")
             mainProject.destroy()
             save()
-            save_pdf()
             new_project()
 
         btnBack14 = ttk.Button(mainProject, text="Back", command=back_14)
@@ -4142,7 +4054,18 @@ def createNewProject():
     # fileobject.close()
 
 def save():
-    global pageNumber, save_json_file_path, p1projecttitle
+    global pageNumber, save_pdf_file_path, save_json_file_path, p1projecttitle
+
+    # Ask for save locations
+    if save_pdf_file_path is None:
+        save_pdf_file_path = asksaveasfilename(
+            defaultextension=".pdf",
+            filetypes=[("PDF files", "*.pdf")],
+            initialfile=p1projecttitle + ".pdf",
+            title="Save PDF As"
+        )
+    if not save_pdf_file_path:
+        return
 
     if save_json_file_path is None:
         save_json_file_path = asksaveasfilename(
@@ -4209,326 +4132,341 @@ def save():
     with open(save_json_file_path, 'w') as json_file:
         json.dump(data, json_file, indent=4)
 
-
-    
-def save_pdf():
     # Generate the PDF
+    pdf = FPDF(orientation='L')
+    pdf.set_auto_page_break(auto=True, margin=15)
 
-    global save_pdf_file_path, p1projecttitle, p1fontstyle, p1fontsize, p1policyanalysis, p1analysts, p2problematicsituation, p2undesirableeffects, p3efforts, p3accomplishments, p3assessments, p5accomplishments, p5assessments, p5existingpolicies, p5relevantprov, p6policyproblem, p6policyissue, p7policyGoalsandObjectives, p7indicators, p8stakeholders, p8actors, p9altnum, p9alternatives, p10spillovers, p10externalities, p10constraints, p10mitimeasures, p11BPAdescription, p11BPAreasonSelect, p12BPAspillover, p12BPAexternality, p12BPAconstraint, p12BPAmitigatingmeasure, p13BPAwhat, p13BPAwho, p13BPAhow, p14budget, p14budgetsource, p14criticalActions, p14responsible, p14timeline, p15dataSources, p15frequency, p15responsible, p15output, p15report
-
-
-    if save_pdf_file_path is None:
-        save_pdf_file_path = asksaveasfilename(
-            defaultextension=".pdf",
-            filetypes=[("PDF files", "*.pdf")],
-            initialfile=p1projecttitle + ".pdf",
-            title="Save PDF As"
-        )
-
-    if not save_pdf_file_path:
-        return
-
-    # Define page dimensions (A4 by default, landscape)
-    PAGE_WIDTH, PAGE_HEIGHT = A4
-    PAGE_WIDTH, PAGE_HEIGHT = PAGE_HEIGHT, PAGE_WIDTH  # Landscape orientation
-
-    # Assume these variables are defined as in the original code
-    # p1fontstyle, p1fontsize, p1projecttitle, p1policyanalysis, p1analysts, save_pdf_file_path, etc.
-
-    try:
-        pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf'))
-        pdfmetrics.registerFont(TTFont('Arial-Bold', 'arialbd.ttf'))
-        pdfmetrics.registerFont(TTFont('Arial-Italic', 'ariali.ttf'))
-        pdfmetrics.registerFont(TTFont('Arial-BoldItalic', 'arialbi.ttf'))
-        pdfmetrics.registerFontFamily('Arial',
-                                      normal='Arial',
-                                      bold='Arial-Bold',
-                                      italic='Arial-Italic',
-                                      boldItalic='Arial-BoldItalic')
-    except Exception as e:
-        print(f"Error registering Arial font: {e}. Please ensure 'arial.ttf', 'arialbd.ttf', 'ariali.ttf', and 'arialbi.ttf' are accessible.")
-        # Fallback to Helvetica if Arial registration fails
-        p1fontstyle = 'Helvetica'
-
-    # Create PDF
-    pdf = SimpleDocTemplate(
-        save_pdf_file_path,
-        pagesize=(PAGE_WIDTH, PAGE_HEIGHT),
-        leftMargin=10*mm,
-        rightMargin=10*mm,
-        topMargin=15*mm,
-        bottomMargin=15*mm
-    )
-
-    # Define styles
-    title_style = ParagraphStyle(
-        name='Title',
-        fontName=p1fontstyle if p1fontstyle in ['Arial', 'Helvetica', 'Times'] else 'Helvetica',
-        fontSize=int(p1fontsize) + 2,
-        leading=int(p1fontsize) + 4,
-        alignment=TA_LEFT
-    )
-    bold_style = ParagraphStyle(
-        name='Bold',
-        fontName=p1fontstyle if p1fontstyle in ['Arial', 'Helvetica', 'Times'] else 'Helvetica',
-        fontSize=int(p1fontsize),
-        leading=int(p1fontsize) + 2,
-        alignment=TA_LEFT
-    )
-    normal_style = ParagraphStyle(
-        name='Normal',
-        fontName=p1fontstyle if p1fontstyle in ['Arial', 'Helvetica', 'Times'] else 'Helvetica',
-        fontSize=int(p1fontsize),
-        leading=int(p1fontsize) + 2,
-        alignment=TA_LEFT,
-        leftIndent=10
-    )
-    table_header_style = ParagraphStyle(
-        name='TableHeader',
-        fontName=p1fontstyle if p1fontstyle in ['Arial', 'Helvetica', 'Times'] else 'Helvetica',
-        fontSize=int(p1fontsize),
-        leading=int(p1fontsize) + 2,
-        alignment=TA_CENTER
-    )
-    table_cell_style = ParagraphStyle(
-        name='TableCell',
-        fontName=p1fontstyle if p1fontstyle in ['Arial', 'Helvetica', 'Times'] else 'Helvetica',
-        fontSize=int(p1fontsize) - 1,
-        leading=int(p1fontsize) + 1,
-        alignment=TA_LEFT
-    )
-
-    # Elements to build the PDF
-    elements = []
-
-    # Helper function to create tables
-    def create_table(page_title, column_data, col_widths=None):
-        elements.append(Paragraph(page_title, title_style))
-        elements.append(Spacer(1, 5*mm))
-
-        # Prepare table data
-        columns = list(column_data.keys())
-        max_rows = max(len(column_data[col]) for col in columns)
-        table_data = [[Paragraph(col, table_header_style) for col in columns]]
-
-        # Add rows
-        for i in range(max_rows):
-            row = [
-                Paragraph(str(column_data[col][i]) if i < len(column_data[col]) else "", table_cell_style)
-                for col in columns
-            ]
-            table_data.append(row)
-
-        # Calculate column widths if not provided
-        if col_widths is None:
-            col_widths = [(PAGE_WIDTH - 20*mm) / len(columns)] * len(columns)
-
-        # Create table
-        table = Table(table_data, colWidths=col_widths)
-        table.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 4),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-            ('TOPPADDING', (0, 0), (-1, -1), 4),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-        ]))
-        elements.append(table)
-        elements.append(Spacer(1, 5*mm))
-
-    # Helper function to add section
     def add_section(page_title, content_dict):
-        elements.append(Paragraph(page_title, title_style))
-        elements.append(Spacer(1, 4*mm))
+        pdf.add_page()
 
+        # Title of the page in bold, bigger font
+        title_font_size = int(p1fontsize) + 2  # slightly larger
+        pdf.set_font(p1fontstyle, 'B', title_font_size)
+        pdf.cell(0, 12, txt=page_title, ln=1, align='L')
+        pdf.ln(4)
+
+        # Content entries: bold variable name, then indented normal text
+        pdf.set_font(p1fontstyle, '', int(p1fontsize))
         for label, value in content_dict.items():
             if not value:
-                continue
-            elements.append(Paragraph(label, bold_style))
+                continue  # Skip empty entries
+
+            # Label in bold
+            pdf.set_font(p1fontstyle, 'B', int(p1fontsize))
+            pdf.cell(0, 10, txt=label, ln=1)
+
+            # Value in regular font, with indentation
+            pdf.set_font(p1fontstyle, '', int(p1fontsize))
             if isinstance(value, list):
                 for item in value:
-                    elements.append(Paragraph(f"    {item}", normal_style))
+                    pdf.multi_cell(0, 10, txt="    " + str(item), border=0)
             else:
-                elements.append(Paragraph(f"    {value}", normal_style))
-            elements.append(Spacer(1, 2*mm))
+                pdf.multi_cell(0, 10, txt="    " + str(value), border=0)
 
-    # Page 1: Cover page
-    estimated_content_height = (int(p1fontsize) + 4) * 3 # Roughly 3 lines with their leading
+            pdf.ln(2)  # Add small space between entries
 
-    # Calculate vertical spacing to push content to the center
-    # PAGE_HEIGHT is used for vertical positioning
-    vertical_spacer_height = (PAGE_WIDTH - estimated_content_height) / 4
+    def add_table(page_title, column_data: dict):
+        pdf.add_page()
 
-    elements.append(Spacer(1, vertical_spacer_height))
+        # Title
+        pdf.set_font(p1fontstyle, 'B', int(p1fontsize) + 2)
+        pdf.cell(0, 10, txt=page_title, ln=1, align='L')
+        pdf.ln(5)
 
-    # All paragraph styles for the cover page should have TA_CENTER alignment
-    cover_title_style = ParagraphStyle('CoverTitle', parent=title_style, alignment=TA_CENTER)
-    cover_subtitle_style = ParagraphStyle('CoverSubtitle', parent=title_style, alignment=TA_CENTER)
-    cover_normal_style = ParagraphStyle('CoverNormal', parent=normal_style, alignment=TA_CENTER)
+        columns = list(column_data.keys())
+        max_rows = max(len(column_data[col]) for col in columns)
+        col_width = (pdf.w - 20) / len(columns)  # Leave margins
+        line_height = 6
 
-    elements.append(Paragraph("Policy Analysis", cover_title_style))
-    elements.append(Paragraph(p1policyanalysis, cover_subtitle_style))
-    elements.append(Paragraph(p1analysts, cover_normal_style))
+        # === HEADER ===
+        pdf.set_font(p1fontstyle, 'B', int(p1fontsize))
+        x_start = pdf.get_x()
+        y_start = pdf.get_y()
+
+        # Step 1: compute line-wrapped heights
+        header_lines = []
+        max_header_height = 0
+        for col in columns:
+            lines = pdf.multi_cell(col_width, line_height, col, split_only=True)
+            header_lines.append(lines)
+            max_header_height = max(max_header_height, len(lines) * line_height)
+
+        # Step 2: draw headers with consistent row height
+        for i, col in enumerate(columns):
+            x = x_start + i * col_width
+            pdf.set_xy(x, y_start)
+            pdf.multi_cell(col_width, line_height, col, border=1, align='C')
+
+        pdf.set_y(y_start + max_header_height)
+
+        # === DATA ROWS ===
+        pdf.set_font(p1fontstyle, '', int(p1fontsize))
+        for row_index in range(max_rows):
+            x_start = pdf.get_x()
+            y_start = pdf.get_y()
+
+            # Step 1: Compute row height based on wrapped content
+            row_heights = []
+            for col in columns:
+                text = str(column_data[col][row_index]) if row_index < len(column_data[col]) else ""
+                lines = pdf.multi_cell(col_width, line_height, text, split_only=True)
+                row_heights.append(len(lines) * line_height)
+            row_height = max(row_heights)
+
+            # Step 2: Draw cells
+            for i, col in enumerate(columns):
+                x = x_start + i * col_width
+                pdf.set_xy(x, y_start)
+                text = str(column_data[col][row_index]) if row_index < len(column_data[col]) else ""
+                pdf.multi_cell(col_width, row_height, text, border=1, align='L')
+
+            pdf.set_y(y_start + row_height)
 
 
-    elements.append(PageBreak())
+
+
+
+    # Page 1
+    pdf.add_page()
+    pdf.set_font(p1fontstyle, 'B', int(p1fontsize))
+
+    # Calculate page dimensions
+    page_height = pdf.h
+
+    # Estimate total height of the content (3 lines of text, each 10 units high)
+    content_height = 3 * 10  # assuming each line is 10 points tall
+
+    # Compute vertical center position
+    start_y = (page_height - content_height) / 2
+
+    # Move cursor to vertical center
+    pdf.set_y(start_y)
+
+    # Center text horizontally by using cell() with align='C'
+    pdf.cell(0, 10, txt="Policy Analysis", ln=1, align="C")
+    pdf.cell(0, 10, txt=p1policyanalysis, ln=1, align="C")
+    pdf.set_font(p1fontstyle, '', int(p1fontsize))
+    pdf.cell(0, 10, txt=p1analysts, ln=1, align="C")
 
     # Page 2
     add_section("Problematic Situation and Its Undesirable Effects", {
-        "Problematic Situation": p2problematicsituation,
-        "Undesirable Effects": p2undesirableeffects
+    "Problematic Situation": p2problematicsituation,
+    "Undesirable Effects": p2undesirableeffects
     })
-    elements.append(PageBreak())
 
     # Page 3
-    create_table("Current Efforts", {
-        "Current Efforts": p3efforts,
-        "Accomplishments": p3accomplishments,
-        "Assessments": p3assessments
-    })
-    elements.append(PageBreak())
-
-    global analysis_type, p4summaryPDF, reg_sum
-    # Page 4
-    elements.append(Paragraph("Statistical Analysis", title_style))
-    elements.append(Paragraph(f"Selected Statistical Method: {analysis_type}", bold_style))
-    elements.append(Spacer(1, 0.2 * inch))
-
-    if reg_sum.strip():
-        elements.append(Preformatted(reg_sum, normal_style))
-        elements.append(Spacer(1, 12))
-
-    # Path to your saved image file
-    image_path = "page4_plot.png"
-
-    try:
-        # Create an Image object
-        # You might need to adjust width and height or use 'scale'
-        # For example, to fit it within certain dimensions while maintaining aspect ratio:
-        # img = Image(image_path, width=4*inch, height=3*inch, kind='proportional')
-        # Or specify a fixed width/height and let ReportLab scale proportionally
-        img = RLImage(image_path)
-        if analysis_type == "Problem Tree Analysis":
-            img.drawWidth = 4 * inch
-        else:
-            img.drawWidth = 5.5*inch # Set desired width
-
-        elements.append(img)
-        elements.append(Spacer(1, 0.2 * inch)) # Add some space after the image
-
-    except Exception as e:
-        print(f"Error inserting image: {e}")
-        # Optionally, add a placeholder text if image insertion fails
-        elements.append(Paragraph("Image could not be loaded.", normal_style))
-    
-    elements.append(PageBreak())
-
+    add_table("Current Efforts", {"Current Efforts": p3efforts, 
+                                 "Accomplishments": p3accomplishments,
+                                 "Assessments": p3assessments})
 
     # Page 5
-    elements.append(Paragraph("Root Cause and Existing Policies", title_style))
-    elements.append(Spacer(1, 5*mm))
-    elements.append(Paragraph("Root Cause", bold_style))
-    elements.append(Paragraph(f"    {p5rootcause}", normal_style))
-    elements.append(Spacer(1, 5*mm))
-    # Table
-    col_labels = ["Existing Policies", "Relevant Provisions", "Ac-com-plish-ments", "Assessments"]
+    pdf.add_page()
+
+    # Page title
+    pdf.set_font(p1fontstyle, 'B', int(p1fontsize) + 2)
+    pdf.cell(0, 10, txt="Root Cause and Existing Policies", ln=1, align='L')
+    pdf.ln(5)
+
+    # Root cause
+    pdf.set_font(p1fontstyle, 'B', int(p1fontsize))
+    pdf.cell(0, 10, txt="Root Cause", ln=1, align='L')
+    pdf.set_font(p1fontstyle, '', int(p1fontsize))
+    pdf.multi_cell(0, 10, txt=f"    {p5rootcause}")
+    pdf.ln(5)
+
+    # Table data
+    col_labels = ["Existing Policies", "Relevant Provisions", "Accomplishments", "Assessments"]
     col_data = [p5existingpolicies, p5relevantprov, p5accomplishments, p5assessments]
-    create_table("", {label: data for label, data in zip(col_labels, col_data)})
-    elements.append(PageBreak())
+    max_rows = max(len(col) for col in col_data)
+    col_width = pdf.w / len(col_labels) - 10
+
+    # Header row
+    pdf.set_font(p1fontstyle, 'B', int(p1fontsize))
+    for label in col_labels:
+        pdf.cell(col_width, 20, txt=label, border=1, align='C')
+    pdf.ln()
+
+    # Table rows
+    pdf.set_font(p1fontstyle, '', int(p1fontsize))
+    for i in range(max_rows):
+        for col in col_data:
+            text = col[i] if i < len(col) else ""
+            pdf.cell(col_width, 20, txt=text, border=1, align='C')
+        pdf.ln()
 
     # Page 6
-    add_section("Policy Problem and Issue Statement", {
-        "Policy Problem": p6policyproblem,
-        "Policy Issue Statement": p6policyissue
-    })
-    elements.append(PageBreak())
+    add_section("Policy Problem and Issue Statement", {"Policy Problem": p6policyproblem, "Policy Issue Statement": p6policyissue})
 
     # Page 7
-    create_table("Goals and Objectives of the Proposal", {
-        "Policy Goals and Objectives": p7policyGoalsandObjectives,
-        "Indicators": p7indicators
-    })
-    elements.append(PageBreak())
-
+    add_table("Goals and Objectives of the Proposal", {
+        "Policy Goals and Objectives": p7policyGoalsandObjectives, "Indicators": p7indicators})
+    
     # Page 8
-    create_table("Stakeholders and Actors", {
-        "Stakeholders": p8stakeholders,
-        "Actors": p8actors
-    })
-    elements.append(PageBreak())
+    add_table("Stakeholders and Actors", {
+        "Stakeholders": p8stakeholders, "Actors": p8actors})
 
     # Page 9
-    create_table("Policy Alternatives", {
-        "Alternative Number": p9altnum,
-        "Alternatives": p9alternatives
-    })
-    elements.append(PageBreak())
+    add_table("Policy Alternatives", {
+        "Alternative Number": p9altnum, "Alternatives": p9alternatives})
 
     # Page 10
-    elements.append(Paragraph("Assessment of Policy Alternatives", title_style))
-    elements.append(Spacer(1, 5*mm))
+    pdf.add_page()
+    pdf.set_font(p1fontstyle, 'B', int(p1fontsize) + 2)
+    pdf.cell(0, 10, "Assessment of Policy Alternatives", ln=1, align="L")
+    pdf.ln(5)
+
+    # Table headers and data
     headers = ["Alternative", "Spillover", "Externalities", "Constraints", "Mitigating Measures"]
     columns = [p9alternatives, p10spillovers, p10externalities, p10constraints, p10mitimeasures]
-    col_widths = [(PAGE_WIDTH - 20*mm) * w for w in [0.20, 0.20, 0.20, 0.20, 0.20]]
-    create_table("", {header: col for header, col in zip(headers, columns)}, col_widths=col_widths)
-    elements.append(PageBreak())
+    max_rows = min(len(col) for col in columns)
+
+    # Max page width minus margins (190 for default A4)
+    page_width = pdf.w - 20
+    col_widths = [page_width * w for w in [0.20, 0.20, 0.20, 0.20, 0.20]]  # Equal width for 5 columns
+    line_height = 5
+
+    # Draw header
+    pdf.set_font(p1fontstyle, 'B', int(p1fontsize))
+    x_start = pdf.get_x()
+    y_start = pdf.get_y()
+
+    header_lines = []
+    max_header_height = 0
+    for i, header in enumerate(headers):
+        lines = pdf.multi_cell(col_widths[i], line_height, header, border=0, align='C', split_only=True)
+        header_lines.append(lines)
+        max_header_height = max(max_header_height, len(lines) * line_height)
+
+    # Render headers with fixed height
+    for i, header in enumerate(headers):
+        x = pdf.get_x()
+        y = pdf.get_y()
+        pdf.multi_cell(col_widths[i], line_height, header, border=1, align='C')
+        pdf.set_xy(x + col_widths[i], y)
+    pdf.ln(max_header_height)
+
+    # Draw content rows
+    pdf.set_font(p1fontstyle, '', int(p1fontsize))
+    for i in range(max_rows):
+        row = [col[i] for col in columns]
+
+        # Step 1: Determine max row height by simulating line count
+        row_heights = []
+        for j, text in enumerate(row):
+            lines = pdf.multi_cell(col_widths[j], line_height, text, border=0, align='L', split_only=True)
+            row_heights.append(len(lines) * line_height)
+        max_row_height = max(row_heights)
+
+        # Step 2: Draw each cell in the row using the same height
+        x_row_start = pdf.get_x()
+        y_row_start = pdf.get_y()
+        for j, text in enumerate(row):
+            x = pdf.get_x()
+            y = pdf.get_y()
+            pdf.multi_cell(col_widths[j], max_row_height, text, border=1, align='L')
+            pdf.set_xy(x + col_widths[j], y)
+        pdf.set_y(y_row_start + max_row_height)
+
 
     # Page 11
     add_section("Best/Optimal Policy Alternative", {
-        "Description": p11BPAdescription,
-        "Reasons for Selection": p11BPAreasonSelect
-    })
-    elements.append(PageBreak())
+        "Description": p11BPAdescription, "Reasons for Selection": p11BPAreasonSelect})
 
     # Page 12
     add_section("Details of the Best/Optimal Policy Alternative", {
-        "Spillover": p12BPAspillover,
-        "Externality": p12BPAexternality,
-        "Constraint": p12BPAconstraint,
-        "Mitigating Measures": p12BPAmitigatingmeasure
-    })
-    elements.append(PageBreak())
+        "Spillover": p12BPAspillover, "Externality": p12BPAexternality,
+        "Constraint": p12BPAconstraint, "Mitigating Measures": p12BPAmitigatingmeasure})
 
     # Page 13
     add_section("Implementation Requirements", {
-        "What type of legislation is needed? Why?": p13BPAwhat,
-        "Who will implement? Why?": p13BPAwho,
-        "Implementation Cost and Source": p13BPAhow
-    })
-    elements.append(PageBreak())
+        "What type of legislation is needed? Why?": p13BPAwhat, "Who will implement? Why?": p13BPAwho, "Implementation Cost and Source": p13BPAhow})
 
     # Page 14
-    create_table("Policy Implementation Plan", {
-        "Critical Actions": p14criticalActions,
-        "Responsible/Accountable Units": p14responsible,
-        "Timeframes": p14timeline,
-        "Budgets": p14budget,
-        "Budget Sources": p14budgetsource
-    })
-    elements.append(PageBreak())
+    add_table("Policy Implementation Plan", {
+        "Critical Actions": p14criticalActions, "Responsible/Accountable Units": p14responsible,
+        "Timeframes": p14timeline, "Budgets": p14budget, "Budget Sources": p14budgetsource})
 
     # Page 15
-    elements.append(Paragraph("Monitoring and Evaluation Plan", title_style))
-    elements.append(Spacer(1, 4*mm))
+    pdf.add_page()
+
+    # Page title
+    pdf.set_font(p1fontstyle, 'B', int(p1fontsize) + 2)
+    pdf.cell(0, 10, "Monitoring and Evaluation Plan", ln=1)
+    pdf.ln(4)
+
+    # Column headers and widths
     headers = [
         "Goals and Objectives", "SMART Indicator", "Data Source", "Frequency",
         "Units-In-Charge", "M&E Output", "M&E Report Users"
     ]
-    columns = [
-        p7policyGoalsandObjectives, p7indicators, p15dataSources,
-        p15frequency, p15responsible, p15output, p15report
-    ]
-    col_widths = [(PAGE_WIDTH - 20*mm) / len(headers)] * len(headers)
-    create_table("", {header: col for header, col in zip(headers, columns)}, col_widths=col_widths)
+    page_width = pdf.w - 20  # account for margins
+    col_widths = [page_width / len(headers)] * len(headers)
+    line_height = 5
 
-    # Build PDF
-    pdf.build(elements)
+    # Header wrapping
+    pdf.set_font(p1fontstyle, 'B', int(p1fontsize) - 1)
+    x_start = pdf.get_x()
+    y_start = pdf.get_y()
 
-def print_file():
-    pdffilename = save_pdf_file_path
-    print(pdffilename)
-    os.startfile(pdffilename, 'print')
+    # Measure header height
+    max_header_height = 0
+    header_lines = []
+    for i, header in enumerate(headers):
+        lines = pdf.multi_cell(col_widths[i], line_height, header, border=0, align='C', split_only=True)
+        header_lines.append(lines)
+        max_header_height = max(max_header_height, len(lines) * line_height)
+
+    # Draw headers
+    pdf.set_xy(x_start, y_start)
+    for i, header in enumerate(headers):
+        x = pdf.get_x()
+        y = pdf.get_y()
+        pdf.multi_cell(col_widths[i], max_header_height, header, border=1, align='C')
+        pdf.set_xy(x + col_widths[i], y)
+    pdf.ln(max_header_height)
+
+    # Data rows
+    pdf.set_font(p1fontstyle, '', int(p1fontsize) - 1)
+    length = min(
+        len(p7policyGoalsandObjectives), len(p7indicators),
+        len(p15dataSources), len(p15frequency),
+        len(p15responsible), len(p15output), len(p15report)
+    )
+
+    for i in range(length):
+        row = [
+            p7policyGoalsandObjectives[i],
+            p7indicators[i],
+            p15dataSources[i],
+            p15frequency[i],
+            p15responsible[i],
+            p15output[i],
+            p15report[i]
+        ]
+
+        # Measure max height for row
+        row_lines = []
+        for j, cell in enumerate(row):
+            lines = pdf.multi_cell(col_widths[j], line_height, cell, border=0, align='L', split_only=True)
+            row_lines.append(lines)
+        max_row_height = max(len(lines) * line_height for lines in row_lines)
+
+        # Draw each cell
+        x_row_start = pdf.get_x()
+        y_row_start = pdf.get_y()
+        for j, cell in enumerate(row):
+            x = pdf.get_x()
+            y = pdf.get_y()
+            pdf.multi_cell(col_widths[j], max_row_height, cell, border=1, align='L')
+            pdf.set_xy(x + col_widths[j], y)
+        pdf.set_y(y_row_start + max_row_height)
+
+
+
+    
+    pdf.output(save_pdf_file_path, 'F')
+    
+    
     
 def print_file():
 
