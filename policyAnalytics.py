@@ -15,6 +15,10 @@ from PIL import Image, ImageTk, ImageGrab
 import fpdf
 from fpdf import FPDF
 
+import reportlab
+
+from reportlab import lib, platypus, pdfbase
+
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Preformatted
 from reportlab.platypus import Image as RLImage
@@ -27,7 +31,6 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.units import inch
 
 import os
-
 
 import pandas as pd
 import numpy as np 

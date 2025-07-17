@@ -28,7 +28,6 @@ from reportlab.lib.units import inch
 
 import os
 
-
 import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt 
@@ -473,10 +472,6 @@ def createNewProject():
     ##p1fontsize = 12
 
     color = ("", "#000000")  # Default color for ShapeEditorApp
-    interceptLR, coefficientLR = 0, 0
-    interceptMR1, coefficientMR1 = 0, 0
-    interceptMR2, coefficientMR2 = 0, 0
-    interceptLogR, coefficientConstLogR, coefficientXLogR = 0, 0, 0
     discount = 0.05  # Default discount rate
     
     # Tooltip class
@@ -1284,7 +1279,7 @@ def createNewProject():
                 image_filename = "page4_plot.png"
                 plt.savefig(image_filename)
                 plt.show() 
-                page_5
+                page_5()
             
             elif(int(var.get()) == 4):
                 analysis = Toplevel(main)
@@ -1589,7 +1584,7 @@ def createNewProject():
     def page_5(): 
         global p5rootcause, p5existingpolicies, p5relevantprov, p5accomplishments, p5assessments  
 
-        mainProject.state('zoomed')
+        mainProject.geometry("1530x830")
         style.configure('Treeview', rowheight=320)
 
         ### Progress indicator
@@ -1882,18 +1877,18 @@ def createNewProject():
     def page_7():
         global p7policyGoalsandObjectives, p7indicators
 
-        mainProject.geometry("900x600")
-        style.configure('Treeview', rowheight=40)
+        mainProject.geometry("930x630")
+        style.configure('Treeview', rowheight=20)
 
         # Main container
         frame7 = tk.LabelFrame(mainProject, text="Goals and Objectives of the Proposal", font=("Arial", 12, "bold"))
-        frame7.pack(padx=20, pady=20, fill="both", expand=True)
+        frame7.place(x=40, y=10)
 
         status = ttk.Label(mainProject, text="")
         status.place(relx=0.02, rely=0.92)
 
         # Treeview
-        goals_and_obj_table = ttk.Treeview(frame7, selectmode="browse", height=5)
+        goals_and_obj_table = ttk.Treeview(frame7, selectmode="browse", height=12)
         goals_and_obj_table["columns"] = ("1", "2")
         goals_and_obj_table['show'] = 'headings'
         goals_and_obj_table.column("1", width=350, anchor='c')
@@ -1905,12 +1900,12 @@ def createNewProject():
         sb_x = ttk.Scrollbar(frame7, orient="horizontal", command=goals_and_obj_table.xview)
         goals_and_obj_table.configure(yscrollcommand=sb_y.set, xscrollcommand=sb_x.set)
 
-        goals_and_obj_table.grid(row=1, column=0, sticky="nsew")
-        sb_y.grid(row=1, column=1, sticky="ns")
-        sb_x.grid(row=2, column=0, sticky="ew")
+        goals_and_obj_table.grid(row=0, column=0)
+        sb_y.grid(row=0, column=1, sticky="ns")
+        sb_x.grid(row=1, column=0, sticky="ew")
 
-        frame7.grid_rowconfigure(1, weight=1)
-        frame7.grid_columnconfigure(0, weight=1)
+        # frame7.grid_rowconfigure(0, weight=1)
+        # frame7.grid_columnconfigure(0, weight=1)
 
         # Input section
         pgo_label = tk.Label(mainProject, text="Policy Goals and Objectives")
@@ -2051,7 +2046,6 @@ def createNewProject():
 
 
     def page_8():
-
         global p8stakeholders, p8actors
         mainProject.state('normal') 
         mainProject.geometry("800x700")
@@ -2069,7 +2063,7 @@ def createNewProject():
         frame8.place(x=40, y=10)
 
         # Table
-        sta_and_act_table = ttk.Treeview(frame8, selectmode="browse", height=10)
+        sta_and_act_table = ttk.Treeview(frame8, selectmode="browse", height=15)
         sta_and_act_table["columns"] = ("1", "2")
         sta_and_act_table['show'] = 'headings'
         sta_and_act_table.column("1", width=350, anchor='c')
