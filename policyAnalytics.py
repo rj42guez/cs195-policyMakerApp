@@ -45,6 +45,14 @@ import sklearn as skl
 
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 # Hamdi addition
 #import tkinter.tix as tix 
 
@@ -91,9 +99,9 @@ programmerLabel = Label(middle_pane, background="#ffffff", foreground="#76090c",
 reveiwerLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="left", text = "Reviewers: Colin Rosales, Danne Nicole Pinpin, and Jean Phoebe Yao")
 adminLabel = Label(middle_pane, background="#ffffff", foreground="#76090c", font=("Franklin ", 10), wraplength=1400, justify="left", text = "Administrative Assistance: Lilian J. Marfil, Pedro J. Madarang, and Zhelly Ann Linsangan")
 
-dspppLogo = (Image.open("logo_DSPPP.png"))
-cidsLogo = (Image.open("logo_UP_CIDS.png"))
-upLogo = (Image.open("logo_UP.png"))
+dspppLogo = (Image.open(resource_path("logo_DSPPP.png")))
+cidsLogo = (Image.open(resource_path("logo_UP_CIDS.png")))
+upLogo = (Image.open(resource_path("logo_UP.png")))
 
 up = upLogo.resize((100, 100))
 dsppp = dspppLogo.resize((100, 100))
@@ -183,6 +191,9 @@ p8actors = []
 global p9altnum, p9alternatives
 p9altnum = []
 p9alternatives = []
+
+global p9stakeholderDataPerAlt
+p9stakeholderDataPerAlt = []
 
 global p10spillovers, p10externalities, p10constraints, p10mitimeasures
 p10spillovers = []
@@ -280,6 +291,9 @@ def new_project():
     p9altnum = []
     p9alternatives = []
 
+    global p9stakeholderDataPerAlt
+    p9stakeholderDataPerAlt = []
+
     global p10spillovers, p10externalities, p10constraints, p10mitimeasures
     p10spillovers = []
     p10externalities = []
@@ -326,6 +340,7 @@ def open_project():
     global p7policyGoalsandObjectives, p7indicators
     global p8stakeholders, p8actors
     global p9altnum, p9alternatives
+    global p9stakeholderDataPerAlt
     global p10spillovers, p10externalities, p10constraints, p10mitimeasures
     global p11BPAdescription, p11BPAreasonSelect
     global p12BPAspillover, p12BPAexternality, p12BPAconstraint, p12BPAmitigatingmeasure
@@ -363,6 +378,7 @@ def open_project():
         p8actors = data.get("p8actors", [])
         p9altnum = data.get("p9altnum", [])
         p9alternatives = data.get("p9alternatives", [])
+        p9stakeholderDataPerAlt = data.get("p9stakeholderDataPerAlt", [])
         p10spillovers = data.get("p10spillovers", [])
         p10externalities = data.get("p10externalities", [])
         p10constraints = data.get("p10constraints", [])
@@ -3074,100 +3090,100 @@ def createNewProject():
                     princeMethod.title("PRINCE Method: Alternative " + str(a+1) + " - " + policyAlt)
                     princeMethod.geometry("670x600")
 
-                    analysisFrame = tk.LabelFrame(princeMethod)
-
-                    princeLabel = Label(analysisFrame, text = "PRINCE Method")
-                    princeTable=ttk.Treeview(analysisFrame)
-                    princeTable["columns"]=("1","2","3","4","5")
-                    princeTable['show']='headings'
-                    princeTable.column("1",width=130,anchor='c')
-                    princeTable.column("2",width=130,anchor='c')
-                    princeTable.column("3",width=130,anchor='c')
-                    princeTable.column("4",width=130,anchor='c')
-                    princeTable.column("5",width=130,anchor='c')
-                    princeTable.heading("1",text="Player")
-                    princeTable.heading("2",text="Issue Position")
-                    princeTable.heading("3",text="Power")
-                    princeTable.heading("4",text="Priority")
-                    princeTable.heading("5",text="PRINCE Score")
-
-                    playerLabel = Label(princeMethod, text = "Player")
-                    issueposLabel = Label(princeMethod, text = "Issue\nPosition")
-                    powerLabel = Label(princeMethod, text = "Power")
-                    prioLabel = Label(princeMethod, text = "Priority")
-
-                    player = tk.Entry(princeMethod, width=30)
-                    issuepos = tk.Entry(princeMethod, width=30) 
-                    power = tk.Entry(princeMethod, width=30) 
-                    prio = tk.Entry(princeMethod, width=30) 
-
-                    addButton = tk.Button(princeMethod, text='Add', width=10, command=lambda: add_data())  
-                    editButton = tk.Button(princeMethod, text="Edit", width=10, command=lambda: edit_data())
-
-                    def show_data(a):
-                        player.delete(0,END)
-                        issuepos.delete(0,END)
-                        power.delete(0,END)
-                        prio.delete(0,END)
-
-                        selectedItem = princeTable.selection()[0]
-                        player.insert(0, princeTable.item(selectedItem)['values'][0])
-                        issuepos.insert(0, princeTable.item(selectedItem)['values'][1])
-                        power.insert(0, princeTable.item(selectedItem)['values'][2])
-                        prio.insert(0, princeTable.item(selectedItem)['values'][3])
-
-                    princeTable.bind("<<TreeviewSelect>>", show_data)
-
-                    def edit_data():
-                        playerText = player.get()                               # read player textbox
-                        issueposText = int(issuepos.get())                      # read issue position textbox
-                        powerText = int(power.get())                            # read power textbox        
-                        prioText = int(prio.get())                              # read priority textbox     
-
-                        grades = [issueposText, powerText, prioText]
-                        pc = 1
-                        for g in grades:
-                            if g != 0:
-                                pc *= g       
-                                                
-                        selected_item = princeTable.selection()[0]
-                        princeTable.item(selected_item, text="blub", values=(playerText, issueposText, powerText, prioText, pc))
-
-                    def add_data():
-                        playerText = player.get()                               # read player textbox
-                        issueposText = int(issuepos.get())                      # read issue position textbox
-                        powerText = int(power.get())                            # read power textbox        
-                        prioText = int(prio.get())                              # read priority textbox 
-
-                        grades = [issueposText, powerText, prioText]
-                        pc = 1
-                        for g in grades:
-                            if g != 0:
-                                pc *= g 
-
-                        global assessmentTuple
-                        assessmentTuple = [playerText, issueposText, powerText, prioText]
-
-                        princeTable.insert("",'end', values=(playerText, issueposText, powerText, prioText, pc))
-                        player.delete(0,END)
-                        issuepos.delete(0,END)
-                        power.delete(0,END)
-                        prio.delete(0,END)
-                        player.focus() 
-
-                    analysisFrame.place(x=10, y=10)
-                    princeLabel.grid(row=0, column=1)
-                    princeTable.grid(row=1, column=1)
-                    playerLabel.place(x=40, y=330)
-                    player.place(x=200, y=330)
-                    issueposLabel.place(x=40, y=390)
-                    issuepos.place(x=200, y=390)
-                    powerLabel.place(x=40, y=450)
-                    power.place(x=200, y=450)
-                    prioLabel.place(x=40, y=510)
-                    prio.place(x=200, y=510)
-                    addButton.place(x=450, y=390)
-                    editButton.place(x=450, y=450)
+                    # analysisFrame = tk.LabelFrame(princeMethod)
+# 
+                    # princeLabel = Label(analysisFrame, text = "PRINCE Method")
+                    # princeTable=ttk.Treeview(analysisFrame)
+                    # princeTable["columns"]=("1","2","3","4","5")
+                    # princeTable['show']='headings'
+                    # princeTable.column("1",width=130,anchor='c')
+                    # princeTable.column("2",width=130,anchor='c')
+                    # princeTable.column("3",width=130,anchor='c')
+                    # princeTable.column("4",width=130,anchor='c')
+                    # princeTable.column("5",width=130,anchor='c')
+                    # princeTable.heading("1",text="Player")
+                    # princeTable.heading("2",text="Issue Position")
+                    # princeTable.heading("3",text="Power")
+                    # princeTable.heading("4",text="Priority")
+                    # princeTable.heading("5",text="PRINCE Score")
+# 
+                    # playerLabel = Label(princeMethod, text = "Player")
+                    # issueposLabel = Label(princeMethod, text = "Issue\nPosition")
+                    # powerLabel = Label(princeMethod, text = "Power")
+                    # prioLabel = Label(princeMethod, text = "Priority")
+# 
+                    # player = tk.Entry(princeMethod, width=30)
+                    # issuepos = tk.Entry(princeMethod, width=30) 
+                    # power = tk.Entry(princeMethod, width=30) 
+                    # prio = tk.Entry(princeMethod, width=30) 
+# 
+                    # addButton = tk.Button(princeMethod, text='Add', width=10, command=lambda: add_data())  
+                    # editButton = tk.Button(princeMethod, text="Edit", width=10, command=lambda: edit_data())
+# 
+                    # def show_data(a):
+                    #     player.delete(0,END)
+                    #     issuepos.delete(0,END)
+                    #     power.delete(0,END)
+                    #     prio.delete(0,END)
+# 
+                    #     selectedItem = princeTable.selection()[0]
+                    #     player.insert(0, princeTable.item(selectedItem)['values'][0])
+                    #     issuepos.insert(0, princeTable.item(selectedItem)['values'][1])
+                    #     power.insert(0, princeTable.item(selectedItem)['values'][2])
+                    #     prio.insert(0, princeTable.item(selectedItem)['values'][3])
+# 
+                    # princeTable.bind("<<TreeviewSelect>>", show_data)
+# 
+                    # def edit_data():
+                    #     playerText = player.get()                               # read player textbox
+                    #     issueposText = int(issuepos.get())                      # read issue position textbox
+                    #     powerText = int(power.get())                            # read power textbox        
+                    #     prioText = int(prio.get())                              # read priority textbox     
+# 
+                    #     grades = [issueposText, powerText, prioText]
+                    #     pc = 1
+                    #     for g in grades:
+                    #         if g != 0:
+                    #             pc *= g       
+                    #                             
+                    #     selected_item = princeTable.selection()[0]
+                    #     princeTable.item(selected_item, text="blub", values=(playerText, issueposText, powerText, prioText, pc))
+# 
+                    # def add_data():
+                    #     playerText = player.get()                               # read player textbox
+                    #     issueposText = int(issuepos.get())                      # read issue position textbox
+                    #     powerText = int(power.get())                            # read power textbox        
+                    #     prioText = int(prio.get())                              # read priority textbox 
+# 
+                    #     grades = [issueposText, powerText, prioText]
+                    #     pc = 1
+                    #     for g in grades:
+                    #         if g != 0:
+                    #             pc *= g 
+# 
+                    #     global assessmentTuple
+                    #     assessmentTuple = [playerText, issueposText, powerText, prioText]
+# 
+                    #     princeTable.insert("",'end', values=(playerText, issueposText, powerText, prioText, pc))
+                    #     player.delete(0,END)
+                    #     issuepos.delete(0,END)
+                    #     power.delete(0,END)
+                    #     prio.delete(0,END)
+                    #     player.focus() 
+# 
+                    # analysisFrame.place(x=10, y=10)
+                    # princeLabel.grid(row=0, column=1)
+                    # princeTable.grid(row=1, column=1)
+                    # playerLabel.place(x=40, y=330)
+                    # player.place(x=200, y=330)
+                    # issueposLabel.place(x=40, y=390)
+                    # issuepos.place(x=200, y=390)
+                    # powerLabel.place(x=40, y=450)
+                    # power.place(x=200, y=450)
+                    # prioLabel.place(x=40, y=510)
+                    # prio.place(x=200, y=510)
+                    # addButton.place(x=450, y=390)
+                    # editButton.place(x=450, y=450)
 
                 a = 0
 
@@ -3176,10 +3192,13 @@ def createNewProject():
                     a += 1    
 
             elif int(varAccept.get()) == 2:
+                global p9stakeholderDataPerAlt
                 def windowPerAlt(a, policyAlt):
                     stakeholderWindow = Toplevel(main)
                     stakeholderWindow.title("Stakeholder Analysis: Alternative " + str(a+1) + " - " + policyAlt)
                     stakeholderWindow.geometry("790x600")
+
+                    p9stakeholderDataPerAlt.append([]) 
 
                     analysisFrame = tk.LabelFrame(stakeholderWindow)
 
@@ -3223,6 +3242,9 @@ def createNewProject():
 
 
                     stakeholderTable.bind("<<TreeviewSelect>>", show_data)
+                    if a < len(p9stakeholderDataPerAlt):
+                        for row in p9stakeholderDataPerAlt[a]:
+                            stakeholderTable.insert("", "end", values=row)
 
                     def edit_data():
                         player_stakeactorText = player_stakeactor.get()     # read player(s + a) textbox
@@ -3234,23 +3256,30 @@ def createNewProject():
                         stakeholderTable.item(selected_item, text="blub", values=(player_stakeactorText, positionText, motivationText, sourceText))
 
                     def add_data():
-                        player_stakeactorText = player_stakeactor.get()     # read player(s + a) textbox
-                        positionText = position.get()                       # read position textbox
-                        motivationText = motivation.get()                   # read motivation textbox        
-                        sourceText = source.get()                           # read source textbox   
+                        player_stakeactorText = player_stakeactor.get()
+                        positionText = position.get()
+                        motivationText = motivation.get()
+                        sourceText = source.get()
 
-                        global assessmentTuple
-                        assessmentTuple = [player_stakeactorText, positionText, motivationText, sourceText]
+                        stakeholderTable.insert("", 'end', values=(
+                            player_stakeactorText, positionText, motivationText, sourceText))
 
-                        # effortList.append(efforttuple)
+                        # Save to the corresponding sublist using index `a`
+                        p9stakeholderDataPerAlt[a].append([
+                            player_stakeactorText,
+                            positionText,
+                            motivationText,
+                            sourceText
+                        ])
 
-                        stakeholderTable.insert("",'end', values=(player_stakeactorText, positionText, motivationText, sourceText))
-                        player_stakeactor.delete(0,END)
-                        position.delete(0,END)
-                        motivation.delete(0,END)
-                        source.delete(0,END)
-                        player_stakeactor.focus() 
+                        player_stakeactor.delete(0, END)
+                        position.delete(0, END)
+                        motivation.delete(0, END)
+                        source.delete(0, END)
 
+                        player_stakeactor.focus()
+
+                    save()
                     analysisFrame.place(x=10, y=10)
                     stakeholderLabel.grid(row=0, column=1)
                     stakeholderTable.grid(row=1, column=1)
@@ -4088,7 +4117,18 @@ def createNewProject():
         sb_y.place(relx=0.97, rely=0.10, relheight=0.80)
         sb_x.place(relx=0.01, rely=0.90, relwidth=0.96)
 
-        for values in zip(p7policyGoalsandObjectives, p7indicators, p15dataSources, p15frequency, p15responsible, p15output, p15report):
+        # Insert rows, filling missing p15 fields with ""
+        max_rows = len(p7policyGoalsandObjectives)
+        for i in range(max_rows):
+            values = [
+            p7policyGoalsandObjectives[i] if i < len(p7policyGoalsandObjectives) else "",
+            p7indicators[i] if i < len(p7indicators) else "",
+            p15dataSources[i] if i < len(p15dataSources) else "",
+            p15frequency[i] if i < len(p15frequency) else "",
+            p15responsible[i] if i < len(p15responsible) else "",
+            p15output[i] if i < len(p15output) else "",
+            p15report[i] if i < len(p15report) else "",
+            ]
             policyAssessmentTable.insert("", "end", values=values)
 
         policyAssessmentTable.bind("<<TreeviewSelect>>", show_data15)
@@ -4184,6 +4224,7 @@ def save():
         "p8actors": p8actors,
         "p9altnum": p9altnum,
         "p9alternatives": p9alternatives,
+        "p9stakeholderDataPerAlt": p9stakeholderDataPerAlt,
         "p10spillovers": p10spillovers,
         "p10externalities": p10externalities,
         "p10constraints": p10constraints,
@@ -4217,7 +4258,7 @@ def save():
 def save_pdf():
     # Generate the PDF
 
-    global save_pdf_file_path, p1projecttitle, p1fontstyle, p1fontsize, p1policyanalysis, p1analysts, p2problematicsituation, p2undesirableeffects, p3efforts, p3accomplishments, p3assessments, p5accomplishments, p5assessments, p5existingpolicies, p5relevantprov, p6policyproblem, p6policyissue, p7policyGoalsandObjectives, p7indicators, p8stakeholders, p8actors, p9altnum, p9alternatives, p10spillovers, p10externalities, p10constraints, p10mitimeasures, p11BPAdescription, p11BPAreasonSelect, p12BPAspillover, p12BPAexternality, p12BPAconstraint, p12BPAmitigatingmeasure, p13BPAwhat, p13BPAwho, p13BPAhow, p14budget, p14budgetsource, p14criticalActions, p14responsible, p14timeline, p15dataSources, p15frequency, p15responsible, p15output, p15report
+    global save_pdf_file_path, p1projecttitle, p1fontstyle, p1fontsize, p1policyanalysis, p1analysts, p2problematicsituation, p2undesirableeffects, p3efforts, p3accomplishments, p3assessments, p5accomplishments, p5assessments, p5existingpolicies, p5relevantprov, p6policyproblem, p6policyissue, p7policyGoalsandObjectives, p7indicators, p8stakeholders, p8actors, p9altnum, p9alternatives, p9stakeholderDataPerAlt, p10spillovers, p10externalities, p10constraints, p10mitimeasures, p11BPAdescription, p11BPAreasonSelect, p12BPAspillover, p12BPAexternality, p12BPAconstraint, p12BPAmitigatingmeasure, p13BPAwhat, p13BPAwho, p13BPAhow, p14budget, p14budgetsource, p14criticalActions, p14responsible, p14timeline, p15dataSources, p15frequency, p15responsible, p15output, p15report
 
 
     if save_pdf_file_path is None:
@@ -4413,7 +4454,9 @@ def save_pdf():
         # Or specify a fixed width/height and let ReportLab scale proportionally
         img = RLImage(image_path)
         if analysis_type == "Problem Tree Analysis":
-            img.drawWidth = 4 * inch
+            img.drawWidth = 3.5 * inch
+            # Move image to the left by setting left alignment (x=0)
+            img.hAlign = 'LEFT'
         else:
             img.drawWidth = 5.5*inch # Set desired width
 
@@ -4435,7 +4478,7 @@ def save_pdf():
     elements.append(Paragraph(f"    {p5rootcause}", normal_style))
     elements.append(Spacer(1, 5*mm))
     # Table
-    col_labels = ["Existing Policies", "Relevant Provisions", "Ac-com-plish-ments", "Assessments"]
+    col_labels = ["Existing Policies", "Relevant Provisions", "Accomplishments", "Assessments"]
     col_data = [p5existingpolicies, p5relevantprov, p5accomplishments, p5assessments]
     create_table("", {label: data for label, data in zip(col_labels, col_data)})
     elements.append(PageBreak())
@@ -4466,6 +4509,27 @@ def save_pdf():
         "Alternative Number": p9altnum,
         "Alternatives": p9alternatives
     })
+
+    for i in enumerate(p9alternatives):
+        # For each alternative, if stakeholder data exists, create a table for it
+        if i[0] < len(p9stakeholderDataPerAlt):
+            stakeholder_data = p9stakeholderDataPerAlt[i[0]]
+            if stakeholder_data:  # Only add table if there is data
+            # Transpose stakeholder_data into columns
+                players = [row[0] for row in stakeholder_data]
+                positions = [row[1] for row in stakeholder_data]
+                motivations = [row[2] for row in stakeholder_data]
+                sources = [row[3] for row in stakeholder_data]
+                create_table(
+                    f"Stakeholder Analysis for Alternative {i[0]+1}: {p9alternatives[i[0]]}",
+                    {
+                    "Players": players,
+                    "Positions": positions,
+                    "Motivations": motivations,
+                    "Sources of Power": sources
+                    }
+                )
+        
     elements.append(PageBreak())
 
     # Page 10
@@ -4514,16 +4578,14 @@ def save_pdf():
     # Page 15
     elements.append(Paragraph("Monitoring and Evaluation Plan", title_style))
     elements.append(Spacer(1, 4*mm))
-    headers = [
-        "Goals and Objectives", "SMART Indicator", "Data Source", "Frequency",
-        "Units-In-Charge", "M&E Output", "M&E Report Users"
-    ]
-    columns = [
-        p7policyGoalsandObjectives, p7indicators, p15dataSources,
-        p15frequency, p15responsible, p15output, p15report
-    ]
-    col_widths = [(PAGE_WIDTH - 20*mm) / len(headers)] * len(headers)
-    create_table("", {header: col for header, col in zip(headers, columns)}, col_widths=col_widths)
+    create_table("", {"Goals and Objectives": p7policyGoalsandObjectives, 
+                      "SMART Indicators": p7indicators, 
+                      "Data Source": p15dataSources,
+                      "Frequency": p15frequency,
+                      "Units-In-Charge": p15responsible,
+                      "M&E Output": p15output,
+                      "M&E Report Users": p15report  
+                      })
 
     # Build PDF
     pdf.build(elements)
