@@ -74,39 +74,28 @@ global reg_sum
 reg_sum = ""
 
 ctk.set_appearance_mode("light")
-ctk.set_default_color_theme("green")
+ctk.set_default_color_theme("themes/red.json")
 
 root = ctk.CTk()
-root.title("Policy Analytics 1.0")
-root.geometry("1300x700")
-
-#sizegrip = ttk.Sizegrip(root)
-#sizegrip.pack(padx = 5, pady = 5, anchor = tk.SE, expand = True)
+root.title("Policy Analytics 1.1")
 
 # getting screen's width in pixels
 hght = root.winfo_screenheight()
 wth = root.winfo_screenwidth() 
 print("\n width x height = %d x %d (in pixels)\n" %(wth, hght))
 
-main = CTkXYFrame(root, width=wth, height=hght)
-main.pack(expand=True, padx=10, pady=10)
+root.geometry(f"{wth}x{hght}")
 
-# canvas = tk.Canvas(main, background="#ffffff")
-# canvas.configure(yscrollcommand=scrollbar.set)
+main = CTkXYFrame(root, fg_color="white")
+main.pack(fill="both", expand=True)
 
-# left_pane = tk.PanedWindow(main, background="#76090c", width=200)
-# right_pane = tk.PanedWindow(main, background="#76090c", width=200)
-
-# main.add(left_pane, stretch="always", minsize=150)
-# main.add(right_pane, stretch="always", minsize=150)
-
-introLabel = ctk.CTkLabel(main, fg_color="transparent", text_color="#76090c", font=("Franklin Gothic Heavy", 20), wraplength=1500, justify="center", text = "Welcome to Policy Analytics 1.0")
-aboutLabel = ctk.CTkLabel(main, fg_color="transparent", text_color="#76090c", font=("Franklin ", 16), wraplength=1500, justify="center", text = "Policy Analytics 1.0 is a tool for learning policy analysis. This software can be used in training programs and classroom learning. It provides a step-by-step procedure that allows users to input and process basic essential data for problem structuring, forecasting and assessment of policy alternatives, recommending or prescribing the best/optimal policy alternative, designing an implementation plan, and building a monitoring and evaluation plan. Its outputs can be used in writing a complete policy issue paper. It is based on the “Elements of the Policy Issue Paper” in Annex 1 of Public Policy Analysis: An Integrated Approach by William N. Dunn (2018) with modifications based on the teaching and training experiences of its creator, Dr. Ebinezer R. Florano, Professor of Public Policy at the University of the Philippines, National College of Public Administration and Governance and Convenor of the UPCIDS Data Science for Public Policy Program (DSPPP).")
-arrLabel = ctk.CTkLabel(main, fg_color="transparent", text_color="#76090c", font=("Franklin ", 16), wraplength=1900, justify="center", text = "All rights reserved@2024 – UPCIDS-DSPPP")
-creatorLabel = ctk.CTkLabel(main, fg_color="transparent", text_color="#76090c", font=("Franklin ", 16), wraplength=1900, justify="left", text = "Creator: Dr. Ebinezer R. Florano")
-programmerLabel = ctk.CTkLabel(main, fg_color="transparent", text_color="#76090c", font=("Franklin ", 16), wraplength=1900, justify="left", text = "Programmers: Bianca Amurao, Emmerson Isip, Gabriel Ramos, Mohammad Hamdi Tuan, and Raphael Justin Portuguez")
-reveiwerLabel = ctk.CTkLabel(main, fg_color="transparent", text_color="#76090c", font=("Franklin ", 16), wraplength=1900, justify="left", text = "Reviewers: Colin Rosales, Danne Nicole Pinpin, and Jean Phoebe Yao")
-adminLabel = ctk.CTkLabel(main, fg_color="transparent", text_color="#76090c", font=("Franklin ", 16), wraplength=1900, justify="left", text = "Administrative Assistance: Lilian J. Marfil, Pedro J. Madarang, and Zhelly Ann Linsangan")
+introLabel = tk.Label(main, anchor=tk.CENTER, background="white", foreground="#76090c", font=("Franklin Gothic Heavy", int(16*(wth/1920))), justify="center", text = "Welcome to Policy Analytics 1.1\n")
+aboutLabel = tk.Label(main, background="white", foreground="#76090c", font=("Franklin", int(14*(wth/1920))), wraplength=1000-55, justify="center", text = "Policy Analytics 1.1 is a tool for learning policy analysis. This software can be used in training programs and classroom learning. It provides a step-by-step procedure that allows users to input and process basic essential data for problem structuring, forecasting and assessment of policy alternatives, recommending or prescribing the best/optimal policy alternative, designing an implementation plan, and building a monitoring and evaluation plan. Its outputs can be used in writing a complete policy issue paper. It is based on the “Elements of the Policy Issue Paper” in Annex 1 of Public Policy Analysis: An Integrated Approach by William N. Dunn (2018) with modifications based on the teaching and training experiences of its creator, Dr. Ebinezer R. Florano, Professor of Public Policy at the University of the Philippines, National College of Public Administration and Governance and Convenor of the UP CIDS Data Science for Public Policy Program (DSPPP).\n\n")
+arrLabel =tk.Label(main, background="white", foreground="#76090c", font=("Franklin", int(14*(wth/1920))), wraplength=1000-55, justify="center", text = "All rights reserved@2024 – UPCIDS-DSPPP\n\n")
+creatorLabel = tk.Label(main, background="white", foreground="#76090c", font=("Franklin", int(14*(wth/1920))), wraplength=800-55, justify="center", text = "\n\nDr. Ebinezer R. Florano\nCreator\n")
+programmerLabel = tk.Label(main, background="white", foreground="#76090c", font=("Franklin", int(14*(wth/1920))), wraplength=800-55, justify="center", text = "Bianca Mae Amurao, Emmerson Isip, Gabriel Ramos, Mohammad Hamdi Tuan, and Raphael Justin Portuguez\nProgrammers\n")
+reveiwerLabel = tk.Label(main, background="white", foreground="#76090c", font=("Franklin", int(14*(wth/1920))), wraplength=800-55, justify="center", text = "Colin Rosales, Danne Nicole Pinpin, and Jean Phoebe Yao\nReviewers\n")
+adminLabel = tk.Label(main, background="white", foreground="#76090c", font=("Franklin", int(14*(wth/1920))), wraplength=800-55, justify="center", text = "Lilian J. Marfil, Pedro J. Madarang, and Zhelly Ann Linsangan\nAdministrative Assistance\n")
 
 dspppLogo = (Image.open(resource_path("logo_DSPPP.png")))
 cidsLogo = (Image.open(resource_path("logo_UP_CIDS.png")))
@@ -119,34 +108,50 @@ up = ImageTk.PhotoImage(up)
 dsppp = ImageTk.PhotoImage(dsppp)
 cids = ImageTk.PhotoImage(cidsLogo)
 
+###
+# def update_wraplength(event):
+#    # Subtract some padding (e.g., 100px) to prevent edge crowding
+#    new_width = event.wth - 100
+#    for label in resizable_labels:
+#        label.config(wraplength=new_width)
 
-main.columnconfigure(0, weight=1)
-main.columnconfigure(1, weight=1)
-main.columnconfigure(2, weight=1)
-main.columnconfigure(3, weight=1)
-main.columnconfigure(4, weight=1)
-main.columnconfigure(5, weight=1)
+#resizable_labels = [introLabel, aboutLabel, arrLabel, creatorLabel, programmerLabel, reveiwerLabel, adminLabel]
+###
 
-introLabel.pack(pady=(20, 5), anchor="center")     
-aboutLabel.pack(pady=(20, 5), anchor="center")    
-arrLabel.pack(pady=(20, 5), anchor="center")     
+# main.bind("<Configure>", update_wraplength)
+
+introLabel.grid(row=0, column=0, padx=10) 
+# introLabel.place (x=1920//2, y=100, anchor=tk.CENTER)      
+aboutLabel.grid(row=2, column=0, sticky="ew", padx=10)    
+arrLabel.grid(row=4, column=0, sticky="ew", padx=10)     
 
 logo_frame = tk.Frame(main, background="#ffffff")  
-logo_frame.pack(pady=20, anchor="center") 
+logo_frame.grid(row=6, column=0) 
+
+root.grid_rowconfigure(0, weight=1)
+root.grid_columnconfigure(0, weight=1)
+logo_frame.grid_rowconfigure(0, weight=1)
+logo_frame.grid_columnconfigure(0, weight=1)
+logo_frame.grid_columnconfigure(1, weight=1)
+logo_frame.grid_columnconfigure(2, weight=1)
+logo_frame.grid_columnconfigure(3, weight=1)
+logo_frame.grid_columnconfigure(4, weight=1)
+logo_frame.grid_columnconfigure(5, weight=1)
+logo_frame.grid_columnconfigure(6, weight=1)
 
 upLabel = Label(logo_frame, image=up, background="#ffffff")
-upLabel.pack(side=tk.LEFT, padx=20)  
+upLabel.grid(row=0, column=2, padx=50)  
 
 dspppLabel = Label(logo_frame, image=dsppp, background="#ffffff")
-dspppLabel.pack(side=tk.LEFT, padx=20)
+dspppLabel.grid(row=0, column=3, padx=50)
 
 cidsLabel = Label(logo_frame, image=cids, background="#ffffff")
-cidsLabel.pack(side=tk.LEFT, padx=20)
+cidsLabel.grid(row=0, column=4, padx=50)
 
-creatorLabel.pack(pady=5, padx=50, anchor="w")
-programmerLabel.pack(pady=5, padx=50, anchor="w")
-reveiwerLabel.pack(pady=5, padx=50, anchor="w")
-adminLabel.pack(pady=5, padx=50, anchor="w")
+creatorLabel.grid(row=8, column=0, sticky="ew")   
+programmerLabel.grid(row=10, column=0, sticky="ew")   
+reveiwerLabel.grid(row=12, column=0, sticky="ew")   
+adminLabel.grid(row=14, column=0, sticky="ew")   
 style = ttk.Style()
 
 #    sb_ver = Scrollbar(
@@ -467,8 +472,6 @@ def help_page():
 def wrap(string, length=40):
     return '\n'.join(textwrap.wrap(string, length))
 
-
-
 def createNewProject():
     global pageNumber
     pageNumber = 0
@@ -484,6 +487,10 @@ def createNewProject():
     mainProject.focus_force()             # Bring focus
     mainProject.attributes("-topmost", 1) # Stay on top initially
     mainProject.after(10, lambda: mainProject.attributes("-topmost", 0))  # Release topmost after lift
+
+    # mainProject = CTkXYFrame(root, fg_color="white")
+    # mainProject.pack(fill="both", expand=True)
+
     
     varRoot1 = tk.IntVar()
     varRoot2 = tk.IntVar()
@@ -539,7 +546,7 @@ def createNewProject():
     def setup_page_common(page_num, title, frame, widgets_to_destroy, back_func, next_func):
         mainProject.state('zoomed')
         style.configure('Treeview', rowheight=120)
-        style.configure("TButton", foreground="black", font=("Arial", 10))
+        style.configure("TButton", foreground="black", font=("Calibri", int(12*(wth/1920))))
 
         # Canvas with scrollbars
         canvas = tk.Canvas(mainProject)
@@ -572,7 +579,7 @@ def createNewProject():
         # Progress bar and workflow map
         progress = ttk.Progressbar(mainProject, length=200, maximum=15, value=page_num)
         progress.place(relx=0.01, rely=0.05)
-        progress_label = tk.Label(mainProject, text=f"Page {page_num} of 15: {title}", font=("Arial", 12, "bold"))
+        progress_label = tk.Label(mainProject, text=f"Page {page_num} of 15: {title}", font=("Calibri", int(14*(wth/1920)), "bold"))
         progress_label.place(relx=0.01, rely=0.08)
         workflow_canvas = tk.Canvas(mainProject, height=50, width=750)
         workflow_canvas.place(relx=0.01, rely=0.12)
@@ -599,27 +606,26 @@ def createNewProject():
         widgets_to_destroy.extend([canvas, scrollbar_y, scrollbar_x, zoom_in_button, zoom_out_button, progress, progress_label, workflow_canvas, btn_back, btn_next])
 
     def page_1():
-        global pageNumber
-        pageNumber += 1
-        print(pageNumber)
+        global pageNumber 
+        pageNumber = 1
         mainProject.title("Create New Project")
         mainProject.geometry("660x225")
 
         # Progress indicator
-        progress_label = tk.Label(mainProject, text="Page 1 of 15: Set-up document", font=("Arial", 10), fg="gray")
+        progress_label = tk.Label(mainProject, text="Page 1 of 15: Set-up document", font=("Calibri", int(10*(wth/1920))), fg="gray")
         progress_label.place(relx=0.02, rely=0.90, anchor="nw")
 
         frame1 = tk.LabelFrame(mainProject)
 
         blank = Label(mainProject, text = "  ")
 
-        projectTitleLabel1 = Label(frame1, text = "Project Title")
+        projectTitleLabel1 = Label(frame1, text = "Project Title", font=("Calibri", int(10*(wth/1920))))
         projectTitle = Entry(frame1, width=30)
 
-        settingsLabel = Label(frame1, text = "Settings")
-        fontStyleLabel = Label(frame1, text = "Choose font style: ")
-        fontSizeLabel = Label(frame1, text = "Choose font size: ")
-        indentationLabel = Label(frame1, text = "Choose indentation: ")
+        settingsLabel = Label(frame1, text = "Settings", font=("Calibri", int(10*(wth/1920))))
+        fontStyleLabel = Label(frame1, text = "Choose font style: ", font=("Calibri", int(10*(wth/1920))))
+        fontSizeLabel = Label(frame1, text = "Choose font size: ", font=("Calibri", int(10*(wth/1920))))
+        indentationLabel = Label(frame1, text = "Choose indentation: ", font=("Calibri", int(10*(wth/1920))))
         
         font.families()
         fonts = list(font.families())
@@ -629,20 +635,20 @@ def createNewProject():
         fontSize = Entry(frame1, width=10)
         indentation = Entry(frame1, width=10)
 
-        analystNameLabel1 = Label(frame1, text = "Analyst")
+        analystNameLabel1 = Label(frame1, text = "Analyst", font=("Calibri", int(10*(wth/1920))))
         analystName = Entry(frame1, width=30)
 
-        levelsLabel1 = Label(frame1, text = "Levels of Analysis ")
+        levelsLabel1 = Label(frame1, text = "Levels of Analysis ", font=("Calibri", int(10*(wth/1920))))
 
         varNat = tk.IntVar()
         varLoc = tk.IntVar()
         varOrg = tk.IntVar()
 
-        national = tk.Checkbutton(frame1, text='National',variable=varNat, onvalue=1, offvalue=0)
-        local = tk.Checkbutton(frame1, text='Local',variable=varLoc, onvalue=1, offvalue=0)
-        organizational = tk.Checkbutton(frame1, text='Organizational',variable=varOrg, onvalue=1, offvalue=0)
+        national = tk.Checkbutton(frame1, text='National', font=("Calibri", int(10*(wth/1920))), variable=varNat, onvalue=1, offvalue=0)
+        local = tk.Checkbutton(frame1, text='Local', font=("Calibri", int(10*(wth/1920))), variable=varLoc, onvalue=1, offvalue=0)
+        organizational = tk.Checkbutton(frame1, text='Organizational', font=("Calibri", int(10*(wth/1920))), variable=varOrg, onvalue=1, offvalue=0)
 
-        polAnaTitleLabel1 = Label(frame1, text = "Policy Analysis Title")
+        polAnaTitleLabel1 = Label(frame1, text = "Policy Analysis Title", font=("Calibri", int(10*(wth/1920))))
         polAnaTitle = Entry(frame1, width=30)
 
         frame1.place(x=10, y=10)
@@ -731,8 +737,8 @@ def createNewProject():
             btnClear1.destroy()  
             page_2()
             
-        btnCreate = Button(mainProject, text = "Create", width=10, command = lambda: create_project())
-        btnClear1 = Button(mainProject, text = "Clear", width=10, command = lambda: clear_page_1())
+        btnCreate = Button(mainProject, text = "Create", width=10, font=("Calibri", int(10*(wth/1920))), command = lambda: create_project())
+        btnClear1 = Button(mainProject, text = "Clear", width=10, font=("Calibri", int(10*(wth/1920))), command = lambda: clear_page_1())
 
         btnCreate.place(x=380, y=170)
         btnClear1.place(x=190, y=170)
@@ -748,15 +754,15 @@ def createNewProject():
 
         ### Progress indicator
         frame2 = tk.LabelFrame(mainProject)
-        progress_label = tk.Label(mainProject, text="Page 2 of 15: Problematic Situation and Its Undesirable Effects.", font=("Arial", 10), fg="gray")
+        progress_label = tk.Label(mainProject, text="Page 2 of 15: Problematic Situation and Its Undesirable Effects.", font=("Calibri", int(10*(wth/1920))), fg="gray")
         progress_label.place(relx=0.02, rely=0.90, anchor="nw")
 
         status.config(text="")
 
-        probSitLabel = Label(frame2, text = "Problematic Situation")
+        probSitLabel = Label(frame2, text = "Problematic Situation", font=("Calibri", int(10*(wth/1920))))
         probSit = scrolledtext.ScrolledText(frame2, height = 8, width=30)
         
-        undeEffLabel = Label(frame2, text = "Undesirable Effects")
+        undeEffLabel = Label(frame2, text = "Undesirable Effects", font=("Calibri", int(10*(wth/1920))))
         undeEff = scrolledtext.ScrolledText(frame2, height = 8, width=30)
         
         frame2.place(x=40, y=10)
@@ -775,6 +781,7 @@ def createNewProject():
             frame2.destroy() 
             btnBack1.destroy()
             btnNext1.destroy() 
+            progress_label.destroy()
             save()
             page_1()
         
@@ -805,6 +812,7 @@ def createNewProject():
             frame2.destroy() 
             btnBack1.destroy()
             btnNext1.destroy() 
+            progress_label.destroy()
             page_3()
 
         btnBack1 = Button(mainProject, text = "Back", width=10, command = lambda: back_1())
@@ -815,12 +823,11 @@ def createNewProject():
  
     def page_3():
 
-
         global p3efforts, p3accomplishments, p3assessments
         mainProject.geometry("1250x700")
         style = ttk.Style()
         style.configure('Treeview', rowheight=160)
-        style.configure("TButton", foreground="black", font=("Arial", 10))  # Set button text to black
+        style.configure("TButton", foreground="black", font=("Arial", int(10*(wth/1920))))  # Set button text to black
 
 
         # Undo stack
@@ -828,11 +835,6 @@ def createNewProject():
 
         # Canvas with scrollbars
         canvas = tk.Canvas(mainProject)
-        scrollbar_y = ttk.Scrollbar(mainProject, orient="vertical", command=canvas.yview)
-        scrollbar_x = ttk.Scrollbar(mainProject, orient="horizontal", command=canvas.xview)
-        canvas.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
-        scrollbar_y.pack(side="right", fill="y")
-        scrollbar_x.pack(side="bottom", fill="x")
         canvas.pack(side="left", fill="both", expand=True)
         frame3 = tk.LabelFrame(canvas)
         canvas.create_window((0, 0), window=frame3, anchor="nw")
@@ -876,7 +878,6 @@ def createNewProject():
         currEffLabel.grid(row=0, column=0, columnspan=2)
         effortsTable.grid(row=1, column=0)
         sb_y.grid(row=1, column=1, sticky="ns")
-        sb_x.grid(row=2, column=0, sticky="ew")
 
         # Input fields
         effoLabel = tk.Label(mainProject, text="Effort")
@@ -912,7 +913,7 @@ def createNewProject():
         if not effortsTable.get_children():
             for e, a, s in zip(p3efforts, p3accomplishments, p3assessments):
                 effortsTable.insert("", "end", values=(wrap(e), wrap(a), wrap(s)))
-
+                
         # Event handlers
         def show_data(a):
             effort.delete("1.0", tk.END)
@@ -1010,20 +1011,22 @@ def createNewProject():
             save()
 
         # Keyboard shortcuts
-        mainProject.bind("<Control-z>", lambda event: undo())
-        mainProject.bind("<Control-Return>", lambda event: add_data())
+        frame3.bind("<Control-z>", lambda event: undo())
+        frame3.bind("<Control-Return>", lambda event: add_data())
         effort.bind("<Tab>", lambda event: accomplishment.focus_set())
         accomplishment.bind("<Tab>", lambda event: assessment.focus_set())
         assessment.bind("<Tab>", lambda event: addButton.focus_set())
 
         ### Progress indicator
-        progress_label = tk.Label(mainProject, text="Page 3 of 15: Current Efforts", font=("Arial", 10), fg="gray")
+        progress_label = tk.Label(frame3, text="Page 3 of 15: Current Efforts", font=("Arial", int(10*(wth/1920))), fg="gray")
         progress_label.place(relx=0.02, rely=0.90, anchor="nw")
+
 
 
         def back_2():
             global pageNumber
             pageNumber -= 1
+            print(pageNumber)
             for widget in mainProject.winfo_children():
                 widget.destroy()
             page_2()
@@ -1031,6 +1034,7 @@ def createNewProject():
         def next_2():
             global pageNumber
             pageNumber += 1
+            print(pageNumber)
             for widget in mainProject.winfo_children():
                 widget.destroy()
             save()
@@ -1039,14 +1043,14 @@ def createNewProject():
     def page_4():
         mainProject.geometry("660x250")
         # Progress indicator
-        progress_label = tk.Label(mainProject, text="Page 4 of 15: Select Statistical Methods", font=("Arial", 10), fg="gray")
+        progress_label = tk.Label(mainProject, text="Page 4 of 15: Select Statistical Methods", font=("Arial", int(10*(wth/1920))), fg="gray")
         progress_label.place(relx=0.02, rely=0.90, anchor="nw")
         frame4 = tk.LabelFrame(mainProject)
 
         global var, analysis_type
         var = IntVar()
             
-        StatisticalMethod = Label(frame4, text = "Statistical Method")
+        StatisticalMethod = Label(mainProject, text = "Statistical Method")
         Qualita = Label(frame4, text = "Qualitative")
         Quantita = Label(frame4, text = "Quantitative")
         R1 = Radiobutton(frame4, text="Linear Regression", variable=var, value=1)
@@ -1054,7 +1058,7 @@ def createNewProject():
         R3 = Radiobutton(frame4, text="Logistic Regression", variable=var, value=3)
         R4 = Radiobutton(frame4, text="Problem Tree Analysis", variable=var, value=4)
 
-        StatisticalMethod.place(x = 275, y=10)
+        StatisticalMethod.place(x=275, y=15)
         frame4.place(x=190, y=50)
         Quantita.grid(row=1, column=0)
         Qualita.grid(row=1, column=1)
@@ -1092,14 +1096,14 @@ def createNewProject():
 
                 model = sm.OLS(y_train, sm.add_constant(X_train)).fit()
 
-                lb1 = Label(analysis,text=model.summary(), font="Consolas", justify="left")
+                lb1 = Label(analysis,text=model.summary(), font=("Consolas", int(10*(wth/1920))), justify="left")
                 lb1.pack()
 
                 reg = skl.linear_model.LinearRegression().fit(X_train[:], y_train[:])
 
                 divider  = "\n******************************************************************************\n"
                 regTitle = "                       skLearn Linear Regression Results                        \n"
-                lb2 = Label(analysis,text=divider+regTitle, font="Consolas", justify="left")
+                lb2 = Label(analysis,text=divider+regTitle, font=("Consolas", int(10*(wth/1920))), justify="left")
                 lb2.pack()
 
                 score = "Score:        " + str(round(float(reg.score(X_train, y_train)), 5))
@@ -1110,7 +1114,7 @@ def createNewProject():
                 coefficientLR = float(reg.coef_)
 
                 summary = score + interceptLRDisplay + coefficientLRDisplay
-                lb3 = Label(analysis,text=summary, font="Consolas", justify="left")
+                lb3 = Label(analysis,text=summary, font=("Consolas", int(10*(wth/1920))), justify="left")
                 lb3.pack()
 
                 global p4summaryPDF
@@ -1170,14 +1174,14 @@ def createNewProject():
                 
                 print(ks_res.summary())
 
-                lb1 = Label(analysis, text=ks_res.summary(), font="Consolas", justify="left")
+                lb1 = Label(analysis, text=ks_res.summary(), font=("Consolas", int(10*(wth/1920))), justify="left")
                 lb1.pack()
 
                 column_headers = list(df.columns.values)
 
                 dividerA  = "******************************************************************************\n"
                 regTitleA = "          skLearn Multiple Regression Results - "+column_headers[0]+"           \n"
-                lb2 = Label(analysis2, text=dividerA+regTitleA, font="Consolas", justify="left")
+                lb2 = Label(analysis2, text=dividerA+regTitleA, font=("Consolas", int(10*(wth/1920))), justify="left")
                 lb2.pack()
 
                 reg1 = skl.linear_model.LinearRegression().fit(data_x1, data_y)
@@ -1190,12 +1194,12 @@ def createNewProject():
                 coefficientMR1 = float(reg1.coef_)
 
                 summary3 = score + interceptMR1Display + coefficientMR1Display 
-                lb3 = Label(analysis2, text=summary3, font="Consolas", justify="left")
+                lb3 = Label(analysis2, text=summary3, font=("Consolas", int(10*(wth/1920))), justify="left")
                 lb3.pack()
 
                 dividerB  = "******************************************************************************\n"
                 regTitleB = "          skLearn Multiple Regression Results - "+column_headers[1]+"            \n"
-                lb4 = Label(analysis2, text=dividerB+regTitleB, font="Consolas", justify="left")
+                lb4 = Label(analysis2, text=dividerB+regTitleB, font=("Consolas", int(10*(wth/1920))), justify="left")
                 lb4.pack()
 
                 reg2 = skl.linear_model.LinearRegression().fit(data_x2, data_y)
@@ -1208,7 +1212,7 @@ def createNewProject():
                 coefficientMR2 = float(reg2.coef_)
 
                 summary4 = score + interceptMR2Display + coefficientMR2Display
-                lb5 = Label(analysis2, text=summary4, font="Consolas", justify="left")
+                lb5 = Label(analysis2, text=summary4, font=("Consolas", int(10*(wth/1920))), justify="left")
                 lb5.pack()
 
                 reg_sum = regTitleA + summary3 + "    \n    \n" + regTitleB + summary4
@@ -1275,14 +1279,14 @@ def createNewProject():
 
                 logit_model = sm.Logit(y_train, X_train).fit()
 
-                lb1 = Label(analysis,text=logit_model.summary(), font="Consolas", justify="left")
+                lb1 = Label(analysis,text=logit_model.summary(), font=("Consolas", int(10*(wth/1920))), justify="left")
                 lb1.pack()
 
                 reg = skl.linear_model.LogisticRegression().fit(X_train[:], y_train[:])
 
                 divider  = "\n******************************************************************************\n"
                 regTitle = "                       skLearn Logistic Regression Results                        "
-                lb2 = Label(analysis,text=divider+regTitle, font="Consolas", justify="left")
+                lb2 = Label(analysis,text=divider+regTitle, font=("Consolas", int(10*(wth/1920))), justify="left")
                 lb2.pack()
 
                 score = "Score:        " + str(round(float(reg.score(X_train, y_train)), 5))
@@ -1296,10 +1300,10 @@ def createNewProject():
                 coefficientXLogR = float(reg.coef_[0][1])
 
                 summary2 = score + interceptLogRDisplay + coefficientLogRDisplay
-                lb3 = Label(analysis,text=summary2, font="Consolas", justify="left")
+                lb3 = Label(analysis,text=summary2, font=("Consolas", int(10*(wth/1920))), justify="left")
                 lb3.pack()
 
-                lb4 = Label(analysis2,text=logit_model.summary2(), font="Consolas", justify="left")
+                lb4 = Label(analysis2,text=logit_model.summary2(), font=("Consolas", int(10*(wth/1920))), justify="left")
                 lb4.pack()
                 
                 reg_sum = summary2
@@ -1624,7 +1628,7 @@ def createNewProject():
         style.configure('Treeview', rowheight=320)
 
         ### Progress indicator
-        progress_label = tk.Label(mainProject, text="Page 5 of 15: Root Cause", font=("Arial", 10), fg="gray")
+        progress_label = tk.Label(mainProject, text="Page 5 of 15: Root Cause", font=("Arial", int(10*(wth/1920))), fg="gray")
         progress_label.place(relx=0.02, rely=0.90, anchor="nw")
 
         frame5 = tk.LabelFrame(mainProject)
@@ -1847,7 +1851,7 @@ def createNewProject():
         style.configure('Treeview', rowheight=320)
 
         ### Progress indicator
-        progress_label = tk.Label(mainProject, text="Page 6 of 15: Policy Problem and Issue Statement", font=("Arial", 10), fg="gray")
+        progress_label = tk.Label(mainProject, text="Page 6 of 15: Policy Problem and Issue Statement", font=("Arial", int(10*(wth/1920))), fg="gray")
         progress_label.place(relx=0.02, rely=0.90, anchor="nw")
 
         frame6 = tk.LabelFrame(mainProject)
@@ -1917,8 +1921,8 @@ def createNewProject():
         style.configure('Treeview', rowheight=40)
 
         # Main container
-        frame7 = tk.LabelFrame(mainProject, text="Goals and Objectives of the Proposal", font=("Arial", 12, "bold"))
-        frame7.pack(padx=20, pady=20, fill="both", expand=True)
+        frame7 = tk.LabelFrame(mainProject, text="Goals and Objectives of the Proposal", font=("Arial", int(12*(wth/1920)), "bold"))
+        frame7.pack(padx=20, pady=20, fill="both")
 
         status = ttk.Label(mainProject, text="")
         status.place(relx=0.02, rely=0.92)
@@ -4264,9 +4268,7 @@ def save():
 
     with open(save_json_file_path, 'w') as json_file:
         json.dump(data, json_file, indent=4)
-
-
-    
+ 
 def save_pdf():
     # Generate the PDF
 
@@ -4625,14 +4627,14 @@ def quit():
 menubar = Menu(root) 
 
 file1 = Menu(menubar, tearoff = 0) 
-menubar.add_cascade(label ='File', menu = file1) 
-file1.add_command(label ='Create New', command = lambda: new_project())
-file1.add_command(label ='Open Project', command = lambda: open_project())
-file1.add_command(label ='Save', command = lambda: save()) 
-file1.add_command(label ='Print', command = lambda: print_file()) 
+menubar.add_cascade(label ='File', font = ("Calibri", int(12*(wth/1920))), menu = file1) 
+file1.add_command(label ='Create New', font = ("Calibri", int(12*(wth/1920))), command = lambda: new_project())
+file1.add_command(label ='Open Project', font = ("Calibri", int(12*(wth/1920))), command = lambda: open_project())
+file1.add_command(label ='Save', font = ("Calibri", int(12*(wth/1920))), command = lambda: save()) 
+file1.add_command(label ='Print', font = ("Calibri", int(12*(wth/1920))), command = lambda: print_file()) 
 file1.add_separator() 
-file1.add_command(label ='Help', command = lambda: help_page()) 
-file1.add_command(label ='Exit', command = lambda: quit())
+file1.add_command(label ='Help', font = ("Calibri", int(12*(wth/1920))), command = lambda: help_page()) 
+file1.add_command(label ='Exit', font = ("Calibri", int(12*(wth/1920))), command = lambda: quit())
 
 root.config(menu=menubar)
 
