@@ -511,10 +511,6 @@ def createNewProject():
     ##p1fontsize = 12
 
     color = ("", "#000000")  # Default color for ShapeEditorApp
-    interceptLR, coefficientLR = 0, 0
-    interceptMR1, coefficientMR1 = 0, 0
-    interceptMR2, coefficientMR2 = 0, 0
-    interceptLogR, coefficientConstLogR, coefficientXLogR = 0, 0, 0
     discount = 0.05  # Default discount rate
     
     # Tooltip class
