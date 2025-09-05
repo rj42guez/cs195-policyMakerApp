@@ -77,7 +77,7 @@ ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("themes/red.json")
 
 root = ctk.CTk()
-root.title("Policy Analytics 1.1")
+root.title("Policy Analytics 1.3")
 
 # getting screen's width in pixels
 hght = root.winfo_screenheight()
@@ -90,8 +90,8 @@ root.state("zoomed")
 main = CTkXYFrame(root, fg_color="white")
 main.pack(fill="both", expand=True)
 
-introLabel = tk.Label(main, anchor=tk.CENTER, background="white", foreground="#76090c", font=("Franklin Gothic Heavy", 16), justify="center", text = "Welcome to Policy Analytics 1.1\n")
-aboutLabel = tk.Label(main, background="white", foreground="#76090c", font=("Franklin", 14), wraplength=wth-55, justify="center", text = "Policy Analytics 1.1 is a tool for learning policy analysis. This software can be used in training programs and classroom learning. It provides a step-by-step procedure that allows users to input and process basic essential data for problem structuring, forecasting and assessment of policy alternatives, recommending or prescribing the best/optimal policy alternative, designing an implementation plan, and building a monitoring and evaluation plan. Its outputs can be used in writing a complete policy issue paper. It is based on the “Elements of the Policy Issue Paper” in Annex 1 of Public Policy Analysis: An Integrated Approach by William N. Dunn (2018) with modifications based on the teaching and training experiences of its creator, Dr. Ebinezer R. Florano, Professor of Public Policy at the University of the Philippines, National College of Public Administration and Governance and Convenor of the UP CIDS Data Science for Public Policy Program (DSPPP).\n\n")
+introLabel = tk.Label(main, anchor=tk.CENTER, background="white", foreground="#76090c", font=("Franklin Gothic Heavy", 16), justify="center", text = "Welcome to Policy Analytics 1.3\n")
+aboutLabel = tk.Label(main, background="white", foreground="#76090c", font=("Franklin", 14), wraplength=wth-55, justify="center", text = "Policy Analytics 1.3 is a tool for learning policy analysis. This software can be used in training programs and classroom learning. It provides a step-by-step procedure that allows users to input and process basic essential data for problem structuring, forecasting and assessment of policy alternatives, recommending or prescribing the best/optimal policy alternative, designing an implementation plan, and building a monitoring and evaluation plan. Its outputs can be used in writing a complete policy issue paper. It is based on the “Elements of the Policy Issue Paper” in Annex 1 of Public Policy Analysis: An Integrated Approach by William N. Dunn (2018) with modifications based on the teaching and training experiences of its creator, Dr. Ebinezer R. Florano, Professor of Public Policy at the University of the Philippines, National College of Public Administration and Governance and Convenor of the UP CIDS Data Science for Public Policy Program (DSPPP).\n\n")
 arrLabel =tk.Label(main, background="white", foreground="#76090c", font=("Franklin", 14), wraplength=wth-55, justify="center", text = "All rights reserved@2024 – UPCIDS-DSPPP\n\n")
 creatorLabel = tk.Label(main, background="white", foreground="#76090c", font=("Franklin", 14), wraplength=wth-55, justify="center", text = "\n\nDr. Ebinezer R. Florano\nCreator\n")
 programmerLabel = tk.Label(main, background="white", foreground="#76090c", font=("Franklin", 14), wraplength=wth-55, justify="center", text = "Bianca Mae Amurao, Emmerson Isip, Gabriel Ramos, Mohammad Hamdi Tuan, and Raphael Justin Portuguez\nProgrammers\n")
