@@ -3100,10 +3100,6 @@ def createNewProject():
                     
                     princeScore1s = []
 
-                    pc2 = 0
-                    pc3 = 0
-                    pc4 = 0
-
                     princeMethod = Toplevel(main)
                     princeMethod.title("PRINCE Method: Alternative " + str(a+1) + " - " + policyAlt)
                     princeMethod.geometry("670x600")
@@ -3136,8 +3132,22 @@ def createNewProject():
                     prio = tk.Entry(princeMethod, width=30) 
 
                     addButton = tk.Button(princeMethod, text='Add', width=10, command=lambda: add_data())  
+                    computeButton = tk.Button(princeMethod, text='Compute', width=10, command=lambda: compute_prince234())  
                     editButton = tk.Button(princeMethod, text="Edit", width=10, command=lambda: edit_data())
 
+                    def compute_prince234():
+                        pc2 = 0
+                        pc3 = 0
+                        pc4 = 0
+
+                        for ps1 in princeScore1s:
+                            # 2nd Computation
+                            
+                            # 3rd Computation
+                            pc3 += abs(ps1[1])
+                        
+                        print(pc3)
+                    
                     def show_data(a):
                         player.delete(0,END)
                         issuepos.delete(0,END)
@@ -3151,8 +3161,6 @@ def createNewProject():
                         prio.insert(0, princeTable.item(selectedItem)['values'][3])
 
                     princeTable.bind("<<TreeviewSelect>>", show_data)
-
-
 
                     def edit_data():
                         playerText = player.get()                               # read player textbox
@@ -3197,8 +3205,6 @@ def createNewProject():
                             pn = -1
                         
                         princeScore1s.append([len(princeScore1s)+1, pc1, pn])
-                        # for ps1 in princeScore1s:
-                        #     if 
                         
                         global assessmentTuple
                         assessmentTuple = [playerText, issueposText, powerText, prioText]
