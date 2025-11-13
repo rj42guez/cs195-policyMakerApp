@@ -3132,7 +3132,7 @@ def createNewProject():
                     prio = tk.Entry(princeMethod, width=30) 
 
                     addButton = tk.Button(princeMethod, text='Add', width=10, command=lambda: add_data())  
-                    computeButton = tk.Button(princeMethod, text='Compute', width=10, command=lambda: compute_prince234())  
+                    computeButton = tk.Button(princeMethod, text='Get Calculations', width=20, command=lambda: compute_prince234())  
                     editButton = tk.Button(princeMethod, text="Edit", width=10, command=lambda: edit_data())
 
                     def compute_prince234():
@@ -3170,12 +3170,26 @@ def createNewProject():
 
                         grades = [issueposText, powerText, prioText]
                         pc1 = 1
+                        pn = 0
+
                         for g in grades:
                             if g != 0:
-                                pc1 *= g       
+                                pc1 *= g     
+                        
+                        if pc1 > 0:
+                            pn = 1
+                        elif pc1 < 0:
+                            pn = -1
+                        
+                        pc1Text = str(pc1)
+                        if pn == 0:
+                            pc1Text = '('+pc1Text+')'
+                            print(pc1Text)
+                        
+                        princeScore1s.append([len(princeScore1s)+1, pc1, pn])  
                                                 
                         selected_item = princeTable.selection()[0]
-                        princeTable.item(selected_item, text="blub", values=(playerText, issueposText, powerText, prioText, pc1))
+                        princeTable.item(selected_item, text="blub", values=(playerText, issueposText, powerText, prioText, pc1Text))
 
                     def add_data():
                         playerText = player.get()                               # read player textbox
@@ -3185,7 +3199,6 @@ def createNewProject():
 
                         grades = [issueposText, powerText, prioText]
                         pc1 = 1
-
                         pn = 0
 
                         for g in grades:
@@ -3194,15 +3207,15 @@ def createNewProject():
                             else:
                                 pn = 0 
                         
-                        pc1Text = str(pc1)
-                        if pn == 0:
-                            pc1Text = '('+pc1Text+')'
-                            print(pc1Text)
-                        
                         if pc1 > 0:
                             pn = 1
                         elif pc1 < 0:
                             pn = -1
+                        
+                        pc1Text = str(pc1)
+                        if pn == 0:
+                            pc1Text = '('+pc1Text+')'
+                            print(pc1Text)
                         
                         princeScore1s.append([len(princeScore1s)+1, pc1, pn])
                         
@@ -3228,6 +3241,7 @@ def createNewProject():
                     prioLabel.place(x=40, y=510)
                     prio.place(x=200, y=510)
                     addButton.place(x=450, y=390)
+                    computeButton.place(x=100, y=270)
                     editButton.place(x=450, y=450)
 
                 a = 0
