@@ -3144,7 +3144,7 @@ def createNewProject():
                             # 2nd Computation
                             
                             # 3rd Computation
-                            pc3 += abs(ps1[1])
+                            pc3 += abs(ps1[0])
                         
                         print(pc3)
                     
@@ -3186,9 +3186,12 @@ def createNewProject():
                             pc1Text = '('+pc1Text+')'
                             print(pc1Text)
                         
-                        princeScore1s.append([len(princeScore1s)+1, pc1, pn])  
-                                                
                         selected_item = princeTable.selection()[0]
+                        print(selected_item)
+
+                        princeScore1s[princeTable.index(selected_item)] = [pc1, pn]
+                        print(princeScore1s)
+
                         princeTable.item(selected_item, text="blub", values=(playerText, issueposText, powerText, prioText, pc1Text))
 
                     def add_data():
@@ -3217,7 +3220,7 @@ def createNewProject():
                             pc1Text = '('+pc1Text+')'
                             print(pc1Text)
                         
-                        princeScore1s.append([len(princeScore1s)+1, pc1, pn])
+                        princeScore1s.append([pc1, pn])
                         
                         global assessmentTuple
                         assessmentTuple = [playerText, issueposText, powerText, prioText]
