@@ -3097,104 +3097,132 @@ def createNewProject():
 
             if int(varAccept.get()) == 1:
                 def windowPerAlt(a, policyAlt):
+                    
+                    princeScore1s = []
+
+                    pc2 = 0
+                    pc3 = 0
+                    pc4 = 0
+
                     princeMethod = Toplevel(main)
                     princeMethod.title("PRINCE Method: Alternative " + str(a+1) + " - " + policyAlt)
                     princeMethod.geometry("670x600")
 
-                    # analysisFrame = tk.LabelFrame(princeMethod)
-# 
-                    # princeLabel = Label(analysisFrame, text = "PRINCE Method")
-                    # princeTable=ttk.Treeview(analysisFrame)
-                    # princeTable["columns"]=("1","2","3","4","5")
-                    # princeTable['show']='headings'
-                    # princeTable.column("1",width=130,anchor='c')
-                    # princeTable.column("2",width=130,anchor='c')
-                    # princeTable.column("3",width=130,anchor='c')
-                    # princeTable.column("4",width=130,anchor='c')
-                    # princeTable.column("5",width=130,anchor='c')
-                    # princeTable.heading("1",text="Player")
-                    # princeTable.heading("2",text="Issue Position")
-                    # princeTable.heading("3",text="Power")
-                    # princeTable.heading("4",text="Priority")
-                    # princeTable.heading("5",text="PRINCE Score")
-# 
-                    # playerLabel = Label(princeMethod, text = "Player")
-                    # issueposLabel = Label(princeMethod, text = "Issue\nPosition")
-                    # powerLabel = Label(princeMethod, text = "Power")
-                    # prioLabel = Label(princeMethod, text = "Priority")
-# 
-                    # player = tk.Entry(princeMethod, width=30)
-                    # issuepos = tk.Entry(princeMethod, width=30) 
-                    # power = tk.Entry(princeMethod, width=30) 
-                    # prio = tk.Entry(princeMethod, width=30) 
-# 
-                    # addButton = tk.Button(princeMethod, text='Add', width=10, command=lambda: add_data())  
-                    # editButton = tk.Button(princeMethod, text="Edit", width=10, command=lambda: edit_data())
-# 
-                    # def show_data(a):
-                    #     player.delete(0,END)
-                    #     issuepos.delete(0,END)
-                    #     power.delete(0,END)
-                    #     prio.delete(0,END)
-# 
-                    #     selectedItem = princeTable.selection()[0]
-                    #     player.insert(0, princeTable.item(selectedItem)['values'][0])
-                    #     issuepos.insert(0, princeTable.item(selectedItem)['values'][1])
-                    #     power.insert(0, princeTable.item(selectedItem)['values'][2])
-                    #     prio.insert(0, princeTable.item(selectedItem)['values'][3])
-# 
-                    # princeTable.bind("<<TreeviewSelect>>", show_data)
-# 
-                    # def edit_data():
-                    #     playerText = player.get()                               # read player textbox
-                    #     issueposText = int(issuepos.get())                      # read issue position textbox
-                    #     powerText = int(power.get())                            # read power textbox        
-                    #     prioText = int(prio.get())                              # read priority textbox     
-# 
-                    #     grades = [issueposText, powerText, prioText]
-                    #     pc = 1
-                    #     for g in grades:
-                    #         if g != 0:
-                    #             pc *= g       
-                    #                             
-                    #     selected_item = princeTable.selection()[0]
-                    #     princeTable.item(selected_item, text="blub", values=(playerText, issueposText, powerText, prioText, pc))
-# 
-                    # def add_data():
-                    #     playerText = player.get()                               # read player textbox
-                    #     issueposText = int(issuepos.get())                      # read issue position textbox
-                    #     powerText = int(power.get())                            # read power textbox        
-                    #     prioText = int(prio.get())                              # read priority textbox 
-# 
-                    #     grades = [issueposText, powerText, prioText]
-                    #     pc = 1
-                    #     for g in grades:
-                    #         if g != 0:
-                    #             pc *= g 
-# 
-                    #     global assessmentTuple
-                    #     assessmentTuple = [playerText, issueposText, powerText, prioText]
-# 
-                    #     princeTable.insert("",'end', values=(playerText, issueposText, powerText, prioText, pc))
-                    #     player.delete(0,END)
-                    #     issuepos.delete(0,END)
-                    #     power.delete(0,END)
-                    #     prio.delete(0,END)
-                    #     player.focus() 
-# 
-                    # analysisFrame.place(x=10, y=10)
-                    # princeLabel.grid(row=0, column=1)
-                    # princeTable.grid(row=1, column=1)
-                    # playerLabel.place(x=40, y=330)
-                    # player.place(x=200, y=330)
-                    # issueposLabel.place(x=40, y=390)
-                    # issuepos.place(x=200, y=390)
-                    # powerLabel.place(x=40, y=450)
-                    # power.place(x=200, y=450)
-                    # prioLabel.place(x=40, y=510)
-                    # prio.place(x=200, y=510)
-                    # addButton.place(x=450, y=390)
-                    # editButton.place(x=450, y=450)
+                    analysisFrame = tk.LabelFrame(princeMethod)
+
+                    princeLabel = Label(analysisFrame, text = "PRINCE Method")
+                    princeTable=ttk.Treeview(analysisFrame)
+                    princeTable["columns"]=("1","2","3","4","5")
+                    princeTable['show']='headings'
+                    princeTable.column("1",width=130,anchor='c')
+                    princeTable.column("2",width=130,anchor='c')
+                    princeTable.column("3",width=130,anchor='c')
+                    princeTable.column("4",width=130,anchor='c')
+                    princeTable.column("5",width=130,anchor='c')
+                    princeTable.heading("1",text="Player")
+                    princeTable.heading("2",text="Issue Position")
+                    princeTable.heading("3",text="Power")
+                    princeTable.heading("4",text="Priority")
+                    princeTable.heading("5",text="PRINCE Score")
+
+                    playerLabel = Label(princeMethod, text = "Player")
+                    issueposLabel = Label(princeMethod, text = "Issue\nPosition")
+                    powerLabel = Label(princeMethod, text = "Power")
+                    prioLabel = Label(princeMethod, text = "Priority")
+
+                    player = tk.Entry(princeMethod, width=30)
+                    issuepos = tk.Entry(princeMethod, width=30) 
+                    power = tk.Entry(princeMethod, width=30) 
+                    prio = tk.Entry(princeMethod, width=30) 
+
+                    addButton = tk.Button(princeMethod, text='Add', width=10, command=lambda: add_data())  
+                    editButton = tk.Button(princeMethod, text="Edit", width=10, command=lambda: edit_data())
+
+                    def show_data(a):
+                        player.delete(0,END)
+                        issuepos.delete(0,END)
+                        power.delete(0,END)
+                        prio.delete(0,END)
+
+                        selectedItem = princeTable.selection()[0]
+                        player.insert(0, princeTable.item(selectedItem)['values'][0])
+                        issuepos.insert(0, princeTable.item(selectedItem)['values'][1])
+                        power.insert(0, princeTable.item(selectedItem)['values'][2])
+                        prio.insert(0, princeTable.item(selectedItem)['values'][3])
+
+                    princeTable.bind("<<TreeviewSelect>>", show_data)
+
+
+
+                    def edit_data():
+                        playerText = player.get()                               # read player textbox
+                        issueposText = int(issuepos.get())                      # read issue position textbox
+                        powerText = int(power.get())                            # read power textbox        
+                        prioText = int(prio.get())                              # read priority textbox     
+
+                        grades = [issueposText, powerText, prioText]
+                        pc1 = 1
+                        for g in grades:
+                            if g != 0:
+                                pc1 *= g       
+                                                
+                        selected_item = princeTable.selection()[0]
+                        princeTable.item(selected_item, text="blub", values=(playerText, issueposText, powerText, prioText, pc1))
+
+                    def add_data():
+                        playerText = player.get()                               # read player textbox
+                        issueposText = int(issuepos.get())                      # read issue position textbox
+                        powerText = int(power.get())                            # read power textbox        
+                        prioText = int(prio.get())                              # read priority textbox 
+
+                        grades = [issueposText, powerText, prioText]
+                        pc1 = 1
+
+                        pn = 0
+
+                        for g in grades:
+                            if g != 0:
+                                pc1 *= g
+                            else:
+                                pn = 0 
+                        
+                        pc1Text = str(pc1)
+                        if pn == 0:
+                            pc1Text = '('+pc1Text+')'
+                            print(pc1Text)
+                        
+                        if pc1 > 0:
+                            pn = 1
+                        elif pc1 < 0:
+                            pn = -1
+                        
+                        princeScore1s.append([len(princeScore1s)+1, pc1, pn])
+                        # for ps1 in princeScore1s:
+                        #     if 
+                        
+                        global assessmentTuple
+                        assessmentTuple = [playerText, issueposText, powerText, prioText]
+
+                        princeTable.insert("",'end', values=(playerText, issueposText, powerText, prioText, pc1Text))
+                        player.delete(0,END)
+                        issuepos.delete(0,END)
+                        power.delete(0,END)
+                        prio.delete(0,END)
+                        player.focus() 
+
+                    analysisFrame.place(x=10, y=10)
+                    princeLabel.grid(row=0, column=1)
+                    princeTable.grid(row=1, column=1)
+                    playerLabel.place(x=40, y=330)
+                    player.place(x=200, y=330)
+                    issueposLabel.place(x=40, y=390)
+                    issuepos.place(x=200, y=390)
+                    powerLabel.place(x=40, y=450)
+                    power.place(x=200, y=450)
+                    prioLabel.place(x=40, y=510)
+                    prio.place(x=200, y=510)
+                    addButton.place(x=450, y=390)
+                    editButton.place(x=450, y=450)
 
                 a = 0
 
